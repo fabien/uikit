@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en-gb" dir="ltr">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Custom - UIkit tests</title>
+        <script src="js/test.js"></script>
+        <script>
+            function getNodeContent(node) {
+                return node ? node.querySelector('h3').textContent : '';
+            };
+        
+            document.addEventListener('DOMContentLoaded', function() {
+                var images = ['photo.jpg', 'photo2.jpg', 'photo3.jpg'];
+                var count = 0;
+                
+                document.querySelectorAll('.uk-view').forEach(function(elem) {
+                    var view = UIkit.view(elem);
+                
+                    view.$el.addEventListener('beforeitemshow', function(event) {
+                        console.log('BEFORE SHOW', getNodeContent(event.target));
+                        // event.preventDefault(); // Optional: reject
+                    });
+                
+                    view.$el.addEventListener('beforeitemhide', function(event) {
+                        console.log('BEFORE HIDE', getNodeContent(event.target));
+                        // event.preventDefault(); // Optional: reject
+                    });
+                    
+                    UIkit.util.on(view.$el, 'click', function(event) {
+                        view.promise.then(function() {
+                            count = count + 1;
+                            
+                            var img = document.createElement('img');
+                            img.setAttribute('uk-cover', '');
+                            img.src = 'images/' + images[count % 3];
+                            var item = document.createElement('div');
+                            item.className = 'uk-background-' + (count % 2 ? 'secondary' : 'primary');
+                            item.appendChild(img);
+                            
+                            var overlay = document.createElement('h3');
+                            overlay.className = 'uk-position-center uk-margin-remove uk-text-uppercase';
+                            overlay.textContent = 'Item ' + count;
+                            item.appendChild(overlay);
+                            
+                            return new Promise(function(resolve, reject) {
+                                img.onload = resolve;
+                                img.onerror = reject;
+                            }).then(function() {
+                                return view.show(item, count % 2 ? -1 : 1);
+                            });
+                        }).then(function(elem) {
+                            console.log('COMPLETED', getNodeContent(elem));
+                        }, function() {
+                            console.log('REJECTED');
+                        });
+                    });
+                });
+            });
+        </script>
+    </head>
+    <body>
+        <div class="uk-container uk-margin-large-bottom">
+            <div class="uk-background-muted uk-light" style="margin-bottom: 15px;" uk-view uk-ratio="ratio: 3:1">
+                <div class="uk-flex uk-flex-center uk-flex-middle uk-background-primary">
+                    <h3 class="uk-text-uppercase">Slide</h3>
+                </div>
+            </div>
+            <div class="uk-child-width-1-2 uk-grid-small" uk-grid>
+                <div>
+                    <div class="uk-background-muted uk-light" uk-view="animation: fade" uk-ratio="ratio: 2:1">
+                        <div class="uk-flex uk-flex-center uk-flex-middle uk-background-primary">
+                            <h3 class="uk-text-uppercase">Fade</h3>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="uk-background-muted uk-light" uk-view="animation: scale" uk-ratio="ratio: 2:1">
+                        <div class="uk-flex uk-flex-center uk-flex-middle uk-background-primary">
+                            <h3 class="uk-text-uppercase">Scale</h3>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="uk-background-muted uk-light" uk-view="animation: push" uk-ratio>
+                        <div class="uk-flex uk-flex-center uk-flex-middle uk-background-primary">
+                            <h3 class="uk-text-uppercase">Push</h3>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="uk-background-muted uk-light" uk-view="animation: pull" uk-ratio>
+                        <div class="uk-flex uk-flex-center uk-flex-middle uk-background-primary">
+                            <h3 class="uk-text-uppercase">Pull</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,76 @@
+// Name:            View
+// Description:     Component to create views
+//
+// Component:       `uk-view`
+//
+// Sub-objects:     `uk-view-items`
+//
+// States:          `uk-active`
+//
+// ========================================================================
+
+
+/* ========================================================================
+   Component: Slideshow
+ ========================================================================== */
+
+/*
+ * 1. Prevent tab highlighting on iOS.
+ */
+
+.uk-view {
+    /* 1 */
+    -webkit-tap-highlight-color: transparent;
+    position: relative;
+    z-index: 0;
+    /* 2 */
+    margin: 0;
+    padding: 0;
+    /* 3 */
+    overflow: hidden;
+    /* 4 */
+    -webkit-touch-callout: none;
+    .hook-view;
+}
+
+/* Item
+ ========================================================================== */
+
+/*
+ * 1. Position items above each other
+ * 2. Take the full width
+ * 3. Clip child elements, e.g. for `uk-cover`
+ * 4. Optimize animation
+ * 5. Disable horizontal panning gestures in IE11 and Edge
+ */
+
+.uk-view > * {
+    /* 1 */
+    position: absolute;
+    top: 0;
+    left: 0;
+    /* 2 */
+    right: 0;
+    bottom: 0;
+    /* 3 */
+    overflow: hidden;
+    /* 4 */
+    will-change: transform, opacity;
+    /* 5 */
+    touch-action: pan-y;
+}
+
+/*
+ * Hide not active items
+ */
+
+.uk-view > :not(.uk-active) { display: none; }
+
+
+// Hooks
+// ========================================================================
+
+.hook-view-misc;
+
+.hook-view() {}
+.hook-view-misc() {}
