@@ -27,6 +27,11 @@
                         // event.preventDefault(); // Optional: reject
                     });
                     
+                    view.$el.addEventListener('retain', function(event) {
+                        console.log('RETAIN', getNodeContent(event.target));
+                        UIkit.util.remove(event.target);
+                    });
+                    
                     UIkit.util.on(view.$el, 'click', function(event) {
                         view.promise.then(function() {
                             count = count + 1;
@@ -42,6 +47,9 @@
                             overlay.className = 'uk-position-center uk-margin-remove uk-text-uppercase';
                             overlay.textContent = 'Item ' + count;
                             item.appendChild(overlay);
+                            
+                            // Optional: retain the element (see retain event above)
+                            item.setAttribute('retain', '');
                             
                             return new Promise(function(resolve, reject) {
                                 img.onload = resolve;
@@ -61,12 +69,21 @@
     </head>
     <body>
         <div class="uk-container uk-margin-large-bottom">
-            <div class="uk-background-muted uk-light" style="margin-bottom: 15px;" uk-view uk-ratio="ratio: 3:1">
-                <div class="uk-flex uk-flex-center uk-flex-middle uk-background-primary">
-                    <h3 class="uk-text-uppercase">Slide</h3>
-                </div>
-            </div>
             <div class="uk-child-width-1-2 uk-grid-small" uk-grid>
+                <div>
+                    <div class="uk-background-muted uk-light" uk-view="animation: none" uk-ratio="ratio: 3:1">
+                        <div class="uk-flex uk-flex-center uk-flex-middle uk-background-primary">
+                            <h3 class="uk-text-uppercase">None</h3>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <div class="uk-background-muted uk-light" uk-view uk-ratio="ratio: 3:1">
+                        <div class="uk-flex uk-flex-center uk-flex-middle uk-background-primary">
+                            <h3 class="uk-text-uppercase">Slide</h3>
+                        </div>
+                    </div>
+                </div>
                 <div>
                     <div class="uk-background-muted uk-light" uk-view="animation: fade" uk-ratio="ratio: 2:1">
                         <div class="uk-flex uk-flex-center uk-flex-middle uk-background-primary">

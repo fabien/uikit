@@ -10,7 +10,7 @@ function plugin(UIkit) {
 
     UIkit.use(ViewControlPlugin);
 
-    const {mixin, util: {addClass, assign, fastdom, isNumber, remove, removeClass}} = UIkit;
+    const {mixin, util: {addClass, assign, fastdom, hasAttr, isNumber, remove, removeClass, trigger}} = UIkit;
 
     const Animations = AnimationsPlugin(UIkit);
     const Transitioner = TransitionerPlugin(UIkit);
@@ -47,7 +47,7 @@ function plugin(UIkit) {
         methods: {
             
             isRetained: function(target) {
-                return this.retain;
+                return this.retain || hasAttr(target, 'retain');
             }
             
         },
@@ -69,6 +69,7 @@ function plugin(UIkit) {
             itemhidden({target}) {
                 if (this.isRetained(target)) {
                     removeClass(target, this.clsActive, this.clsActivated);
+                    trigger(target, 'retain', [this]);
                 } else {
                     remove(target);
                 }

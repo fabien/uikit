@@ -37,6 +37,9 @@ function plugin(UIkit) {
         computed: {
 
             duration({velocity}, $el) {
+                if (this.animation && isNumber(this.animation.duration)) {
+                    return this.animation.duration;
+                }
                 return speedUp($el.offsetWidth / velocity);
             },
             

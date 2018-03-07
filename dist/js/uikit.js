@@ -2724,6 +2724,24 @@ function AnimationsPlugin$1 (UIkit) {
     var css = ref.css;
 
     var Animations = {
+        
+        none: {
+            
+            duration: 0,
+
+            show: function show() {
+                return [{},{}];
+            },
+
+            percent: function percent(current) {
+                return 1;
+            },
+
+            translate: function translate(percent) {
+                return [{},{}];
+            }
+
+        },
 
         slide: {
 
@@ -11429,6 +11447,9 @@ function plugin$16(UIkit) {
             duration: function duration(ref, $el) {
                 var velocity = ref.velocity;
 
+                if (this.animation && isNumber(this.animation.duration)) {
+                    return this.animation.duration;
+                }
                 return speedUp$1($el.offsetWidth / velocity);
             },
             
@@ -11588,9 +11609,11 @@ function plugin$15(UIkit) {
     var addClass = UIkit_util.addClass;
     var assign = UIkit_util.assign;
     var fastdom = UIkit_util.fastdom;
+    var hasAttr = UIkit_util.hasAttr;
     var isNumber = UIkit_util.isNumber;
     var remove = UIkit_util.remove;
     var removeClass = UIkit_util.removeClass;
+    var trigger = UIkit_util.trigger;
 
     var Animations = AnimationsPlugin$1(UIkit);
     var Transitioner = TransitionerPlugin(UIkit);
@@ -11630,7 +11653,7 @@ function plugin$15(UIkit) {
         methods: {
             
             isRetained: function(target) {
-                return this.retain;
+                return this.retain || hasAttr(target, 'retain');
             }
             
         },
@@ -11660,6 +11683,7 @@ function plugin$15(UIkit) {
 
                 if (this.isRetained(target)) {
                     removeClass(target, this.clsActive, this.clsActivated);
+                    trigger(target, 'retain', [this]);
                 } else {
                     remove(target);
                 }

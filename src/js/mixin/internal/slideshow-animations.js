@@ -3,6 +3,24 @@ export default function (UIkit) {
     const {css} = UIkit.util;
 
     const Animations = {
+        
+        none: {
+            
+            duration: 0,
+
+            show() {
+                return [{},{}];
+            },
+
+            percent(current) {
+                return 1;
+            },
+
+            translate(percent) {
+                return [{},{}];
+            }
+
+        },
 
         slide: {
 
