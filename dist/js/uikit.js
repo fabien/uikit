@@ -11531,7 +11531,7 @@ function plugin$16(UIkit) {
                     return reset();
                 }
                 
-                trigger(this.$el, 'transition', [this, prev, next]);
+                trigger(this.$el, 'transition', [this, next, prev]);
                 
                 var promise = this._show(prev, next, direction, force).then(function () {
 
@@ -11554,7 +11554,7 @@ function plugin$16(UIkit) {
                     var index = this$1.promises.indexOf(promise);
                     if (index > -1) { this$1.promises.splice(index, 1); }
                     
-                    trigger(this$1.$el, 'transitioned', [this$1, prev, next]);
+                    trigger(this$1.$el, 'transitioned', [this$1, next, prev]);
                 });
                 
                 this.promises.push(promise);
