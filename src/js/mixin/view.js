@@ -25,7 +25,7 @@ function plugin(UIkit) {
         },
 
         defaults: {
-            animation: 'slide',
+            animation: 'fade',
             retain: false,
             clsActivated: 'uk-transition-active',
             Animations,
@@ -35,7 +35,7 @@ function plugin(UIkit) {
         computed: {
 
             animation({animation, Animations}) {
-                return assign(animation in Animations ? Animations[animation] : Animations.slide, {name: animation});
+                return assign(animation in Animations ? Animations[animation] : Animations.fade, {name: animation});
             },
 
             transitionOptions() {

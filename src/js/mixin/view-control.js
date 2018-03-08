@@ -14,16 +14,15 @@ function plugin(UIkit) {
             clsActivated: Boolean,
             queue: Boolean,
             easing: String,
-            index: Number,
             velocity: Number,
-            direction: Number
+            direction: Number,
+            duration: Number
         },
 
         defaults: {
             easing: 'ease',
             velocity: 1,
             direction: 1,
-            index: 0,
             stack: [],
             queue: false,
             promises: [],
@@ -36,8 +35,10 @@ function plugin(UIkit) {
 
         computed: {
 
-            duration({velocity}, $el) {
-                if (this.animation && isNumber(this.animation.duration)) {
+            duration({velocity,duration}, $el) {
+                if (isNumber(duration)) {
+                    return duration;
+                } else if (this.animation && isNumber(this.animation.duration)) {
                     return this.animation.duration;
                 }
                 return speedUp($el.offsetWidth / velocity);

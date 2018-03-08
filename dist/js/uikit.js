@@ -11422,16 +11422,15 @@ function plugin$16(UIkit) {
             clsActivated: Boolean,
             queue: Boolean,
             easing: String,
-            index: Number,
             velocity: Number,
-            direction: Number
+            direction: Number,
+            duration: Number
         },
 
         defaults: {
             easing: 'ease',
             velocity: 1,
             direction: 1,
-            index: 0,
             stack: [],
             queue: false,
             promises: [],
@@ -11446,8 +11445,11 @@ function plugin$16(UIkit) {
 
             duration: function duration(ref, $el) {
                 var velocity = ref.velocity;
+                var duration = ref.duration;
 
-                if (this.animation && isNumber(this.animation.duration)) {
+                if (isNumber(duration)) {
+                    return duration;
+                } else if (this.animation && isNumber(this.animation.duration)) {
                     return this.animation.duration;
                 }
                 return speedUp$1($el.offsetWidth / velocity);
@@ -11628,7 +11630,7 @@ function plugin$15(UIkit) {
         },
 
         defaults: {
-            animation: 'slide',
+            animation: 'fade',
             retain: false,
             clsActivated: 'uk-transition-active',
             Animations: Animations,
@@ -11641,7 +11643,7 @@ function plugin$15(UIkit) {
                 var animation = ref.animation;
                 var Animations = ref.Animations;
 
-                return assign(animation in Animations ? Animations[animation] : Animations.slide, {name: animation});
+                return assign(animation in Animations ? Animations[animation] : Animations.fade, {name: animation});
             },
 
             transitionOptions: function transitionOptions() {
