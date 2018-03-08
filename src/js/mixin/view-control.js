@@ -66,26 +66,38 @@ function plugin(UIkit) {
 
         },
         
-        connected: function() {
-            if (this.views[0]) this.show(this.views[0], this.direction);
+        ready: function() {
+            if (this._pending) {
+                this._pending();
+            } else if (this.views[0]) {
+                this.show(this.views[0], this.direction);
+            }
         },
 
         methods: {
 
             show(elem, direction = this.direction, force = false) {
-                
                 elem = !elem ? $('<div></div>') : $(elem);
                 
                 if (!elem) return Promise.reject();
                 
+                if (!this._isReady) {
+                    return new Promise((resolve, reject) => {
+                        this._pending = function() {
+                            delete this._pending;
+                            return this.show(elem, direction, force).then(resolve, reject);
+                        };
+                    });
+                }
+
                 const {stack} = this;
                 const queueIndex = force ? 0 : stack.length;
-                const reset = () => {
+                const reset = (resolve) => {
                     stack.splice(queueIndex, 1);
                     if (stack.length) {
                         this.show(stack.shift(), direction, true);
                     }
-                    return Promise.reject();
+                    return resolve ? Promise.resolve() : Promise.reject();
                 };
 
                 if (this.queue) stack[force ? 'unshift' : 'push'](elem);
@@ -101,14 +113,14 @@ function plugin(UIkit) {
                 const next = elem;
                 let last = null;
                 
-                if (prev === next) return reset();
+                if (prev === next) return reset(true);
                 
                 this.prev = prev;
                 this.current = next;
                 
                 this.$el.appendChild(next);
 
-                var preventHide = prev ? !trigger(prev, 'beforeitemhide', [this]) : false;
+                const preventHide = prev ? !trigger(prev, 'beforeitemhide', [this]) : false;
                 if (preventHide || !trigger(next, 'beforeitemshow', [this, prev])) {
                     this.current = this.prev;
                     if (!this.isRetained(next)) remove(next);
@@ -117,7 +129,7 @@ function plugin(UIkit) {
                 
                 trigger(this.$el, 'transition', [this, next, prev]);
                 
-                var promise = this._show(prev, next, direction, force).then(() => {
+                const promise = this._show(prev, next, direction, force).then(() => {
 
                     prev && trigger(prev, 'itemhidden', [this]);
                     trigger(next, 'itemshown', [this]);
@@ -135,7 +147,7 @@ function plugin(UIkit) {
                     });
 
                 }).finally(() => {
-                    var index = this.promises.indexOf(promise);
+                    const index = this.promises.indexOf(promise);
                     if (index > -1) this.promises.splice(index, 1);
                     
                     trigger(this.$el, 'transitioned', [this, next, prev]);
@@ -153,17 +165,25 @@ function plugin(UIkit) {
             },
             
             _show(prev, next, direction, force) {
-
+                const options = {
+                    direction: direction,
+                    duration: this.duration,
+                    percent: this.percent,
+                    easing: this.easing
+                };
+                
+                trigger(this.$el, 'createtransition', [this, next, prev, options]);
+                
                 this._transitioner = new this.Transitioner(
                     prev,
                     next,
-                    direction,
+                    options.direction,
                     assign({
                         easing: force
                             ? next.offsetWidth < 600
                                 ? 'cubic-bezier(0.25, 0.46, 0.45, 0.94)' /* easeOutQuad */
                                 : 'cubic-bezier(0.165, 0.84, 0.44, 1)' /* easeOutQuart */
-                            : this.easing
+                            : options.easing
                     }, this.transitionOptions)
                 );
 
@@ -172,7 +192,7 @@ function plugin(UIkit) {
                     return Promise.resolve();
                 }
                 
-                return this._transitioner.show(this.duration, this.percent);
+                return this._transitioner.show(options.duration, options.percent);
 
             }
 

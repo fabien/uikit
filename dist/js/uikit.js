@@ -11477,8 +11477,12 @@ function plugin$16(UIkit) {
 
         },
         
-        connected: function() {
-            if (this.views[0]) { this.show(this.views[0], this.direction); }
+        ready: function() {
+            if (this._pending) {
+                this._pending();
+            } else if (this.views[0]) {
+                this.show(this.views[0], this.direction);
+            }
         },
 
         methods: {
@@ -11488,20 +11492,28 @@ function plugin$16(UIkit) {
                 if ( direction === void 0 ) direction = this.direction;
                 if ( force === void 0 ) force = false;
 
-                
                 elem = !elem ? $('<div></div>') : $(elem);
                 
                 if (!elem) { return Promise.reject(); }
                 
+                if (!this._isReady) {
+                    return new Promise(function (resolve, reject) {
+                        this$1._pending = function() {
+                            delete this._pending;
+                            return this.show(elem, direction, force).then(resolve, reject);
+                        };
+                    });
+                }
+
                 var ref = this;
                 var stack = ref.stack;
                 var queueIndex = force ? 0 : stack.length;
-                var reset = function () {
+                var reset = function (resolve) {
                     stack.splice(queueIndex, 1);
                     if (stack.length) {
                         this$1.show(stack.shift(), direction, true);
                     }
-                    return Promise.reject();
+                    return resolve ? Promise.resolve() : Promise.reject();
                 };
 
                 if (this.queue) { stack[force ? 'unshift' : 'push'](elem); }
@@ -11517,7 +11529,7 @@ function plugin$16(UIkit) {
                 var next = elem;
                 var last = null;
                 
-                if (prev === next) { return reset(); }
+                if (prev === next) { return reset(true); }
                 
                 this.prev = prev;
                 this.current = next;
@@ -11569,17 +11581,25 @@ function plugin$16(UIkit) {
             },
             
             _show: function _show(prev, next, direction, force) {
-
+                var options = {
+                    direction: direction,
+                    duration: this.duration,
+                    percent: this.percent,
+                    easing: this.easing
+                };
+                
+                trigger(this.$el, 'createtransition', [this, next, prev, options]);
+                
                 this._transitioner = new this.Transitioner(
                     prev,
                     next,
-                    direction,
+                    options.direction,
                     assign({
                         easing: force
                             ? next.offsetWidth < 600
                                 ? 'cubic-bezier(0.25, 0.46, 0.45, 0.94)' /* easeOutQuad */
                                 : 'cubic-bezier(0.165, 0.84, 0.44, 1)' /* easeOutQuart */
-                            : this.easing
+                            : options.easing
                     }, this.transitionOptions)
                 );
 
@@ -11588,7 +11608,7 @@ function plugin$16(UIkit) {
                     return Promise.resolve();
                 }
                 
-                return this._transitioner.show(this.duration, this.percent);
+                return this._transitioner.show(options.duration, options.percent);
 
             }
 
