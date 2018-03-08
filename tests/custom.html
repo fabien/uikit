@@ -32,6 +32,14 @@
                         UIkit.util.remove(event.target);
                     });
                     
+                    view.$el.addEventListener('transition', function(event) {
+                        console.log('BEGIN TRANSITION');
+                    });
+                    
+                    view.$el.addEventListener('transitioned', function(event) {
+                        console.log('END TRANSITION');
+                    });
+                    
                     UIkit.util.on(view.$el, 'click', function(event) {
                         view.promise.then(function() {
                             count = count + 1;
