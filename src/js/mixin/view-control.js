@@ -4,7 +4,7 @@ function plugin(UIkit) {
         return;
     }
 
-    const {$, assign, clamp, fastdom, getIndex, remove, addClass, removeClass, hasClass, isNumber, isRtl, Promise, toNodes, trigger} = UIkit.util;
+    const {$, $$, assign, clamp, fastdom, getIndex, remove, addClass, removeClass, hasClass, isNumber, isRtl, Promise, toNodes, trigger, getImage} = UIkit.util;
 
     UIkit.mixin.viewControl = {
 
@@ -115,53 +115,56 @@ function plugin(UIkit) {
                 
                 if (prev === next) return reset(true);
                 
-                this.prev = prev;
-                this.current = next;
+                return this._preload(next).then(() => {
                 
-                this.$el.appendChild(next);
-
-                const preventHide = prev ? !trigger(prev, 'beforeitemhide', [this]) : false;
-                if (preventHide || !trigger(next, 'beforeitemshow', [this, prev])) {
-                    this.current = this.prev;
-                    if (!this.isRetained(next)) remove(next);
-                    return reset();
-                }
-                
-                trigger(this.$el, 'transition', [this, next, prev]);
-                
-                const promise = this._show(prev, next, direction, force).then(() => {
-
-                    prev && trigger(prev, 'itemhidden', [this]);
-                    trigger(next, 'itemshown', [this]);
-
-                    return new Promise(resolve => {
-                        fastdom.write(() => {
-                            last = stack.shift();
-                            if (stack.length) {
-                                this.show(stack.shift(), direction, true);
-                            } else {
-                                this._transitioner = null;
-                            }
-                            resolve();
-                        });
-                    });
-
-                }).finally(() => {
-                    const index = this.promises.indexOf(promise);
-                    if (index > -1) this.promises.splice(index, 1);
+                    this.prev = prev;
+                    this.current = next;
                     
-                    trigger(this.$el, 'transitioned', [this, next, prev]);
-                });
-                
-                this.promises.push(promise);
+                    this.$el.appendChild(next);
 
-                prev && trigger(prev, 'itemhide', [this]);
-                trigger(next, 'itemshow', [this]);
-                
-                return Promise.all(this.promises).then(function() {
-                    return last || next;
-                });
+                    const preventHide = prev ? !trigger(prev, 'beforeitemhide', [this]) : false;
+                    if (preventHide || !trigger(next, 'beforeitemshow', [this])) {
+                        this.current = this.prev;
+                        if (!this.isRetained(next)) remove(next);
+                        return reset();
+                    }
+                    
+                    trigger(this.$el, 'transition', [this, next, prev]);
+                    
+                    const promise = this._show(prev, next, direction, force).then(() => {
 
+                        prev && trigger(prev, 'itemhidden', [this]);
+                        trigger(next, 'itemshown', [this]);
+
+                        return new Promise(resolve => {
+                            fastdom.write(() => {
+                                last = stack.shift();
+                                if (stack.length) {
+                                    this.show(stack.shift(), direction, true);
+                                } else {
+                                    this._transitioner = null;
+                                }
+                                resolve();
+                            });
+                        });
+
+                    }).finally(() => {
+                        const index = this.promises.indexOf(promise);
+                        if (index > -1) this.promises.splice(index, 1);
+                        
+                        trigger(this.$el, 'transitioned', [this, next, prev]);
+                    });
+                    
+                    this.promises.push(promise);
+
+                    prev && trigger(prev, 'itemhide', [this]);
+                    trigger(next, 'itemshow', [this]);
+                    
+                    return Promise.all(this.promises).then(function() {
+                        return last || next;
+                    });
+                
+                });
             },
             
             _show(prev, next, direction, force) {
@@ -193,7 +196,13 @@ function plugin(UIkit) {
                 }
                 
                 return this._transitioner.show(options.duration, options.percent);
-
+            },
+            
+            _preload: function(elem) {
+                var promises = $$('img', elem).map(function(img) {
+                    return getImage(img.src);
+                });
+                return Promise.all(promises);
             }
 
         }

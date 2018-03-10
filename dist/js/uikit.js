@@ -11400,6 +11400,7 @@ function plugin$16(UIkit) {
 
     var ref = UIkit.util;
     var $ = ref.$;
+    var $$ = ref.$$;
     var assign = ref.assign;
     var clamp = ref.clamp;
     var fastdom = ref.fastdom;
@@ -11413,6 +11414,7 @@ function plugin$16(UIkit) {
     var Promise = ref.Promise;
     var toNodes = ref.toNodes;
     var trigger = ref.trigger;
+    var getImage = ref.getImage;
 
     UIkit.mixin.viewControl = {
 
@@ -11531,53 +11533,56 @@ function plugin$16(UIkit) {
                 
                 if (prev === next) { return reset(true); }
                 
-                this.prev = prev;
-                this.current = next;
+                return this._preload(next).then(function () {
                 
-                this.$el.appendChild(next);
-
-                var preventHide = prev ? !trigger(prev, 'beforeitemhide', [this]) : false;
-                if (preventHide || !trigger(next, 'beforeitemshow', [this, prev])) {
-                    this.current = this.prev;
-                    if (!this.isRetained(next)) { remove(next); }
-                    return reset();
-                }
-                
-                trigger(this.$el, 'transition', [this, next, prev]);
-                
-                var promise = this._show(prev, next, direction, force).then(function () {
-
-                    prev && trigger(prev, 'itemhidden', [this$1]);
-                    trigger(next, 'itemshown', [this$1]);
-
-                    return new Promise(function (resolve) {
-                        fastdom.write(function () {
-                            last = stack.shift();
-                            if (stack.length) {
-                                this$1.show(stack.shift(), direction, true);
-                            } else {
-                                this$1._transitioner = null;
-                            }
-                            resolve();
-                        });
-                    });
-
-                }).finally(function () {
-                    var index = this$1.promises.indexOf(promise);
-                    if (index > -1) { this$1.promises.splice(index, 1); }
+                    this$1.prev = prev;
+                    this$1.current = next;
                     
-                    trigger(this$1.$el, 'transitioned', [this$1, next, prev]);
-                });
-                
-                this.promises.push(promise);
+                    this$1.$el.appendChild(next);
 
-                prev && trigger(prev, 'itemhide', [this]);
-                trigger(next, 'itemshow', [this]);
-                
-                return Promise.all(this.promises).then(function() {
-                    return last || next;
-                });
+                    var preventHide = prev ? !trigger(prev, 'beforeitemhide', [this$1]) : false;
+                    if (preventHide || !trigger(next, 'beforeitemshow', [this$1])) {
+                        this$1.current = this$1.prev;
+                        if (!this$1.isRetained(next)) { remove(next); }
+                        return reset();
+                    }
+                    
+                    trigger(this$1.$el, 'transition', [this$1, next, prev]);
+                    
+                    var promise = this$1._show(prev, next, direction, force).then(function () {
 
+                        prev && trigger(prev, 'itemhidden', [this$1]);
+                        trigger(next, 'itemshown', [this$1]);
+
+                        return new Promise(function (resolve) {
+                            fastdom.write(function () {
+                                last = stack.shift();
+                                if (stack.length) {
+                                    this$1.show(stack.shift(), direction, true);
+                                } else {
+                                    this$1._transitioner = null;
+                                }
+                                resolve();
+                            });
+                        });
+
+                    }).finally(function () {
+                        var index = this$1.promises.indexOf(promise);
+                        if (index > -1) { this$1.promises.splice(index, 1); }
+                        
+                        trigger(this$1.$el, 'transitioned', [this$1, next, prev]);
+                    });
+                    
+                    this$1.promises.push(promise);
+
+                    prev && trigger(prev, 'itemhide', [this$1]);
+                    trigger(next, 'itemshow', [this$1]);
+                    
+                    return Promise.all(this$1.promises).then(function() {
+                        return last || next;
+                    });
+                
+                });
             },
             
             _show: function _show(prev, next, direction, force) {
@@ -11609,7 +11614,13 @@ function plugin$16(UIkit) {
                 }
                 
                 return this._transitioner.show(options.duration, options.percent);
-
+            },
+            
+            _preload: function(elem) {
+                var promises = $$('img', elem).map(function(img) {
+                    return getImage(img.src);
+                });
+                return Promise.all(promises);
             }
 
         }
@@ -11635,6 +11646,7 @@ function plugin$15(UIkit) {
     var addClass = UIkit_util.addClass;
     var assign = UIkit_util.assign;
     var fastdom = UIkit_util.fastdom;
+    var attr = UIkit_util.attr;
     var hasAttr = UIkit_util.hasAttr;
     var isNumber = UIkit_util.isNumber;
     var remove = UIkit_util.remove;
@@ -11679,7 +11691,7 @@ function plugin$15(UIkit) {
         methods: {
             
             isRetained: function(target) {
-                return this.retain || hasAttr(target, 'retain');
+                return this.retain || hasAttr(target, 'data-retain');
             }
             
         },
@@ -11709,7 +11721,7 @@ function plugin$15(UIkit) {
 
                 if (this.isRetained(target)) {
                     removeClass(target, this.clsActive, this.clsActivated);
-                    trigger(target, 'retain', [this]);
+                    trigger(target, 'retain', [this, attr(target, 'data-retain')]);
                 } else {
                     remove(target);
                 }

@@ -18,18 +18,22 @@
                     var view = UIkit.view(elem);
                     var on = UIkit.util.on;
                     
-                    on(view.$el, 'beforeitemshow', function(event, component, target) {
-                        console.log('BEFORE SHOW', getNodeContent(target));
+                    on(view.$el, 'beforeitemshow', function(event, component) {
+                        console.log('BEFORE SHOW', getNodeContent(event.target));
                         // event.preventDefault(); // Optional: reject
                     });
                 
-                    on(view.$el, 'beforeitemhide', function(event, component, target) {
-                        console.log('BEFORE HIDE', getNodeContent(target));
+                    on(view.$el, 'beforeitemhide', function(event, component) {
+                        console.log('BEFORE HIDE', getNodeContent(event.target));
                         // event.preventDefault(); // Optional: reject
                     });
                     
-                    on(view.$el, 'retain', function(event, component, target) {
-                        console.log('RETAIN', getNodeContent(target));
+                    on(view.$el, 'itemhidden', function(event, component) {
+                        console.log('HIDDEN', getNodeContent(event.target));
+                    });
+                    
+                    on(view.$el, 'retain', function(event, component, id) {
+                        console.log('RETAIN: %s', id, getNodeContent(event.target));
                         UIkit.util.remove(target);
                     });
                     
@@ -62,7 +66,7 @@
                             item.appendChild(overlay);
                             
                             // Optional: retain the element (see retain event above)
-                            // item.setAttribute('retain', '');
+                            item.setAttribute('data-retain', 'foo');
                             
                             return new Promise(function(resolve, reject) {
                                 img.onload = resolve;
