@@ -5,9 +5,18 @@
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Custom - UIkit tests</title>
         <script src="js/test.js"></script>
+        <style>
+            .uk-view {
+                transition: opacity 300ms ease;
+            }
+            .uk-view.uk-empty {
+                opacity: 0;
+            }
+        </style>
         <script>
             function getNodeContent(node) {
-                return node ? node.querySelector('h3').textContent : '';
+                var header = node && node.querySelector('h3');
+                return header ? header.textContent : '';
             };
         
             document.addEventListener('DOMContentLoaded', function() {
@@ -34,7 +43,7 @@
                     
                     on(view.$el, 'retain', function(event, component, id) {
                         console.log('RETAIN: %s', id, getNodeContent(event.target));
-                        UIkit.util.remove(target);
+                        UIkit.util.remove(event.target);
                     });
                     
                     on(view.$el, 'transition', function(event, component, next, prev) {
@@ -45,11 +54,21 @@
                         console.log('2. CREATE TRANSITION: %s', options.direction < 0 ? 'backward' : 'forward');
                     });
                     
-                    view.$el.addEventListener('transitioned', function(event, component, next, prev) {
+                    on(view.$el, 'transitioned', function(event, component, next, prev) {
                         console.log('3. END TRANSITION');
                     });
                     
+                    on(view.$el, 'switchview', function(event, component, viewName) {
+                        console.log('SWITCH VIEW: %s', viewName);
+                    });
+                    
                     UIkit.util.on(view.$el, 'click', function(event) {
+                        if (event.altKey) {
+                            return view.promise.then(function() {
+                                return view.show(null);
+                            });
+                        }
+                        
                         view.promise.then(function() {
                             count = count + 1;
                             

@@ -3,6 +3,7 @@ import Container from './container';
 import Modal from './modal';
 import Position from './position';
 import Togglable from './togglable';
+import AttributesObserver from './observer';
 
 export {Class, Container, Modal, Position, Togglable};
 
@@ -13,5 +14,6 @@ export default function (UIkit) {
     UIkit.mixin.modal = Modal;
     UIkit.mixin.position = Position;
     UIkit.mixin.togglable = Togglable;
+    UIkit.mixin.attributesObserver = AttributesObserver;
 
 }

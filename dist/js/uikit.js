@@ -2668,6 +2668,7 @@ function boot (UIkit) {
         var name = getComponentName(attributeName);
 
         if (!name || !(name in UIkit.components)) {
+            trigger(target, 'attributechanged', [attributeName]);
             return;
         }
 
@@ -4281,6 +4282,36 @@ var Position = {
 
 };
 
+var AttributesObserver = {
+    
+    props: {
+        observeAttributes: Boolean
+    },
+
+    defaults: {
+        observeAttributes: false
+    },
+
+    init: function() {
+        var this$1 = this;
+
+        if (!this.$props.observeAttributes) { return; }
+        var observedAttrs = [].concat(this.$options.observedAttrs || []);
+        on(this.$el, 'attributechanged', function (event, attributeName) {
+            if (event.target === this$1.$el &&
+                (observedAttrs.length === 0 || observedAttrs.indexOf(attributeName) > -1)) {
+                var handlers = [].concat(this$1.$options.attributeChanged || []);
+                handlers.forEach(function (handler) {
+                    var value = this$1.$props[attributeName];
+                    value = isUndefined(value) ? attr(event.target, attributeName) : value;
+                    return handler.call(this$1, attributeName, value);
+                });
+            }
+        });
+    }
+    
+};
+
 function mixin (UIkit) {
 
     UIkit.mixin.class = Class;
@@ -4288,6 +4319,7 @@ function mixin (UIkit) {
     UIkit.mixin.modal = Modal;
     UIkit.mixin.position = Position;
     UIkit.mixin.togglable = Togglable;
+    UIkit.mixin.attributesObserver = AttributesObserver;
 
 }
 
@@ -11409,6 +11441,7 @@ function plugin$16(UIkit) {
     var addClass = ref.addClass;
     var removeClass = ref.removeClass;
     var hasClass = ref.hasClass;
+    var toggleClass = ref.toggleClass;
     var isNumber = ref.isNumber;
     var isRtl = ref.isRtl;
     var Promise = ref.Promise;
@@ -11422,6 +11455,7 @@ function plugin$16(UIkit) {
 
         props: {
             clsActivated: Boolean,
+            clsEmpty: String,
             queue: Boolean,
             easing: String,
             velocity: Number,
@@ -11438,6 +11472,7 @@ function plugin$16(UIkit) {
             promises: [],
             percent: 0,
             clsActive: 'uk-active',
+            clsEmpty: 'uk-empty',
             clsActivated: false,
             Transitioner: false,
             transitionOptions: {}
@@ -11470,7 +11505,8 @@ function plugin$16(UIkit) {
             },
             
             isEmpty: function isEmpty() {
-                return this.views.length === 0;
+                return this.views.length === 0 ||
+                    (this.views.length === 1 && hasClass(this.views[0], 'uk-empty-placeholder'));
             },
             
             views: function views() {
@@ -11486,6 +11522,14 @@ function plugin$16(UIkit) {
                 this.show(this.views[0], this.direction);
             }
         },
+        
+        update: {
+
+            write: function write() {
+                if (this.clsEmpty) { toggleClass(this.$el, this.clsEmpty, this.isEmpty); }
+            }
+
+        },
 
         methods: {
 
@@ -11494,7 +11538,7 @@ function plugin$16(UIkit) {
                 if ( direction === void 0 ) direction = this.direction;
                 if ( force === void 0 ) force = false;
 
-                elem = !elem ? $('<div></div>') : $(elem);
+                elem = !elem ? $('<div class="uk-empty-placeholder"></div>') : $(elem);
                 
                 if (!elem) { return Promise.reject(); }
                 
@@ -11742,15 +11786,24 @@ function plugin$14(UIkit) {
     UIkit.use(plugin$15);
 
     var mixin = UIkit.mixin;
+    var trigger = UIkit.util.trigger;
 
     var Animations = AnimationsPlugin(UIkit);
-
+    
     UIkit.component('view', {
 
-        mixins: [mixin.class, mixin.view],
+        mixins: [mixin.class, mixin.view, mixin.attributesObserver],
+        
+        observedAttrs: 'view',
         
         defaults: {
             Animations: Animations
+        },
+        
+        attributeChanged: function attributeChanged(attributeName, value) {
+            if (attributeName === 'view') {
+                trigger(this.$el, 'switchview', [this, value]);
+            }
         }
 
     });

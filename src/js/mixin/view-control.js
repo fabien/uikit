@@ -4,7 +4,7 @@ function plugin(UIkit) {
         return;
     }
 
-    const {$, $$, assign, clamp, fastdom, getIndex, remove, addClass, removeClass, hasClass, isNumber, isRtl, Promise, toNodes, trigger, getImage} = UIkit.util;
+    const {$, $$, assign, clamp, fastdom, getIndex, remove, addClass, removeClass, hasClass, toggleClass, isNumber, isRtl, Promise, toNodes, trigger, getImage} = UIkit.util;
 
     UIkit.mixin.viewControl = {
 
@@ -12,6 +12,7 @@ function plugin(UIkit) {
 
         props: {
             clsActivated: Boolean,
+            clsEmpty: String,
             queue: Boolean,
             easing: String,
             velocity: Number,
@@ -28,6 +29,7 @@ function plugin(UIkit) {
             promises: [],
             percent: 0,
             clsActive: 'uk-active',
+            clsEmpty: 'uk-empty',
             clsActivated: false,
             Transitioner: false,
             transitionOptions: {}
@@ -57,7 +59,8 @@ function plugin(UIkit) {
             },
             
             isEmpty() {
-                return this.views.length === 0;
+                return this.views.length === 0 ||
+                    (this.views.length === 1 && hasClass(this.views[0], 'uk-empty-placeholder'));
             },
             
             views() {
@@ -73,11 +76,19 @@ function plugin(UIkit) {
                 this.show(this.views[0], this.direction);
             }
         },
+        
+        update: {
+
+            write() {
+                if (this.clsEmpty) toggleClass(this.$el, this.clsEmpty, this.isEmpty);
+            }
+
+        },
 
         methods: {
 
             show(elem, direction = this.direction, force = false) {
-                elem = !elem ? $('<div></div>') : $(elem);
+                elem = !elem ? $('<div class="uk-empty-placeholder"></div>') : $(elem);
                 
                 if (!elem) return Promise.reject();
                 

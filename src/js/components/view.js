@@ -9,16 +9,24 @@ function plugin(UIkit) {
 
     UIkit.use(View);
 
-    const {mixin} = UIkit;
+    const {mixin, util: {trigger}} = UIkit;
 
     const Animations = AnimationsPlugin(UIkit);
-
+    
     UIkit.component('view', {
 
-        mixins: [mixin.class, mixin.view],
+        mixins: [mixin.class, mixin.view, mixin.attributesObserver],
+        
+        observedAttrs: 'view',
         
         defaults: {
             Animations
+        },
+        
+        attributeChanged(attributeName, value) {
+            if (attributeName === 'view') {
+                trigger(this.$el, 'switchview', [this, value]);
+            }
         }
 
     });

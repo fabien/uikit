@@ -1,5 +1,5 @@
 import {getComponentName} from './component';
-import {fastdom, hasAttr} from '../util/index';
+import {fastdom, hasAttr, trigger} from '../util/index';
 
 export default function (UIkit) {
 
@@ -63,6 +63,7 @@ export default function (UIkit) {
         const name = getComponentName(attributeName);
 
         if (!name || !(name in UIkit.components)) {
+            trigger(target, 'attributechanged', [attributeName]);
             return;
         }
 
