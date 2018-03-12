@@ -55,6 +55,7 @@ function plugin(UIkit) {
         events: {
 
             'itemshow itemhide itemshown itemhidden'({target}) {
+                if (this.views.indexOf(target) === -1) return;
                 UIkit.update(null, target);
             },
             
@@ -63,10 +64,12 @@ function plugin(UIkit) {
             },
 
             itemshown({target}) {
+                if (this.views.indexOf(target) === -1) return;
                 addClass(target, this.clsActivated);
             },
 
             itemhidden({target}) {
+                if (this.views.indexOf(target) === -1) return;
                 if (this.isRetained(target)) {
                     removeClass(target, this.clsActive, this.clsActivated);
                     trigger(target, 'retain', [this, attr(target, 'data-retain')]);

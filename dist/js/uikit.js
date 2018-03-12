@@ -8219,7 +8219,12 @@ function DragMixin (UIkit) {
 
     return {
 
+        props: {
+            draggable: Boolean
+        },
+
         defaults: {
+            draggable: true,
             threshold: 10,
             preventCatch: false
         },
@@ -8256,6 +8261,7 @@ function DragMixin (UIkit) {
                 },
 
                 handler: function handler(e) {
+                    if (!this.draggable) { return; }
 
                     if (!isTouch(e) && hasTextNodesOnly(e.target)
                         || e.button > 0
@@ -10639,8 +10645,10 @@ function plugin$10(UIkit) {
     UIkit.use(plugin$4);
 
     var mixin = UIkit.mixin;
-    var height = UIkit.util.height;
-
+    var UIkit_util = UIkit.util;
+    var height = UIkit_util.height;
+    var css = UIkit_util.css;
+    
     var Animations = AnimationsPlugin(UIkit);
 
     UIkit.component('slideshow-parallax', ParallaxPlugin(UIkit, 'slideshow'));
@@ -10652,7 +10660,7 @@ function plugin$10(UIkit) {
         props: {
             ratio: String,
             minHeight: Boolean,
-            maxHeight: Boolean,
+            maxHeight: Boolean
         },
 
         defaults: {
@@ -10668,7 +10676,10 @@ function plugin$10(UIkit) {
         update: {
 
             read: function read() {
-
+                if (this.ratio === 'auto' || !this.ratio.indexOf(':')) {
+                    return {height: false};
+                }
+                
                 var ref = this.ratio.split(':').map(Number);
                 var width = ref[0];
                 var height = ref[1];
@@ -10689,7 +10700,11 @@ function plugin$10(UIkit) {
             write: function write(ref) {
                 var hgt = ref.height;
 
-                height(this.list, Math.floor(hgt));
+                if (hgt === false) {
+                    css(this.list, 'height', '100%');
+                } else {
+                    height(this.list, Math.floor(hgt));
+                }
             },
 
             events: ['load', 'resize']
@@ -11745,6 +11760,7 @@ function plugin$15(UIkit) {
             'itemshow itemhide itemshown itemhidden': function itemshowitemhideitemshownitemhidden(ref) {
                 var target = ref.target;
 
+                if (this.views.indexOf(target) === -1) { return; }
                 UIkit.update(null, target);
             },
             
@@ -11757,12 +11773,14 @@ function plugin$15(UIkit) {
             itemshown: function itemshown(ref) {
                 var target = ref.target;
 
+                if (this.views.indexOf(target) === -1) { return; }
                 addClass(target, this.clsActivated);
             },
 
             itemhidden: function itemhidden(ref) {
                 var target = ref.target;
 
+                if (this.views.indexOf(target) === -1) { return; }
                 if (this.isRetained(target)) {
                     removeClass(target, this.clsActive, this.clsActivated);
                     trigger(target, 'retain', [this, attr(target, 'data-retain')]);
@@ -11819,7 +11837,7 @@ function plugin$17(UIkit) {
     var mixin = UIkit.mixin;
     var UIkit_util = UIkit.util;
     var height = UIkit_util.height;
-    var noop = UIkit_util.noop;
+    var css = UIkit_util.css;
 
     UIkit.component('ratio', {
 
@@ -11840,7 +11858,9 @@ function plugin$17(UIkit) {
         update: [{
             
             read: function read() {
-                if (!this.ratio.indexOf(':')) { return; }
+                if (this.ratio === 'auto' || !this.ratio.indexOf(':')) {
+                    return {height: false};
+                }
                 
                 var ref = this.ratio.split(':').map(Number);
                 var width = ref[0];
@@ -11862,7 +11882,11 @@ function plugin$17(UIkit) {
             write: function write(ref) {
                 var hgt = ref.height;
 
-                height(this.$el, Math.floor(hgt));
+                if (hgt === false) {
+                    css(this.$el, 'height', '100%');
+                } else {
+                    height(this.$el, Math.floor(hgt));
+                }
             },
 
             events: ['load', 'resize']

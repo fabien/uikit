@@ -4,7 +4,7 @@ function plugin(UIkit) {
         return;
     }
 
-    const {mixin, util: {height, noop}} = UIkit;
+    const {mixin, util: {height, css}} = UIkit;
 
     UIkit.component('ratio', {
 
@@ -25,7 +25,9 @@ function plugin(UIkit) {
         update: [{
             
             read() {
-                if (!this.ratio.indexOf(':')) return;
+                if (this.ratio === 'auto' || !this.ratio.indexOf(':')) {
+                    return {height: false};
+                }
                 
                 let [width, height] = this.ratio.split(':').map(Number);
 
@@ -43,7 +45,11 @@ function plugin(UIkit) {
             },
 
             write({height: hgt}) {
-                height(this.$el, Math.floor(hgt));
+                if (hgt === false) {
+                    css(this.$el, 'height', '100%');
+                } else {
+                    height(this.$el, Math.floor(hgt));
+                }
             },
 
             events: ['load', 'resize']

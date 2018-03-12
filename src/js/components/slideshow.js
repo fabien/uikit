@@ -11,8 +11,8 @@ function plugin(UIkit) {
 
     UIkit.use(Slideshow);
 
-    const {mixin, util: {height}} = UIkit;
-
+    const {mixin, util: {height, css}} = UIkit;
+    
     const Animations = AnimationsPlugin(UIkit);
 
     UIkit.component('slideshow-parallax', ParallaxPlugin(UIkit, 'slideshow'));
@@ -24,7 +24,7 @@ function plugin(UIkit) {
         props: {
             ratio: String,
             minHeight: Boolean,
-            maxHeight: Boolean,
+            maxHeight: Boolean
         },
 
         defaults: {
@@ -40,7 +40,10 @@ function plugin(UIkit) {
         update: {
 
             read() {
-
+                if (this.ratio === 'auto' || !this.ratio.indexOf(':')) {
+                    return {height: false};
+                }
+                
                 let [width, height] = this.ratio.split(':').map(Number);
 
                 height = height * this.$el.offsetWidth / width;
@@ -57,7 +60,11 @@ function plugin(UIkit) {
             },
 
             write({height: hgt}) {
-                height(this.list, Math.floor(hgt));
+                if (hgt === false) {
+                    css(this.list, 'height', '100%');
+                } else {
+                    height(this.list, Math.floor(hgt));
+                }
             },
 
             events: ['load', 'resize']

@@ -4,7 +4,12 @@ export default function (UIkit) {
 
     return {
 
+        props: {
+            draggable: Boolean
+        },
+
         defaults: {
+            draggable: true,
             threshold: 10,
             preventCatch: false
         },
@@ -39,6 +44,7 @@ export default function (UIkit) {
                 },
 
                 handler(e) {
+                    if (!this.draggable) return;
 
                     if (!isTouch(e) && hasTextNodesOnly(e.target)
                         || e.button > 0
