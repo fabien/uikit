@@ -8576,7 +8576,8 @@ function plugin$5(UIkit) {
             easing: String,
             index: Number,
             finite: Boolean,
-            velocity: Number
+            velocity: Number,
+            duration: Number
         },
 
         defaults: {
@@ -8596,7 +8597,13 @@ function plugin$5(UIkit) {
 
             duration: function duration(ref, $el) {
                 var velocity = ref.velocity;
+                var duration = ref.duration;
 
+                if (isNumber(duration)) {
+                    return duration;
+                } else if (this.animation && isNumber(this.animation.duration)) {
+                    return this.animation.duration;
+                }
                 return speedUp($el.offsetWidth / velocity);
             },
 
