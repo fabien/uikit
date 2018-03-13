@@ -10,7 +10,7 @@ function plugin(UIkit) {
 
     UIkit.use(ViewControlPlugin);
 
-    const {mixin, util: {addClass, assign, fastdom, attr, hasAttr, isNumber, remove, removeClass, trigger}} = UIkit;
+    const {mixin, util: {addClass, assign, fastdom, attr, isNumber, remove, removeClass, trigger}} = UIkit;
 
     const Animations = AnimationsPlugin(UIkit);
     const Transitioner = TransitionerPlugin(UIkit);
@@ -20,13 +20,11 @@ function plugin(UIkit) {
         mixins: [mixin.viewControl],
 
         props: {
-            animation: String,
-            retain: Boolean
+            animation: String
         },
 
         defaults: {
             animation: 'fade',
-            retain: false,
             clsActivated: 'uk-transition-active',
             Animations,
             Transitioner
@@ -44,14 +42,6 @@ function plugin(UIkit) {
 
         },
         
-        methods: {
-            
-            isRetained: function(target) {
-                return this.retain || hasAttr(target, 'data-retain');
-            }
-            
-        },
-
         events: {
 
             'itemshow itemhide itemshown itemhidden'({target}) {
@@ -69,13 +59,7 @@ function plugin(UIkit) {
             },
 
             itemhidden({target}) {
-                if (this.views.indexOf(target) === -1) return;
-                if (this.isRetained(target)) {
-                    removeClass(target, this.clsActive, this.clsActivated);
-                    trigger(target, 'retain', [this, attr(target, 'data-retain')]);
-                } else {
-                    remove(target);
-                }
+                this.removeItem(target);
             }
 
         }

@@ -11464,6 +11464,8 @@ function plugin$16(UIkit) {
     var removeClass = ref.removeClass;
     var hasClass = ref.hasClass;
     var toggleClass = ref.toggleClass;
+    var attr = ref.attr;
+    var hasAttr = ref.hasAttr;
     var isNumber = ref.isNumber;
     var isRtl = ref.isRtl;
     var Promise = ref.Promise;
@@ -11476,6 +11478,7 @@ function plugin$16(UIkit) {
         attrs: true,
 
         props: {
+            retain: Boolean,
             clsActivated: Boolean,
             clsEmpty: String,
             queue: Boolean,
@@ -11486,6 +11489,7 @@ function plugin$16(UIkit) {
         },
 
         defaults: {
+            retain: false,
             easing: 'ease',
             velocity: 1,
             direction: 1,
@@ -11609,7 +11613,7 @@ function plugin$16(UIkit) {
                     var preventHide = prev ? !trigger(prev, 'beforeitemhide', [this$1]) : false;
                     if (preventHide || !trigger(next, 'beforeitemshow', [this$1])) {
                         this$1.current = this$1.prev;
-                        if (!this$1.isRetained(next)) { remove(next); }
+                        this$1.removeItem(next, true);
                         return reset();
                     }
                     
@@ -11649,6 +11653,20 @@ function plugin$16(UIkit) {
                     });
                 
                 });
+            },
+            
+            isRetained: function isRetained(target) {
+                return this.retain || hasAttr(target, 'data-retain');
+            },
+            
+            removeItem: function removeItem(target, force) {
+                if (this.views.indexOf(target) === -1 && !force) { return; }
+                if (this.isRetained(target)) {
+                    removeClass(target, this.clsActive, this.clsActivated);
+                    trigger(target, 'retain', [this, attr(target, 'data-retain')]);
+                } else {
+                    remove(target);
+                }
             },
             
             _show: function _show(prev, next, direction, force) {
@@ -11713,7 +11731,6 @@ function plugin$15(UIkit) {
     var assign = UIkit_util.assign;
     var fastdom = UIkit_util.fastdom;
     var attr = UIkit_util.attr;
-    var hasAttr = UIkit_util.hasAttr;
     var isNumber = UIkit_util.isNumber;
     var remove = UIkit_util.remove;
     var removeClass = UIkit_util.removeClass;
@@ -11727,13 +11744,11 @@ function plugin$15(UIkit) {
         mixins: [mixin.viewControl],
 
         props: {
-            animation: String,
-            retain: Boolean
+            animation: String
         },
 
         defaults: {
             animation: 'fade',
-            retain: false,
             clsActivated: 'uk-transition-active',
             Animations: Animations,
             Transitioner: Transitioner
@@ -11754,14 +11769,6 @@ function plugin$15(UIkit) {
 
         },
         
-        methods: {
-            
-            isRetained: function(target) {
-                return this.retain || hasAttr(target, 'data-retain');
-            }
-            
-        },
-
         events: {
 
             'itemshow itemhide itemshown itemhidden': function itemshowitemhideitemshownitemhidden(ref) {
@@ -11787,13 +11794,7 @@ function plugin$15(UIkit) {
             itemhidden: function itemhidden(ref) {
                 var target = ref.target;
 
-                if (this.views.indexOf(target) === -1) { return; }
-                if (this.isRetained(target)) {
-                    removeClass(target, this.clsActive, this.clsActivated);
-                    trigger(target, 'retain', [this, attr(target, 'data-retain')]);
-                } else {
-                    remove(target);
-                }
+                this.removeItem(target);
             }
 
         }

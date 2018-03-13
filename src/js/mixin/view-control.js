@@ -4,13 +4,14 @@ function plugin(UIkit) {
         return;
     }
 
-    const {$, $$, assign, clamp, fastdom, getIndex, remove, addClass, removeClass, hasClass, toggleClass, isNumber, isRtl, Promise, toNodes, trigger, getImage} = UIkit.util;
+    const {$, $$, assign, clamp, fastdom, getIndex, remove, addClass, removeClass, hasClass, toggleClass, attr, hasAttr, isNumber, isRtl, Promise, toNodes, trigger, getImage} = UIkit.util;
 
     UIkit.mixin.viewControl = {
 
         attrs: true,
 
         props: {
+            retain: Boolean,
             clsActivated: Boolean,
             clsEmpty: String,
             queue: Boolean,
@@ -21,6 +22,7 @@ function plugin(UIkit) {
         },
 
         defaults: {
+            retain: false,
             easing: 'ease',
             velocity: 1,
             direction: 1,
@@ -136,7 +138,7 @@ function plugin(UIkit) {
                     const preventHide = prev ? !trigger(prev, 'beforeitemhide', [this]) : false;
                     if (preventHide || !trigger(next, 'beforeitemshow', [this])) {
                         this.current = this.prev;
-                        if (!this.isRetained(next)) remove(next);
+                        this.removeItem(next, true);
                         return reset();
                     }
                     
@@ -176,6 +178,20 @@ function plugin(UIkit) {
                     });
                 
                 });
+            },
+            
+            isRetained(target) {
+                return this.retain || hasAttr(target, 'data-retain');
+            },
+            
+            removeItem(target, force) {
+                if (this.views.indexOf(target) === -1 && !force) return;
+                if (this.isRetained(target)) {
+                    removeClass(target, this.clsActive, this.clsActivated);
+                    trigger(target, 'retain', [this, attr(target, 'data-retain')]);
+                } else {
+                    remove(target);
+                }
             },
             
             _show(prev, next, direction, force) {
