@@ -8628,7 +8628,7 @@ function plugin$5(UIkit) {
             },
 
             slides: function slides() {
-                return toNodes(this.list.children);
+                return this.list ? toNodes(this.list.children) : [];
             }
 
         },
@@ -11559,10 +11559,11 @@ function plugin$16(UIkit) {
 
         methods: {
 
-            show: function show(elem, direction, force) {
+            show: function show(elem, direction, force, defer) {
                 var this$1 = this;
                 if ( direction === void 0 ) direction = this.direction;
                 if ( force === void 0 ) force = false;
+                if ( defer === void 0 ) defer = false;
 
                 elem = !elem ? $('<div class="uk-empty-placeholder"></div>') : $(elem);
                 
@@ -11572,7 +11573,7 @@ function plugin$16(UIkit) {
                     return new Promise(function (resolve, reject) {
                         this$1._pending = function() {
                             delete this._pending;
-                            return this.show(elem, direction, force).then(resolve, reject);
+                            return this.show(elem, direction, force, defer).then(resolve, reject);
                         };
                     });
                 }
@@ -11609,49 +11610,59 @@ function plugin$16(UIkit) {
                     this$1.current = next;
                     
                     this$1.$el.appendChild(next);
+                    
+                    var transitionOptions = assign({}, this$1.transitionOptions);
+                    
+                    function _show(done) {
+                        var this$1 = this;
 
-                    var preventHide = prev ? !trigger(prev, 'beforeitemhide', [this$1]) : false;
-                    if (preventHide || !trigger(next, 'beforeitemshow', [this$1])) {
-                        this$1.current = this$1.prev;
-                        this$1.removeItem(next, true);
-                        return reset();
+                        var preventHide = prev ? !trigger(prev, 'beforeitemhide', [this]) : false;
+                        if (preventHide || !trigger(next, 'beforeitemshow', [this])) {
+                            this.current = this.prev;
+                            this.removeItem(next, true);
+                            return defer ? reset : reset();
+                        }
+                        
+                        trigger(this.$el, 'transition', [this, next, prev]);
+                        
+                        var promise = this._show(prev, next, direction, force, transitionOptions).then(function () {
+
+                            prev && trigger(prev, 'itemhidden', [this$1]);
+                            trigger(next, 'itemshown', [this$1]);
+
+                            return new Promise(function (resolve) {
+                                fastdom.write(function () {
+                                    last = stack.shift();
+                                    if (stack.length) {
+                                        this$1.show(stack.shift(), direction, true);
+                                    } else {
+                                        this$1._transitioner = null;
+                                    }
+                                    resolve();
+                                });
+                            });
+
+                        }).finally(function () {
+                            var index = this$1.promises.indexOf(promise);
+                            if (index > -1) { this$1.promises.splice(index, 1); }
+                            
+                            trigger(this$1.$el, 'transitioned', [this$1, next, prev]);
+                        });
+                        
+                        this.promises.push(promise);
+
+                        prev && trigger(prev, 'itemhide', [this]);
+                        trigger(next, 'itemshow', [this]);
+                        
+                        return Promise.all(this.promises).then(function() {
+                            if (typeof done === 'function') {
+                                return done(last || next);
+                            }
+                            return last || next;
+                        });
                     }
                     
-                    trigger(this$1.$el, 'transition', [this$1, next, prev]);
-                    
-                    var promise = this$1._show(prev, next, direction, force).then(function () {
-
-                        prev && trigger(prev, 'itemhidden', [this$1]);
-                        trigger(next, 'itemshown', [this$1]);
-
-                        return new Promise(function (resolve) {
-                            fastdom.write(function () {
-                                last = stack.shift();
-                                if (stack.length) {
-                                    this$1.show(stack.shift(), direction, true);
-                                } else {
-                                    this$1._transitioner = null;
-                                }
-                                resolve();
-                            });
-                        });
-
-                    }).finally(function () {
-                        var index = this$1.promises.indexOf(promise);
-                        if (index > -1) { this$1.promises.splice(index, 1); }
-                        
-                        trigger(this$1.$el, 'transitioned', [this$1, next, prev]);
-                    });
-                    
-                    this$1.promises.push(promise);
-
-                    prev && trigger(prev, 'itemhide', [this$1]);
-                    trigger(next, 'itemshow', [this$1]);
-                    
-                    return Promise.all(this$1.promises).then(function() {
-                        return last || next;
-                    });
-                
+                    return defer ? _show.bind(this$1) : _show.call(this$1);
                 });
             },
             
@@ -11669,7 +11680,7 @@ function plugin$16(UIkit) {
                 }
             },
             
-            _show: function _show(prev, next, direction, force) {
+            _show: function _show(prev, next, direction, force, transitionOptions) {
                 var options = {
                     direction: direction,
                     duration: this.duration,
@@ -11689,7 +11700,7 @@ function plugin$16(UIkit) {
                                 ? 'cubic-bezier(0.25, 0.46, 0.45, 0.94)' /* easeOutQuad */
                                 : 'cubic-bezier(0.165, 0.84, 0.44, 1)' /* easeOutQuart */
                             : options.easing
-                    }, this.transitionOptions)
+                    }, transitionOptions || this.transitionOptions)
                 );
 
                 if (!force && !prev) {

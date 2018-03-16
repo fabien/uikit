@@ -66,7 +66,7 @@ function plugin(UIkit) {
             },
 
             slides() {
-                return toNodes(this.list.children);
+                return this.list ? toNodes(this.list.children) : [];
             }
 
         },

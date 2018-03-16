@@ -89,7 +89,7 @@ function plugin(UIkit) {
 
         methods: {
 
-            show(elem, direction = this.direction, force = false) {
+            show(elem, direction = this.direction, force = false, defer = false) {
                 elem = !elem ? $('<div class="uk-empty-placeholder"></div>') : $(elem);
                 
                 if (!elem) return Promise.reject();
@@ -98,7 +98,7 @@ function plugin(UIkit) {
                     return new Promise((resolve, reject) => {
                         this._pending = function() {
                             delete this._pending;
-                            return this.show(elem, direction, force).then(resolve, reject);
+                            return this.show(elem, direction, force, defer).then(resolve, reject);
                         };
                     });
                 }
@@ -134,49 +134,57 @@ function plugin(UIkit) {
                     this.current = next;
                     
                     this.$el.appendChild(next);
+                    
+                    var transitionOptions = assign({}, this.transitionOptions);
+                    
+                    function _show(done) {
+                        const preventHide = prev ? !trigger(prev, 'beforeitemhide', [this]) : false;
+                        if (preventHide || !trigger(next, 'beforeitemshow', [this])) {
+                            this.current = this.prev;
+                            this.removeItem(next, true);
+                            return defer ? reset : reset();
+                        }
+                        
+                        trigger(this.$el, 'transition', [this, next, prev]);
+                        
+                        const promise = this._show(prev, next, direction, force, transitionOptions).then(() => {
 
-                    const preventHide = prev ? !trigger(prev, 'beforeitemhide', [this]) : false;
-                    if (preventHide || !trigger(next, 'beforeitemshow', [this])) {
-                        this.current = this.prev;
-                        this.removeItem(next, true);
-                        return reset();
+                            prev && trigger(prev, 'itemhidden', [this]);
+                            trigger(next, 'itemshown', [this]);
+
+                            return new Promise(resolve => {
+                                fastdom.write(() => {
+                                    last = stack.shift();
+                                    if (stack.length) {
+                                        this.show(stack.shift(), direction, true);
+                                    } else {
+                                        this._transitioner = null;
+                                    }
+                                    resolve();
+                                });
+                            });
+
+                        }).finally(() => {
+                            const index = this.promises.indexOf(promise);
+                            if (index > -1) this.promises.splice(index, 1);
+                            
+                            trigger(this.$el, 'transitioned', [this, next, prev]);
+                        });
+                        
+                        this.promises.push(promise);
+
+                        prev && trigger(prev, 'itemhide', [this]);
+                        trigger(next, 'itemshow', [this]);
+                        
+                        return Promise.all(this.promises).then(function() {
+                            if (typeof done === 'function') {
+                                return done(last || next);
+                            }
+                            return last || next;
+                        });
                     }
                     
-                    trigger(this.$el, 'transition', [this, next, prev]);
-                    
-                    const promise = this._show(prev, next, direction, force).then(() => {
-
-                        prev && trigger(prev, 'itemhidden', [this]);
-                        trigger(next, 'itemshown', [this]);
-
-                        return new Promise(resolve => {
-                            fastdom.write(() => {
-                                last = stack.shift();
-                                if (stack.length) {
-                                    this.show(stack.shift(), direction, true);
-                                } else {
-                                    this._transitioner = null;
-                                }
-                                resolve();
-                            });
-                        });
-
-                    }).finally(() => {
-                        const index = this.promises.indexOf(promise);
-                        if (index > -1) this.promises.splice(index, 1);
-                        
-                        trigger(this.$el, 'transitioned', [this, next, prev]);
-                    });
-                    
-                    this.promises.push(promise);
-
-                    prev && trigger(prev, 'itemhide', [this]);
-                    trigger(next, 'itemshow', [this]);
-                    
-                    return Promise.all(this.promises).then(function() {
-                        return last || next;
-                    });
-                
+                    return defer ? _show.bind(this) : _show.call(this);
                 });
             },
             
@@ -194,7 +202,7 @@ function plugin(UIkit) {
                 }
             },
             
-            _show(prev, next, direction, force) {
+            _show(prev, next, direction, force, transitionOptions) {
                 const options = {
                     direction: direction,
                     duration: this.duration,
@@ -214,7 +222,7 @@ function plugin(UIkit) {
                                 ? 'cubic-bezier(0.25, 0.46, 0.45, 0.94)' /* easeOutQuad */
                                 : 'cubic-bezier(0.165, 0.84, 0.44, 1)' /* easeOutQuart */
                             : options.easing
-                    }, this.transitionOptions)
+                    }, transitionOptions || this.transitionOptions)
                 );
 
                 if (!force && !prev) {
