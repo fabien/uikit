@@ -11625,6 +11625,12 @@ function plugin$16(UIkit) {
                         
                         trigger(this.$el, 'transition', [this, next, prev]);
                         
+                        var _done = function () {
+                            var index = this$1.promises.indexOf(promise);
+                            if (index > -1) { this$1.promises.splice(index, 1); }
+                            trigger(this$1.$el, 'transitioned', [this$1, next, prev]);
+                        };
+                        
                         var promise = this._show(prev, next, direction, force, transitionOptions).then(function () {
 
                             prev && trigger(prev, 'itemhidden', [this$1]);
@@ -11642,12 +11648,7 @@ function plugin$16(UIkit) {
                                 });
                             });
 
-                        }).finally(function () {
-                            var index = this$1.promises.indexOf(promise);
-                            if (index > -1) { this$1.promises.splice(index, 1); }
-                            
-                            trigger(this$1.$el, 'transitioned', [this$1, next, prev]);
-                        });
+                        }, _done).then(_done);
                         
                         this.promises.push(promise);
 
@@ -11715,7 +11716,9 @@ function plugin$16(UIkit) {
                 var promises = $$('img', elem).map(function(img) {
                     return getImage(img.src);
                 });
-                return Promise.all(promises);
+                return new Promise(function (resolve) {
+                    Promise.all(promises).then(resolve, resolve);
+                });
             }
 
         }

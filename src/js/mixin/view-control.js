@@ -147,6 +147,12 @@ function plugin(UIkit) {
                         
                         trigger(this.$el, 'transition', [this, next, prev]);
                         
+                        const _done = () => {
+                            const index = this.promises.indexOf(promise);
+                            if (index > -1) this.promises.splice(index, 1);
+                            trigger(this.$el, 'transitioned', [this, next, prev]);
+                        };
+                        
                         const promise = this._show(prev, next, direction, force, transitionOptions).then(() => {
 
                             prev && trigger(prev, 'itemhidden', [this]);
@@ -164,12 +170,7 @@ function plugin(UIkit) {
                                 });
                             });
 
-                        }).finally(() => {
-                            const index = this.promises.indexOf(promise);
-                            if (index > -1) this.promises.splice(index, 1);
-                            
-                            trigger(this.$el, 'transitioned', [this, next, prev]);
-                        });
+                        }, _done).then(_done);
                         
                         this.promises.push(promise);
 
@@ -182,7 +183,7 @@ function plugin(UIkit) {
                             }
                             return last || next;
                         });
-                    }
+                    };
                     
                     return defer ? _show.bind(this) : _show.call(this);
                 });
@@ -237,7 +238,9 @@ function plugin(UIkit) {
                 var promises = $$('img', elem).map(function(img) {
                     return getImage(img.src);
                 });
-                return Promise.all(promises);
+                return new Promise(resolve => {
+                    Promise.all(promises).then(resolve, resolve);
+                });
             }
 
         }
