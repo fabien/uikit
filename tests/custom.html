@@ -12,6 +12,9 @@
             .uk-view.uk-empty {
                 opacity: 0;
             }
+            [uk-height-content] {
+                transition: height 100ms ease-out;
+            }
         </style>
         <script>
             function getNodeContent(node) {
@@ -22,6 +25,17 @@
             document.addEventListener('DOMContentLoaded', function() {
                 var images = ['photo.jpg', 'photo2.jpg', 'photo3.jpg'];
                 var count = 0;
+                
+                UIkit.util.on(document, 'click', '[uk-height-content]', function(event) {
+                    var panel = UIkit.util.$('.uk-panel', event.current);
+                    if (panel && event.altKey) {
+                        panel.removeChild(panel.firstElementChild);
+                    } else if (panel) {
+                        var p = document.createElement('p');
+                        p.innerHTML = 'Lorem ipsum dolor sit amet, consectetur adipisicing elit. Enim adipisci, consequuntur, quaerat dolores nisi sed, numquam sint ab similique nulla sapiente, vitae repellendus fuga reprehenderit quod deleniti ipsum. Quidem, alias!';
+                        panel.appendChild(p);
+                    }
+                });
                 
                 document.querySelectorAll('.uk-view').forEach(function(elem) {
                     var view = UIkit.view(elem);
@@ -105,6 +119,14 @@
     </head>
     <body>
         <div class="uk-container uk-margin-large-bottom">
+            <div class="uk-position-relative uk-overflow-hidden uk-margin" uk-height-content="target: .uk-panel; minHeight: 50; maxHeight: 800">
+                <div class="uk-background-muted uk-position-cover">
+                    <div class="uk-panel uk-padding-small">
+                        <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Non quidem, eaque dolor esse, id deserunt neque, voluptate quisquam impedit nobis, laborum quaerat vero doloribus harum dignissimos iure repudiandae temporibus delectus.</p>
+                    </div>
+                </div>
+            </div>
+            
             <div class="uk-child-width-1-2 uk-grid-small" uk-grid>
                 <div>
                     <div class="uk-background-muted uk-light" uk-view="animation: none" uk-ratio="ratio: 3:1">

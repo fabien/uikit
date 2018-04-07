@@ -7,6 +7,7 @@ import Dropdown from './dropdown';
 import FormCustom from './form-custom';
 import Gif from './gif';
 import Grid from './grid';
+import HeightContent from './height-content';
 import HeightMatch from './height-match';
 import HeightViewport from './height-viewport';
 import Icon from './icon';
@@ -38,6 +39,7 @@ export default function (UIkit) {
     UIkit.use(Drop);
     UIkit.use(Dropdown);
     UIkit.use(FormCustom);
+    UIkit.use(HeightContent);
     UIkit.use(HeightMatch);
     UIkit.use(HeightViewport);
     UIkit.use(Margin);

@@ -5229,6 +5229,101 @@ function Grid (UIkit) {
 
 }
 
+function HeightContent (UIkit) {
+
+    UIkit.component('height-content', {
+
+        args: 'target',
+
+        props: {
+            target: String,
+            property: String,
+            minHeight: Number,
+            maxHeight: Number
+        },
+
+        defaults: {
+            target: '> *',
+            property: 'height',
+            minHeight: 0,
+            maxHeight: 0
+        },
+
+        computed: {
+
+            elements: function elements(ref, $el) {
+                var target = ref.target;
+
+                return $$(target, $el);
+            }
+
+        },
+
+        update: {
+
+            read: function read() {
+                return this.match(this.elements);
+            },
+
+            write: function write(ref) {
+                var height = ref.height;
+
+                css(this.$el, this.property, height);
+            },
+
+            events: ['load', 'resize']
+
+        },
+
+        methods: {
+
+            match: function match(elements) {
+                if (elements.length === 0) {
+                    return {};
+                }
+                
+                var heights = [];
+                var maxHeight = this.maxHeight;
+                var minHeight = Math.min(this.minHeight, maxHeight || this.minHeight);
+                
+                elements
+                    .forEach(function (el) {
+
+                        var style, hidden;
+                        
+                        if (!isVisible(el)) {
+                            style = attr(el, 'style');
+                            hidden = attr(el, 'hidden');
+
+                            attr(el, {
+                                style: ((style || '') + ";display:block !important;"),
+                                hidden: null
+                            });
+                        }
+                        
+                        var height = el.offsetHeight;
+                        height = Math.max(minHeight, Math.min(height, maxHeight || height));
+                        
+                        heights.push(height);
+
+                        if (!isUndefined(style)) {
+                            attr(el, {style: style, hidden: hidden});
+                        }
+
+                    });
+
+                var height = heights.reduce(function(memo, height) {
+                    return memo + height;
+                }, 0);
+
+                return {height: height};
+            }
+        }
+
+    });
+
+}
+
 function HeightMatch (UIkit) {
 
     UIkit.component('height-match', {
@@ -6986,6 +7081,7 @@ function Sticky (UIkit) {
             {
 
                 write: function write() {
+                    if (!this.widthElement) { return; }                    
 
                     var ref = this;
                     var placeholder = ref.placeholder;
@@ -7763,6 +7859,7 @@ function core (UIkit) {
     UIkit.use(Drop);
     UIkit.use(Dropdown);
     UIkit.use(FormCustom);
+    UIkit.use(HeightContent);
     UIkit.use(HeightMatch);
     UIkit.use(HeightViewport);
     UIkit.use(Margin);

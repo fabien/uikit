@@ -127,6 +127,7 @@ export default function (UIkit) {
             {
 
                 write() {
+                    if (!this.widthElement) return;                    
 
                     const {placeholder} = this;
                     const outerHeight = (this.isActive ? placeholder : this.$el).offsetHeight;
