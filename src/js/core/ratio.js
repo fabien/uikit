@@ -1,67 +1,53 @@
-function plugin(UIkit) {
+const {mixin, util: {height, css}} = UIkit;
 
-    if (plugin.installed) {
-        return;
-    }
+export default {
 
-    const {mixin, util: {height, css}} = UIkit;
+    mixins: [mixin.class],
+    
+    props: {
+        ratio: String,
+        minHeight: Boolean,
+        maxHeight: Boolean,
+    },
 
-    UIkit.component('ratio', {
+    defaults: {
+        ratio: '1:1',
+        minHeight: false,
+        maxHeight: false
+    },
 
-        mixins: [mixin.class],
+    update: [{
         
-        props: {
-            ratio: String,
-            minHeight: Boolean,
-            maxHeight: Boolean,
-        },
-
-        defaults: {
-            ratio: '1:1',
-            minHeight: false,
-            maxHeight: false
-        },
-
-        update: [{
+        read() {
+            if (this.ratio === 'auto' || !this.ratio.indexOf(':')) {
+                return {height: false};
+            }
             
-            read() {
-                if (this.ratio === 'auto' || !this.ratio.indexOf(':')) {
-                    return {height: false};
-                }
-                
-                let [width, height] = this.ratio.split(':').map(Number);
+            let [width, height] = this.ratio.split(':').map(Number);
 
-                height = height * this.$el.offsetWidth / width;
+            height = height * this.$el.offsetWidth / width;
 
-                if (this.minHeight) {
-                    height = Math.max(this.minHeight, height);
-                }
+            if (this.minHeight) {
+                height = Math.max(this.minHeight, height);
+            }
 
-                if (this.maxHeight) {
-                    height = Math.min(this.maxHeight, height);
-                }
+            if (this.maxHeight) {
+                height = Math.min(this.maxHeight, height);
+            }
 
-                return {height};
-            },
+            return {height};
+        },
 
-            write({height: hgt}) {
-                if (hgt === false) {
-                    css(this.$el, 'height', '100%');
-                } else {
-                    height(this.$el, Math.floor(hgt));
-                }
-            },
+        write({height: hgt}) {
+            if (hgt === false) {
+                css(this.$el, 'height', '100%');
+            } else {
+                height(this.$el, Math.floor(hgt));
+            }
+        },
 
-            events: ['load', 'resize']
+        events: ['load', 'resize']
 
-        }]
-
-    });
+    }]
 
 }
-
-if (!BUNDLED && typeof window !== 'undefined' && window.UIkit) {
-    window.UIkit.use(plugin);
-}
-
-export default plugin;

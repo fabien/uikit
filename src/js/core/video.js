@@ -1,67 +1,73 @@
-import {css, isInView, isVisible, Player} from '../util/index';
+import {css, hasAttr, isInView, isVisible, Player} from 'uikit-util';
 
-export default function (UIkit) {
+export default {
 
-    UIkit.component('video', {
+    args: 'autoplay',
 
-        props: {
-            automute: Boolean,
-            autoplay: Boolean,
-        },
+    props: {
+        automute: Boolean,
+        autoplay: Boolean,
+    },
 
-        defaults: {
-            automute: false,
-            autoplay: true
-        },
+    data: {
+        automute: false,
+        autoplay: true
+    },
 
-        computed: {
+    computed: {
 
-            inView({autoplay}) {
-                return autoplay === 'inview';
-            }
+        inView({autoplay}) {
+            return autoplay === 'inview';
+        }
 
-        },
+    },
 
-        ready() {
+    connected() {
 
-            this.player = new Player(this.$el);
+        if (this.inView && !hasAttr(this.$el, 'preload')) {
+            this.$el.preload = 'none';
+        }
 
-            if (this.automute) {
-                this.player.mute();
-            }
+    },
 
-        },
+    ready() {
 
-        update: [
+        this.player = new Player(this.$el);
 
-            {
+        if (this.automute) {
+            this.player.mute();
+        }
 
-                read(_, {type}) {
+    },
 
-                    return !this.player || (type === 'scroll' || type === 'resize') && !this.inView
-                        ? false
-                        : {
-                            visible: isVisible(this.$el) && css(this.$el, 'visibility') !== 'hidden',
-                            inView: this.inView && isInView(this.$el)
-                        };
-                },
+    update: [
 
-                write({visible, inView}) {
+        {
 
-                    if (!visible || this.inView && !inView) {
-                        this.player.pause();
-                    } else if (this.autoplay === true || this.inView && inView) {
-                        this.player.play();
-                    }
+            read(_, {type}) {
 
-                },
+                return !this.player || (type === 'scroll' || type === 'resize') && !this.inView
+                    ? false
+                    : {
+                        visible: isVisible(this.$el) && css(this.$el, 'visibility') !== 'hidden',
+                        inView: this.inView && isInView(this.$el)
+                    };
+            },
 
-                events: ['load', 'resize', 'scroll']
+            write({visible, inView}) {
 
-            }
+                if (!visible || this.inView && !inView) {
+                    this.player.pause();
+                } else if (this.autoplay === true || this.inView && inView) {
+                    this.player.play();
+                }
 
-        ],
+            },
 
-    });
+            events: ['load', 'resize', 'scroll']
 
-}
+        }
+
+    ]
+
+};

@@ -1,15 +1,8 @@
 import View from '../mixin/view';
 import AnimationsPlugin from './internal/slideshow-animations';
+import {mixin, util: {trigger}} from 'uikit-util';
 
-function plugin(UIkit) {
-
-    if (plugin.installed) {
-        return;
-    }
-
-    UIkit.use(View);
-
-    const {mixin, util: {trigger}} = UIkit;
+export default {
 
     const Animations = AnimationsPlugin(UIkit);
     
@@ -32,9 +25,3 @@ function plugin(UIkit) {
     });
 
 }
-
-if (!BUNDLED && typeof window !== 'undefined' && window.UIkit) {
-    window.UIkit.use(plugin);
-}
-
-export default plugin;

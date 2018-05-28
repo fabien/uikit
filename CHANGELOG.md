@@ -1,18 +1,102 @@
 # Changelog
 
-## WIP
+## 3.0.0 rc 3 (May 28, 2018)
+
+### Changed
+
+- Improve Lightbox type detection
+- UIkit.icon.add supports resetting component icons now
+
+### Fixed
+
+- Fix lazy loading of images with same source
+- Fix lazy loading of background images on elements with no height and width attributes
+- Fix late component registration
+- Fix resizing behavior of Sticky component
+- Fix media mode in Toggle default preventing click events on touch devices
+
+## 3.0.0 rc 2 (May 16, 2018)
+
+### Fixed
+
+- Fix regression in Scrollspy in IE 11
+- Fix Sass distribution
+- Fix large close icon
+
+## 3.0.0 rc 1 (May 15, 2018)
+
+### Added
+
+- Add Img component to lazy load images
+- Add Filter component to filter and sort any kind of layout
+- Add `masonry` option to Grid component
+- Add inverse style for form icon
+- Add smaller font-sizes on mobile for h1, h2, primary and hero heading and article title
+
+### Changed
+
+- Break long words into the next line for comment body
+- Moved grid `parallax` option to Grid component and removed Grid Parallax component
+- Moved Height, Leader, SVG and Video from Utility component into their own components
+- Allow left and right icons at the same time in form and search component
+- Rename `target` to `target-offset` in Sticky component
+- Removed hyphenating for text break
+
+### Fixed
+
+- Fix option color in select dropdowns for Inverse component
+- Fix dropcap font size in Edge
+- Fix dropcap line height in Firefox
+- Fix Scrollspy being stuck in endless update loop
+- Fix Slideshow combined with Height Viewport component
+- Fix Height Match component's `row` matching
+- Fix height calculation in Height Match component
+- Fix regression with Video component not auto play/pause
+
+## 3.0.0 beta 42 (April 5, 2018)
+
+### Fixed
+
+- Fix regression in Offcanvas
+
+## 3.0.0 beta 41 (April 4, 2018)
+
+### Added
+
+- Add table large modifier
+- Add `Autoplay` as primary option for Video component
+- Add core and component dist files to NPM package
 
 ### Changed
 
 - Make `uk-form-icon` padding work with size modifier
+- Make heading line position top a variable
 - Allow dropdowns in Iconnav component
 - Allow any property in `svg-fill` mixin
+- Move progress normalization to progress component
+- Video component sets `preload="false"` if `autoplay` is set to `inview`
+- Global `update` method now updates element itself as well as its parents and children
+
+### Removed
+
+- Removed the instance method `$update`
 
 ### Fixed
 
 - Fix browser compatibility in Navbar component
 - Fix preventClick function on touch devices
 - Fix LightboxPanel props
+- Fix Player ids in Vimeo videos
+- Dropbar opens on bottom positioned drops only
+- Fix setting height of drag in Sortable component
+- `isInView` checks for element visibility now
+- Fix check for backgroundSize: cover resetting backgroundSize in Parallax
+- Fix "Uncaught (in promise) DOMException" in Player
+- Fix Slideshow `fade` effect
+- Fix `type` option in Upload component
+- Fix misplaced Drop on fast toggling
+- Fix Modal close on bgClick behaviour
+- Fix Sets calculation in Slider on iOS
 
 ## 3.0.0 beta 40 (February 8, 2018)
 

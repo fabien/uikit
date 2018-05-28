@@ -1,57 +1,51 @@
-export default function (UIkit) {
+import {css} from 'uikit-util';
 
-    const {css} = UIkit.util;
-
-    const Animations = {
+export default {
+    
+    none: {
         
-        none: {
-            
-            duration: 0,
+        duration: 0,
 
-            show() {
-                return [{},{}];
-            },
-
-            percent(current) {
-                return 1;
-            },
-
-            translate(percent) {
-                return [{},{}];
-            }
-
+        show() {
+            return [{},{}];
         },
 
-        slide: {
-
-            show(dir) {
-                return [
-                    {transform: translate(dir * -100)},
-                    {transform: translate()}
-                ];
-            },
-
-            percent(current) {
-                return Animations.translated(current);
-            },
-
-            translate(percent, dir) {
-                return [
-                    {transform: translate(dir * -100 * percent)},
-                    {transform: translate(dir * 100 * (1 - percent))}
-                ];
-            }
-
+        percent(current) {
+            return 1;
         },
 
-        translated(el) {
-            return Math.abs(css(el, 'transform').split(',')[4] / el.offsetWidth) || 0;
+        translate(percent) {
+            return [{},{}];
         }
 
-    };
+    },
 
-    return Animations;
+    slide: {
 
+        show(dir) {
+            return [
+                {transform: translate(dir * -100)},
+                {transform: translate()}
+            ];
+        },
+
+        percent(current) {
+            return translated(current);
+        },
+
+        translate(percent, dir) {
+            return [
+                {transform: translate(dir * -100 * percent)},
+                {transform: translate(dir * 100 * (1 - percent))}
+            ];
+        }
+
+    }
+
+};
+
+export function translated(el) {
+    return Math.abs(css(el, 'transform').split(',')[4] / el.offsetWidth) || 0;
 }
 
 export function translate(value = 0, unit = '%') {

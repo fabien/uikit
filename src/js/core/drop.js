@@ -1,422 +1,430 @@
-import {Position, Togglable} from '../mixin/index';
-import {$$, addClass, Animation, attr, css, includes, isString, isTouch, MouseTracker, offset, on, once, pointerEnter, pointerLeave, pointInRect, query, removeClass, removeClasses, toggleClass, within} from '../util/index';
+import Position from '../mixin/position';
+import Togglable from '../mixin/togglable';
+import {$$, addClass, Animation, attr, css, includes, isTouch, MouseTracker, offset, on, once, pointerEnter, pointerLeave, pointInRect, query, removeClass, removeClasses, toggleClass, within} from 'uikit-util';
 
-export default function (UIkit) {
+let active;
 
-    let active;
+export default {
 
-    UIkit.component('drop', {
+    mixins: [Position, Togglable],
 
-        mixins: [Position, Togglable],
+    args: 'pos',
 
-        args: 'pos',
+    props: {
+        mode: 'list',
+        toggle: Boolean,
+        boundary: Boolean,
+        boundaryAlign: Boolean,
+        delayShow: Number,
+        delayHide: Number,
+        clsDrop: String
+    },
 
-        props: {
-            mode: 'list',
-            toggle: Boolean,
-            boundary: 'query',
-            boundaryAlign: Boolean,
-            delayShow: Number,
-            delayHide: Number,
-            clsDrop: String
+    data: {
+        mode: ['click', 'hover'],
+        toggle: '- *',
+        boundary: window,
+        boundaryAlign: false,
+        delayShow: 0,
+        delayHide: 800,
+        clsDrop: false,
+        hoverIdle: 200,
+        animation: ['uk-animation-fade'],
+        cls: 'uk-open'
+    },
+
+    computed: {
+
+        boundary({boundary}, $el) {
+            return query(boundary, $el);
         },
 
-        defaults: {
-            mode: ['click', 'hover'],
-            toggle: true,
-            boundary: window,
-            boundaryAlign: false,
-            delayShow: 0,
-            delayHide: 800,
-            clsDrop: false,
-            hoverIdle: 200,
-            animation: ['uk-animation-fade'],
-            cls: 'uk-open'
+        clsDrop({clsDrop}) {
+            return clsDrop || `uk-${this.$options.name}`;
         },
 
-        computed: {
+        clsPos() {
+            return this.clsDrop;
+        }
 
-            clsDrop({clsDrop}) {
-                return clsDrop || `uk-${this.$options.name}`;
+    },
+
+    init() {
+        this.tracker = new MouseTracker();
+    },
+
+    connected() {
+
+        addClass(this.$el, this.clsDrop);
+
+        const {toggle} = this.$props;
+        this.toggle = toggle && this.$create('toggle', query(toggle, this.$el), {
+            target: this.$el,
+            mode: this.mode
+        });
+
+        this.updateAria(this.$el);
+
+    },
+
+    events: [
+
+
+        {
+
+            name: 'click',
+
+            delegate() {
+                return `.${this.clsDrop}-close`;
             },
 
-            clsPos() {
-                return this.clsDrop;
+            handler(e) {
+                e.preventDefault();
+                this.hide(false);
             }
 
         },
 
-        init() {
-            this.tracker = new MouseTracker();
-            addClass(this.$el, this.clsDrop);
-        },
+        {
 
-        connected() {
+            name: 'click',
 
-            const {toggle} = this.$props;
-            this.toggle = toggle && UIkit.toggle(isString(toggle) ? query(toggle, this.$el) : this.$el.previousElementSibling, {
-                target: this.$el,
-                mode: this.mode
-            });
+            delegate() {
+                return 'a[href^="#"]';
+            },
 
-            this.updateAria(this.$el);
+            handler(e) {
 
-        },
+                if (e.defaultPrevented) {
+                    return;
+                }
 
-        events: [
+                const id = e.target.hash;
 
-            {
-
-                name: 'click',
-
-                delegate() {
-                    return `.${this.clsDrop}-close`;
-                },
-
-                handler(e) {
+                if (!id) {
                     e.preventDefault();
+                }
+
+                if (!id || !within(id, this.$el)) {
                     this.hide(false);
                 }
+            }
 
-            },
+        },
 
-            {
+        {
 
-                name: 'click',
+            name: 'beforescroll',
 
-                delegate() {
-                    return 'a[href^="#"]';
-                },
+            handler() {
+                this.hide(false);
+            }
 
-                handler(e) {
+        },
 
-                    if (e.defaultPrevented) {
-                        return;
-                    }
+        {
 
-                    const id = e.target.hash;
+            name: 'toggle',
 
-                    if (!id) {
-                        e.preventDefault();
-                    }
+            self: true,
 
-                    if (!id || !within(id, this.$el)) {
-                        this.hide(false);
-                    }
-                }
+            handler(e, toggle) {
 
-            },
+                e.preventDefault();
 
-            {
-
-                name: 'beforescroll',
-
-                handler() {
+                if (this.isToggled()) {
                     this.hide(false);
+                } else {
+                    this.show(toggle, false);
                 }
+            }
 
+        },
+
+        {
+
+            name: pointerEnter,
+
+            filter() {
+                return includes(this.mode, 'hover');
             },
 
-            {
+            handler(e) {
 
-                name: 'toggle',
-
-                self: true,
-
-                handler(e, toggle) {
-
-                    e.preventDefault();
-
-                    if (this.isToggled()) {
-                        this.hide(false);
-                    } else {
-                        this.show(toggle, false);
-                    }
+                if (isTouch(e)) {
+                    return;
                 }
 
-            },
-
-            {
-
-                name: pointerEnter,
-
-                filter() {
-                    return includes(this.mode, 'hover');
-                },
-
-                handler(e) {
-
-                    if (isTouch(e)) {
-                        return;
-                    }
-
-                    if (active
-                        && active !== this
-                        && active.toggle
-                        && includes(active.toggle.mode, 'hover')
-                        && !within(e.target, active.toggle.$el)
-                        && !pointInRect({x: e.pageX, y: e.pageY}, offset(active.$el))
-                    ) {
-                        active.hide(false);
-                    }
-
-                    e.preventDefault();
-                    this.show(this.toggle);
+                if (active
+                    && active !== this
+                    && active.toggle
+                    && includes(active.toggle.mode, 'hover')
+                    && !within(e.target, active.toggle.$el)
+                    && !pointInRect({x: e.pageX, y: e.pageY}, offset(active.$el))
+                ) {
+                    active.hide(false);
                 }
 
-            },
+                e.preventDefault();
+                this.show(this.toggle);
+            }
 
-            {
+        },
 
-                name: 'toggleshow',
+        {
 
-                handler(e, toggle) {
+            name: 'toggleshow',
 
-                    if (toggle && !includes(toggle.target, this.$el)) {
-                        return;
-                    }
+            handler(e, toggle) {
 
-                    e.preventDefault();
-                    this.show(toggle || this.toggle);
+                if (toggle && !includes(toggle.target, this.$el)) {
+                    return;
                 }
 
-            },
+                e.preventDefault();
+                this.show(toggle || this.toggle);
+            }
 
-            {
+        },
 
-                name: `togglehide ${pointerLeave}`,
+        {
 
-                handler(e, toggle) {
+            name: `togglehide ${pointerLeave}`,
 
-                    if (isTouch(e) || toggle && !includes(toggle.target, this.$el)) {
-                        return;
-                    }
+            handler(e, toggle) {
 
-                    e.preventDefault();
-
-                    if (this.toggle && includes(this.toggle.mode, 'hover')) {
-                        this.hide();
-                    }
+                if (isTouch(e) || toggle && !includes(toggle.target, this.$el)) {
+                    return;
                 }
 
-            },
+                e.preventDefault();
 
-            {
-
-                name: 'beforeshow',
-
-                self: true,
-
-                handler() {
-                    this.clearTimers();
-                    this.position();
+                if (this.toggle && includes(this.toggle.mode, 'hover')) {
+                    this.hide();
                 }
+            }
 
-            },
+        },
 
-            {
+        {
 
-                name: 'show',
+            name: 'beforeshow',
 
-                self: true,
+            self: true,
 
-                handler() {
-                    this.tracker.init();
+            handler() {
+                this.clearTimers();
+                Animation.cancel(this.$el);
+                this.position();
+            }
+
+        },
+
+        {
+
+            name: 'show',
+
+            self: true,
+
+            handler() {
+                this.tracker.init();
+                if (this.toggle) {
                     addClass(this.toggle.$el, this.cls);
                     attr(this.toggle.$el, 'aria-expanded', 'true');
-                    registerEvent();
+                }
+                registerEvent();
+            }
+
+        },
+
+        {
+
+            name: 'beforehide',
+
+            self: true,
+
+            handler() {
+                this.clearTimers();
+            }
+
+        },
+
+        {
+
+            name: 'hide',
+
+            handler({target}) {
+
+                if (this.$el !== target) {
+                    active = active === null && within(target, this.$el) && this.isToggled() ? this : active;
+                    return;
                 }
 
-            },
+                active = this.isActive() ? null : active;
 
-            {
-
-                name: 'beforehide',
-
-                self: true,
-
-                handler() {
-                    this.clearTimers();
-                }
-
-            },
-
-            {
-
-                name: 'hide',
-
-                handler({target}) {
-
-                    if (this.$el !== target) {
-                        active = active === null && within(target, this.$el) && this.isToggled() ? this : active;
-                        return;
-                    }
-
-                    active = this.isActive() ? null : active;
+                if (this.toggle) {
                     removeClass(this.toggle.$el, this.cls);
                     attr(this.toggle.$el, 'aria-expanded', 'false');
                     this.toggle.$el.blur();
                     $$('a, button', this.toggle.$el).forEach(el => el.blur());
-                    this.tracker.cancel();
                 }
 
+                this.tracker.cancel();
             }
 
-        ],
+        }
 
-        update: {
+    ],
 
-            write() {
+    update: {
 
-                if (this.isToggled() && !Animation.inProgress(this.$el)) {
-                    this.position();
-                }
+        write() {
 
-            },
-
-            events: ['resize']
+            if (this.isToggled() && !Animation.inProgress(this.$el)) {
+                this.position();
+            }
 
         },
 
-        methods: {
+        events: ['resize']
 
-            show(toggle, delay = true) {
+    },
 
-                const show = () => !this.isToggled() && this.toggleElement(this.$el, true);
-                const tryShow = () => {
+    methods: {
 
-                    this.toggle = toggle || this.toggle;
+        show(toggle, delay = true) {
 
-                    this.clearTimers();
+            const show = () => !this.isToggled() && this.toggleElement(this.$el, true);
+            const tryShow = () => {
 
-                    if (this.isActive()) {
-                        return;
-                    } else if (delay && active && active !== this && active.isDelaying) {
-                        this.showTimer = setTimeout(this.show, 10);
-                        return;
-                    } else if (this.isParentOf(active)) {
-
-                        if (active.hideTimer) {
-                            active.hide(false);
-                        } else {
-                            return;
-                        }
-
-                    } else if (active && !this.isChildOf(active) && !this.isParentOf(active)) {
-
-                        let prev;
-                        while (active && active !== prev && !this.isChildOf(active)) {
-                            prev = active;
-                            active.hide(false);
-                        }
-
-                    }
-
-                    if (delay && this.delayShow) {
-                        this.showTimer = setTimeout(show, this.delayShow);
-                    } else {
-                        show();
-                    }
-
-                    active = this;
-                };
-
-                if (toggle && this.toggle && toggle.$el !== this.toggle.$el) {
-
-                    once(this.$el, 'hide', tryShow);
-                    this.hide(false);
-
-                } else {
-                    tryShow();
-                }
-            },
-
-            hide(delay = true) {
-
-                const hide = () => this.toggleNow(this.$el, false);
+                this.toggle = toggle || this.toggle;
 
                 this.clearTimers();
 
-                this.isDelaying = this.tracker.movesTo(this.$el);
+                if (this.isActive()) {
+                    return;
+                } else if (delay && active && active !== this && active.isDelaying) {
+                    this.showTimer = setTimeout(this.show, 10);
+                    return;
+                } else if (this.isParentOf(active)) {
 
-                if (delay && this.isDelaying) {
-                    this.hideTimer = setTimeout(this.hide, this.hoverIdle);
-                } else if (delay && this.delayHide) {
-                    this.hideTimer = setTimeout(hide, this.delayHide);
+                    if (active.hideTimer) {
+                        active.hide(false);
+                    } else {
+                        return;
+                    }
+
+                } else if (active && !this.isChildOf(active) && !this.isParentOf(active)) {
+
+                    let prev;
+                    while (active && active !== prev && !this.isChildOf(active)) {
+                        prev = active;
+                        active.hide(false);
+                    }
+
+                }
+
+                if (delay && this.delayShow) {
+                    this.showTimer = setTimeout(show, this.delayShow);
                 } else {
-                    hide();
-                }
-            },
-
-            clearTimers() {
-                clearTimeout(this.showTimer);
-                clearTimeout(this.hideTimer);
-                this.showTimer = null;
-                this.hideTimer = null;
-                this.isDelaying = false;
-            },
-
-            isActive() {
-                return active === this;
-            },
-
-            isChildOf(drop) {
-                return drop && drop !== this && within(this.$el, drop.$el);
-            },
-
-            isParentOf(drop) {
-                return drop && drop !== this && within(drop.$el, this.$el);
-            },
-
-            position() {
-
-                removeClasses(this.$el, `${this.clsDrop}-(stack|boundary)`);
-                css(this.$el, {top: '', left: '', display: 'block'});
-                toggleClass(this.$el, `${this.clsDrop}-boundary`, this.boundaryAlign);
-
-                const boundary = offset(this.boundary);
-                const alignTo = this.boundaryAlign ? boundary : offset(this.toggle.$el);
-
-                if (this.align === 'justify') {
-                    const prop = this.getAxis() === 'y' ? 'width' : 'height';
-                    css(this.$el, prop, alignTo[prop]);
-                } else if (this.$el.offsetWidth > Math.max(boundary.right - alignTo.left, alignTo.right - boundary.left)) {
-                    addClass(this.$el, `${this.clsDrop}-stack`);
+                    show();
                 }
 
-                this.positionAt(this.$el, this.boundaryAlign ? this.boundary : this.toggle.$el, this.boundary);
+                active = this;
+            };
 
-                css(this.$el, 'display', '');
+            if (toggle && this.toggle && toggle.$el !== this.toggle.$el) {
 
+                once(this.$el, 'hide', tryShow);
+                this.hide(false);
+
+            } else {
+                tryShow();
             }
+        },
+
+        hide(delay = true) {
+
+            const hide = () => this.toggleNow(this.$el, false);
+
+            this.clearTimers();
+
+            this.isDelaying = this.tracker.movesTo(this.$el);
+
+            if (delay && this.isDelaying) {
+                this.hideTimer = setTimeout(this.hide, this.hoverIdle);
+            } else if (delay && this.delayHide) {
+                this.hideTimer = setTimeout(hide, this.delayHide);
+            } else {
+                hide();
+            }
+        },
+
+        clearTimers() {
+            clearTimeout(this.showTimer);
+            clearTimeout(this.hideTimer);
+            this.showTimer = null;
+            this.hideTimer = null;
+            this.isDelaying = false;
+        },
+
+        isActive() {
+            return active === this;
+        },
+
+        isChildOf(drop) {
+            return drop && drop !== this && within(this.$el, drop.$el);
+        },
+
+        isParentOf(drop) {
+            return drop && drop !== this && within(drop.$el, this.$el);
+        },
+
+        position() {
+
+            removeClasses(this.$el, `${this.clsDrop}-(stack|boundary)`);
+            css(this.$el, {top: '', left: '', display: 'block'});
+            toggleClass(this.$el, `${this.clsDrop}-boundary`, this.boundaryAlign);
+
+            const boundary = offset(this.boundary);
+            const alignTo = this.boundaryAlign ? boundary : offset(this.toggle.$el);
+
+            if (this.align === 'justify') {
+                const prop = this.getAxis() === 'y' ? 'width' : 'height';
+                css(this.$el, prop, alignTo[prop]);
+            } else if (this.$el.offsetWidth > Math.max(boundary.right - alignTo.left, alignTo.right - boundary.left)) {
+                addClass(this.$el, `${this.clsDrop}-stack`);
+            }
+
+            this.positionAt(this.$el, this.boundaryAlign ? this.boundary : this.toggle.$el, this.boundary);
+
+            css(this.$el, 'display', '');
 
         }
 
-    });
+    }
 
-    UIkit.drop.getActive = () => active;
+};
 
-    let registered;
+let registered;
 
-    function registerEvent() {
+function registerEvent() {
 
-        if (registered) {
+    if (registered) {
+        return;
+    }
+
+    registered = true;
+    on(document, 'click', ({target, defaultPrevented}) => {
+        let prev;
+
+        if (defaultPrevented) {
             return;
         }
 
-        registered = true;
-        on(document, 'click', ({target, defaultPrevented}) => {
-            let prev;
-
-            if (defaultPrevented) {
-                return;
-            }
-
-            while (active && active !== prev && !within(target, active.$el) && !(active.toggle && within(target, active.toggle.$el))) {
-                prev = active;
-                active.hide(false);
-            }
-        });
-    }
-
+        while (active && active !== prev && !within(target, active.$el) && !(active.toggle && within(target, active.toggle.$el))) {
+            prev = active;
+            active.hide(false);
+        }
+    });
 }
