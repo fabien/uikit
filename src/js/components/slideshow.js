@@ -30,7 +30,7 @@ export default {
             if (this.ratio === 'auto' || !this.ratio.indexOf(':')) {
                 return {height: false};
             }
-            
+
             let [width, height] = this.ratio.split(':').map(Number);
 
             height = height * this.$el.offsetWidth / width;

@@ -14,7 +14,8 @@ export default {
         easing: String,
         index: Number,
         finite: Boolean,
-        velocity: Number
+        velocity: Number,
+        duration: Number
     },
 
     data: () => ({
@@ -32,7 +33,12 @@ export default {
 
     computed: {
 
-        duration({velocity}, $el) {
+        duration({velocity, duration}, $el) {
+            if (isNumber(duration)) {
+                return duration;
+            } else if (this.animation && isNumber(this.animation.duration)) {
+                return this.animation.duration;
+            }
             return speedUp($el.offsetWidth / velocity);
         },
 
@@ -53,7 +59,7 @@ export default {
         },
 
         slides() {
-            return toNodes(this.list.children);
+            return this.list ? toNodes(this.list.children) : [];
         }
 
     },

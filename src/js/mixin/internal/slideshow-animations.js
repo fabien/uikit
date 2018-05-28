@@ -1,13 +1,13 @@
 import {css} from 'uikit-util';
 
 export default {
-    
+
     none: {
-        
+
         duration: 0,
 
         show() {
-            return [{},{}];
+            return [{}, {}];
         },
 
         percent(current) {
@@ -15,7 +15,7 @@ export default {
         },
 
         translate(percent) {
-            return [{},{}];
+            return [{}, {}];
         }
 
     },

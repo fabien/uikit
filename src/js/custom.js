@@ -1,10 +1,8 @@
-import AnimationsPlugin from './components/internal/slideshow-animations';
-import TransitionerPlugin from './mixin/internal/slideshow-transitioner';
+import Animations from './components/internal/slideshow-animations';
+import Transitioner from './mixin/internal/slideshow-transitioner';
 
 export default function (UIkit) {
-    
     UIkit.plugins = UIkit.plugins || {};
-    UIkit.plugins.Animations = AnimationsPlugin(UIkit);
-    UIkit.plugins.Transitioner = TransitionerPlugin(UIkit);
-
+    UIkit.plugins.Animations = Animations;
+    UIkit.plugins.Transitioner = Transitioner;
 }

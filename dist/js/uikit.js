@@ -583,7 +583,7 @@
         return off;
     }
 
-    function trigger$1(target, event, detail) {
+    function trigger(target, event, detail) {
         return toEventTargets(target).reduce(function (notCanceled, target) { return notCanceled && target.dispatchEvent(createEvent(event, true, true, detail)); }
             , true);
     }
@@ -665,7 +665,7 @@
 
         }, true));
 
-        trigger$1(document, 'touchcancel');
+        trigger(document, 'touchcancel');
 
     }
 
@@ -1328,7 +1328,7 @@
                     }
                 }
 
-                var timer = setTimeout(function () { return trigger$1(element, 'transitionend'); }, duration);
+                var timer = setTimeout(function () { return trigger(element, 'transitionend'); }, duration);
 
                 once(element, 'transitionend transitioncanceled', function (ref) {
                     var type = ref.type;
@@ -1364,12 +1364,12 @@
         start: transition,
 
         stop: function stop(element) {
-            trigger$1(element, 'transitionend');
+            trigger(element, 'transitionend');
             return Promise.resolve();
         },
 
         cancel: function cancel(element) {
-            trigger$1(element, 'transitioncanceled');
+            trigger(element, 'transitioncanceled');
         },
 
         inProgress: function inProgress(element) {
@@ -1471,7 +1471,7 @@
         },
 
         cancel: function cancel(element) {
-            trigger$1(element, 'animationcancel');
+            trigger(element, 'animationcancel');
         }
 
     };
@@ -2168,7 +2168,7 @@
     };
 
     function mergeOptions(parent, child, vm) {
-
+        
         var options = {};
 
         if (isFunction(child)) {
@@ -2473,8 +2473,8 @@
 
                 swipeTimeout = setTimeout(function () {
                     if (touch.el) {
-                        trigger$1(touch.el, 'swipe');
-                        trigger$1(touch.el, ("swipe" + (swipeDirection(touch))));
+                        trigger(touch.el, 'swipe');
+                        trigger(touch.el, ("swipe" + (swipeDirection(touch))));
                     }
                     touch = {};
                 });
@@ -2482,14 +2482,14 @@
             // normal tap
             } else if ('last' in touch) {
 
-                tapTimeout = setTimeout(function () { return trigger$1(touch.el, 'tap'); });
+                tapTimeout = setTimeout(function () { return trigger(touch.el, 'tap'); });
 
                 // trigger single click after 350ms of inactivity
                 if (touch.el && type !== 'mouseup' && within(target, touch.el)) {
                     clickTimeout = setTimeout(function () {
                         clickTimeout = null;
                         if (touch.el && !clicked) {
-                            trigger$1(touch.el, 'click');
+                            trigger(touch.el, 'click');
                         }
                         touch = {};
                     }, 350);
@@ -2585,7 +2585,7 @@
         on: on,
         off: off,
         once: once,
-        trigger: trigger$1,
+        trigger: trigger,
         createEvent: createEvent,
         toEventTargets: toEventTargets,
         preventClick: preventClick,
@@ -2881,14 +2881,14 @@
 
     }
 
-    var AnimationsPlugin = {
-        
+    var Animations = {
+
         none: {
-            
+
             duration: 0,
 
             show: function show() {
-                return [{},{}];
+                return [{}, {}];
             },
 
             percent: function percent(current) {
@@ -2896,7 +2896,7 @@
             },
 
             translate: function translate(percent) {
-                return [{},{}];
+                return [{}, {}];
             }
 
         },
@@ -2940,7 +2940,7 @@
         return ("scale3d(" + value + ", " + value + ", 1)");
     }
 
-    var AnimationsPlugin$1 = assign({}, AnimationsPlugin, {
+    var Animations$1 = assign({}, Animations, {
 
         fade: {
 
@@ -3138,15 +3138,13 @@
     }
 
     function triggerUpdate(el, type, data$$1) {
-        trigger$1(el, createEvent(type, false, false, data$$1));
+        trigger(el, createEvent(type, false, false, data$$1));
     }
 
     function custom (UIkit) {
-        
         UIkit.plugins = UIkit.plugins || {};
-        UIkit.plugins.Animations = AnimationsPlugin$1(UIkit);
-        UIkit.plugins.Transitioner = Transitioner(UIkit);
-
+        UIkit.plugins.Animations = Animations$1;
+        UIkit.plugins.Transitioner = Transitioner;
     }
 
     function globalAPI (UIkit) {
@@ -3963,7 +3961,7 @@
                             ? el.style.height === '0px'
                             : !this.isToggled(el);
 
-                if (!trigger$1(el, ("before" + (show ? 'show' : 'hide')), [this])) {
+                if (!trigger(el, ("before" + (show ? 'show' : 'hide')), [this])) {
                     return Promise.reject();
                 }
 
@@ -3974,10 +3972,10 @@
                         : this._toggleAnimation
                 )(el, show);
 
-                trigger$1(el, show ? 'show' : 'hide', [this]);
+                trigger(el, show ? 'show' : 'hide', [this]);
 
                 return promise.then(function () {
-                    trigger$1(el, show ? 'shown' : 'hidden', [this$1]);
+                    trigger(el, show ? 'shown' : 'hidden', [this$1]);
                     this$1.$update(el);
                 });
             },
@@ -5340,6 +5338,97 @@
             return sum;
         }, []));
     }
+
+    var HeightContent = {
+
+        args: 'target',
+
+        props: {
+            target: String,
+            property: String,
+            minHeight: Number,
+            maxHeight: Number
+        },
+
+        data: {
+            target: '> *',
+            property: 'height',
+            minHeight: 0,
+            maxHeight: 0
+        },
+
+        computed: {
+
+            elements: function elements(ref, $el) {
+                var target = ref.target;
+
+                return $$(target, $el);
+            }
+
+        },
+
+        update: {
+
+            read: function read() {
+                return this.match(this.elements);
+            },
+
+            write: function write(ref) {
+                var height$$1 = ref.height;
+
+                css$1(this.$el, this.property, height$$1);
+            },
+
+            events: ['load', 'resize']
+
+        },
+
+        methods: {
+
+            match: function match(elements) {
+                if (elements.length === 0) {
+                    return {};
+                }
+
+                var heights = [];
+                var maxHeight = this.maxHeight;
+                var minHeight = Math.min(this.minHeight, maxHeight || this.minHeight);
+
+                elements
+                    .forEach(function (el) {
+
+                        var style, hidden;
+
+                        if (!isVisible(el)) {
+                            style = attr(el, 'style');
+                            hidden = attr(el, 'hidden');
+
+                            attr(el, {
+                                style: ((style || '') + ";display:block !important;"),
+                                hidden: null
+                            });
+                        }
+
+                        var height$$1 = el.offsetHeight;
+                        height$$1 = Math.max(minHeight, Math.min(height$$1, maxHeight || height$$1));
+
+                        heights.push(height$$1);
+
+                        if (!isUndefined(style)) {
+                            attr(el, {style: style, hidden: hidden});
+                        }
+
+                    });
+
+                var height$$1 = heights.reduce(function(memo, height$$1) {
+                    return memo + height$$1;
+                }, 0);
+
+                return {height: height$$1};
+            }
+        }
+
+    };
 
     var HeightMatch = {
 
@@ -7111,7 +7200,7 @@
 
                     var active = this.getActive();
                     if (this.mode === 'none' || active && active !== this && active !== this.prev) {
-                        trigger$1(this.panel, 'transitionend');
+                        trigger(this.panel, 'transitionend');
                     }
                 }
             },
@@ -7202,7 +7291,7 @@
 
                 css$1(css$1(this.$el, 'maxHeight', 150), 'maxHeight', Math.max(150, 150 + height(this.modal) - this.panel.offsetHeight));
                 if (current !== css$1(this.$el, 'maxHeight')) {
-                    trigger$1(this.$el, 'resize');
+                    trigger(this.$el, 'resize');
                 }
             },
 
@@ -7266,7 +7355,7 @@
                     target = docHeight - winHeight;
                 }
 
-                if (!trigger$1(this.$el, 'beforescroll', [this, el])) {
+                if (!trigger(this.$el, 'beforescroll', [this, el])) {
                     return;
                 }
 
@@ -7282,7 +7371,7 @@
                     if (currentY !== target) {
                         requestAnimationFrame(step);
                     } else {
-                        trigger$1(this$1.$el, 'scrolled', [this$1, el]);
+                        trigger(this$1.$el, 'scrolled', [this$1, el]);
                     }
 
                 };
@@ -7405,7 +7494,7 @@
                                 addClass(el, this$1.inViewClass);
                                 toggleClass(el, cls);
 
-                                trigger$1(el, 'inview');
+                                trigger(el, 'inview');
 
                                 this$1.$update(el);
 
@@ -7432,7 +7521,7 @@
                             removeClass(el, this$1.inViewClass);
                             toggleClass(el, cls);
 
-                            trigger$1(el, 'outview');
+                            trigger(el, 'outview');
 
                             this$1.$update(el);
 
@@ -7547,7 +7636,7 @@
                     removeClass(this.elements, this.cls);
 
                     if (active) {
-                        trigger$1(this.$el, 'active', [active, addClass(this.closest ? closest(active, this.closest) : active, this.cls)]);
+                        trigger(this.$el, 'active', [active, addClass(this.closest ? closest(active, this.closest) : active, this.cls)]);
                     }
 
                 },
@@ -7809,7 +7898,7 @@
             hide: function hide() {
 
                 if (!this.isActive || hasClass(this.selTarget, this.clsActive)) {
-                    trigger$1(this.$el, 'inactive');
+                    trigger(this.$el, 'inactive');
                 }
 
                 removeClass(this.$el, this.clsFixed, this.clsBelow);
@@ -7836,11 +7925,11 @@
                 if (hasClass(this.selTarget, this.clsActive)) {
 
                     if (!active) {
-                        trigger$1(this.$el, 'inactive');
+                        trigger(this.$el, 'inactive');
                     }
 
                 } else if (active) {
-                    trigger$1(this.$el, 'active');
+                    trigger(this.$el, 'active');
                 }
 
                 toggleClass(this.$el, this.clsBelow, this.scroll > this.bottomOffset);
@@ -8170,7 +8259,7 @@
         methods: {
 
             toggle: function toggle(type) {
-                if (trigger$1(this.target, type || 'toggle', [this])) {
+                if (trigger(this.target, type || 'toggle', [this])) {
                     this.toggleElement(this.target);
                 }
             }
@@ -8190,6 +8279,7 @@
         UIkit.component('formCustom', FormCustom);
         UIkit.component('gif', Gif);
         UIkit.component('grid', Grid);
+        UIkit.component('heightContent', HeightContent);
         UIkit.component('heightMatch', HeightMatch);
         UIkit.component('heightViewport', HeightViewport);
         UIkit.component('icon', Icon);
@@ -8662,7 +8752,7 @@
 
                 state = assign({filter: {'': ''}, sort: []}, state);
 
-                trigger$1(this.$el, 'beforeFilter', [this, state]);
+                trigger(this.$el, 'beforeFilter', [this, state]);
 
                 var children = toNodes(this.target.children);
 
@@ -8688,10 +8778,10 @@
                 };
 
                 if (animate$$1) {
-                    this.animate(apply$$1).then(function () { return trigger$1(this$1.$el, 'afterFilter', [this$1]); });
+                    this.animate(apply$$1).then(function () { return trigger(this$1.$el, 'afterFilter', [this$1]); });
                 } else {
                     apply$$1();
-                    trigger$1(this.$el, 'afterFilter', [this]);
+                    trigger(this.$el, 'afterFilter', [this]);
                 }
 
             }
@@ -8772,7 +8862,7 @@
         return toNodes(nodes).sort(function (a, b) { return data(a, sort).localeCompare(data(b, sort)) * (order === 'asc' || -1); });
     }
 
-    var Animations = assign({}, AnimationsPlugin, {
+    var Animations$2 = assign({}, Animations, {
 
         fade: {
 
@@ -8926,7 +9016,12 @@
 
     var SliderDrag = {
 
+        props: {
+            draggable: Boolean
+        },
+
         data: {
+            draggable: true,
             threshold: 10,
             preventCatch: false
         },
@@ -8963,6 +9058,7 @@
                 },
 
                 handler: function handler(e) {
+                    if (!this.draggable) { return; }
 
                     if (!isTouch(e) && hasTextNodesOnly(e.target)
                         || e.button > 0
@@ -9032,11 +9128,14 @@
 
                 var ref = this;
                 var slides = ref.slides;
+
+                if (slides.length === 0) { return; }
+
                 var ref$1 = this;
                 var prevIndex = ref$1.prevIndex;
                 var dis = Math.abs(distance);
                 var nextIndex = this.getIndex(prevIndex + this.dir, prevIndex);
-                var width$$1 = this._getDistance(prevIndex, nextIndex) || slides[prevIndex].offsetWidth;
+                var width$$1 = this._getDistance(prevIndex, nextIndex) || slides[prevIndex ? prevIndex : 0].offsetWidth;
 
                 while (nextIndex !== prevIndex && dis > width$$1) {
 
@@ -9045,7 +9144,7 @@
                     prevIndex = nextIndex;
                     dis -= width$$1;
                     nextIndex = this$1.getIndex(prevIndex + this$1.dir, prevIndex);
-                    width$$1 = this$1._getDistance(prevIndex, nextIndex) || slides[prevIndex].offsetWidth;
+                    width$$1 = this$1._getDistance(prevIndex, nextIndex) || slides[prevIndex ? prevIndex : 0].offsetWidth;
 
                 }
 
@@ -9059,7 +9158,7 @@
                 var itemShown;
 
                 [this.index, this.prevIndex].filter(function (i) { return !includes([nextIndex, prevIndex], i); }).forEach(function (i) {
-                    trigger$1(slides[i], 'itemhidden', [this$1]);
+                    trigger(slides[i], 'itemhidden', [this$1]);
 
                     if (edge) {
                         itemShown = true;
@@ -9069,22 +9168,22 @@
                 });
 
                 if (this.index === prevIndex && this.prevIndex !== prevIndex || itemShown) {
-                    trigger$1(slides[this.index], 'itemshown', [this]);
+                    trigger(slides[this.index], 'itemshown', [this]);
                 }
 
                 if (changed) {
                     this.prevIndex = prevIndex;
                     this.index = nextIndex;
 
-                    !edge && trigger$1(prev, 'beforeitemhide', [this]);
-                    trigger$1(next, 'beforeitemshow', [this]);
+                    !edge && trigger(prev, 'beforeitemhide', [this]);
+                    trigger(next, 'beforeitemshow', [this]);
                 }
 
                 this._transitioner = this._translate(Math.abs(this.percent), prev, !edge && next);
 
                 if (changed) {
-                    !edge && trigger$1(prev, 'itemhide', [this]);
-                    trigger$1(next, 'itemshow', [this]);
+                    !edge && trigger(prev, 'itemhide', [this]);
+                    trigger(next, 'itemshow', [this]);
                 }
 
             },
@@ -9243,7 +9342,8 @@
             easing: String,
             index: Number,
             finite: Boolean,
-            velocity: Number
+            velocity: Number,
+            duration: Number
         },
 
         data: function () { return ({
@@ -9263,7 +9363,13 @@
 
             duration: function duration(ref, $el) {
                 var velocity = ref.velocity;
+                var duration = ref.duration;
 
+                if (isNumber(duration)) {
+                    return duration;
+                } else if (this.animation && isNumber(this.animation.duration)) {
+                    return this.animation.duration;
+                }
                 return speedUp($el.offsetWidth / velocity);
             },
 
@@ -9288,7 +9394,7 @@
             },
 
             slides: function slides() {
-                return toNodes(this.list.children);
+                return this.list ? toNodes(this.list.children) : [];
             }
 
         },
@@ -9348,8 +9454,8 @@
                 this.prevIndex = prevIndex;
                 this.index = nextIndex;
 
-                prev && trigger$1(prev, 'beforeitemhide', [this]);
-                if (!trigger$1(next, 'beforeitemshow', [this, prev])) {
+                prev && trigger(prev, 'beforeitemhide', [this]);
+                if (!trigger(next, 'beforeitemshow', [this, prev])) {
                     this.index = this.prevIndex;
                     reset();
                     return;
@@ -9357,8 +9463,8 @@
 
                 var promise = this._show(prev, next, force).then(function () {
 
-                    prev && trigger$1(prev, 'itemhidden', [this$1]);
-                    trigger$1(next, 'itemshown', [this$1]);
+                    prev && trigger(prev, 'itemhidden', [this$1]);
+                    trigger(next, 'itemshown', [this$1]);
 
                     return new Promise(function (resolve) {
                         fastdom.write(function () {
@@ -9374,8 +9480,8 @@
 
                 });
 
-                prev && trigger$1(prev, 'itemhide', [this]);
-                trigger$1(next, 'itemshow', [this]);
+                prev && trigger(prev, 'itemhide', [this]);
+                trigger(next, 'itemshow', [this]);
 
                 return promise;
 
@@ -9477,7 +9583,7 @@
         data: {
             animation: 'slide',
             clsActivated: 'uk-transition-active',
-            Animations: AnimationsPlugin,
+            Animations: Animations,
             Transitioner: Transitioner
         },
 
@@ -9485,9 +9591,9 @@
 
             animation: function animation(ref) {
                 var animation = ref.animation;
-                var Animations = ref.Animations;
+                var Animations$$1 = ref.Animations;
 
-                return assign(animation in Animations ? Animations[animation] : Animations.slide, {name: animation});
+                return assign(animation in Animations$$1 ? Animations$$1[animation] : Animations$$1.slide, {name: animation});
             },
 
             transitionOptions: function transitionOptions() {
@@ -9555,7 +9661,7 @@
             selClose: '.uk-close-large',
             pauseOnHover: false,
             velocity: 2,
-            Animations: Animations,
+            Animations: Animations$2,
             template: "<div class=\"uk-lightbox uk-overflow-hidden\"> <ul class=\"uk-lightbox-items\"></ul> <div class=\"uk-lightbox-toolbar uk-position-top uk-text-right uk-transition-slide-top uk-transition-opaque\"> <button class=\"uk-lightbox-toolbar-icon uk-close-large\" type=\"button\" uk-close></button> </div> <a class=\"uk-lightbox-button uk-position-center-left uk-position-medium uk-transition-fade\" href=\"#\" uk-slidenav-previous uk-lightbox-item=\"previous\"></a> <a class=\"uk-lightbox-button uk-position-center-right uk-position-medium uk-transition-fade\" href=\"#\" uk-slidenav-next uk-lightbox-item=\"next\"></a> <div class=\"uk-lightbox-toolbar uk-lightbox-caption uk-position-bottom uk-text-center uk-transition-slide-bottom uk-transition-opaque\"></div> </div>"
         }); },
 
@@ -9662,7 +9768,7 @@
 
                     this.toggleNow(this.$el, true);
 
-                    this.animation = Animations['scale'];
+                    this.animation = Animations$2['scale'];
                     removeClass(e.target, this.clsActive);
                     this.stack.splice(1, 0, this.index);
 
@@ -9819,7 +9925,7 @@
                     return;
                 }
 
-                trigger$1(this.$el, 'itemload', [item]);
+                trigger(this.$el, 'itemload', [item]);
             },
 
             getItem: function getItem(index$$1) {
@@ -9831,7 +9937,7 @@
             setItem: function setItem(item, content) {
                 assign(item, {content: content});
                 var el = html(this.slides[this.items.indexOf(item)], content);
-                trigger$1(this.$el, 'itemloaded', [this, el]);
+                trigger(this.$el, 'itemloaded', [this, el]);
                 this.$update(el);
             },
 
@@ -10049,7 +10155,7 @@
 
                 var removeFn = function () {
 
-                    trigger$1(this$1.$el, 'close', [this$1]);
+                    trigger(this$1.$el, 'close', [this$1]);
                     remove(this$1.$el);
 
                     if (!containers[this$1.pos].children.length) {
@@ -10692,7 +10798,7 @@
     }
 
     function triggerUpdate$1(el, type, data$$1) {
-        trigger$1(el, createEvent(type, false, false, data$$1));
+        trigger(el, createEvent(type, false, false, data$$1));
     }
 
     function slides(list) {
@@ -11096,7 +11202,7 @@
             selList: '.uk-slideshow-items',
             attrItem: 'uk-slideshow-item',
             selNav: '.uk-slideshow-nav',
-            Animations: AnimationsPlugin$1
+            Animations: Animations$1
         },
 
         update: {
@@ -11105,7 +11211,7 @@
                 if (this.ratio === 'auto' || !this.ratio.indexOf(':')) {
                     return {height: false};
                 }
-                
+
                 var ref = this.ratio.split(':').map(Number);
                 var width$$1 = ref[0];
                 var height$$1 = ref[1];
@@ -11281,7 +11387,7 @@
                 addClass(this.$el.children, this.clsItem);
                 addClass(document.documentElement, this.clsDragState);
 
-                trigger$1(this.$el, 'start', [this, this.placeholder]);
+                trigger(this.$el, 'start', [this, this.placeholder]);
 
                 this.move(e);
             },
@@ -11355,14 +11461,14 @@
 
                 if (this === sortable) {
                     if (this.origin.index !== index(this.placeholder)) {
-                        trigger$1(this.$el, 'moved', [this, this.placeholder]);
+                        trigger(this.$el, 'moved', [this, this.placeholder]);
                     }
                 } else {
-                    trigger$1(sortable.$el, 'added', [sortable, this.placeholder]);
-                    trigger$1(this.$el, 'removed', [this, this.placeholder]);
+                    trigger(sortable.$el, 'added', [sortable, this.placeholder]);
+                    trigger(this.$el, 'removed', [this, this.placeholder]);
                 }
 
-                trigger$1(this.$el, 'stop', [this, this.placeholder]);
+                trigger(this.$el, 'stop', [this, this.placeholder]);
 
                 remove(this.drag);
                 this.drag = null;
@@ -11645,7 +11751,7 @@
                     return;
                 }
 
-                trigger$1(this.$el, 'upload', [files]);
+                trigger(this.$el, 'upload', [files]);
 
                 for (var i = 0; i < files.length; i++) {
 
@@ -11743,477 +11849,438 @@
         e.stopPropagation();
     }
 
-    function plugin(UIkit) {
+    var AttributesObserver = {
 
-        if (plugin.installed) {
-            return;
+        props: {
+            observeAttributes: Boolean
+        },
+
+        data: {
+            observeAttributes: false
+        },
+
+        init: function init() {
+            var this$1 = this;
+
+            if (!this.$props.observeAttributes) { return; }
+            var observedAttrs = [].concat(this.$options.observedAttrs || []);
+            on(this.$el, 'attributechanged', function (event, attributeName) {
+                if (event.target === this$1.$el &&
+                    (observedAttrs.length === 0 || observedAttrs.indexOf(attributeName) > -1)) {
+                    var handlers = [].concat(this$1.$options.attributeChanged || []);
+                    handlers.forEach(function (handler) {
+                        var value = this$1.$props[attributeName];
+                        value = isUndefined(value) ? attr(event.target, attributeName) : value;
+                        return handler.call(this$1, attributeName, value);
+                    });
+                }
+            });
         }
 
-        var ref = UIkit.util;
-        var $ = ref.$;
-        var $$ = ref.$$;
-        var assign = ref.assign;
-        var clamp = ref.clamp;
-        var fastdom = ref.fastdom;
-        var getIndex = ref.getIndex;
-        var remove = ref.remove;
-        var addClass = ref.addClass;
-        var removeClass = ref.removeClass;
-        var hasClass = ref.hasClass;
-        var toggleClass = ref.toggleClass;
-        var attr = ref.attr;
-        var hasAttr = ref.hasAttr;
-        var isNumber = ref.isNumber;
-        var isRtl = ref.isRtl;
-        var Promise = ref.Promise;
-        var toNodes = ref.toNodes;
-        var trigger = ref.trigger;
-        var getImage = ref.getImage;
+    };
 
-        UIkit.mixin.viewControl = {
+    var ViewControl = {
 
-            attrs: true,
+        attrs: true,
 
-            props: {
-                retain: Boolean,
-                clsActivated: Boolean,
-                clsEmpty: String,
-                queue: Boolean,
-                easing: String,
-                velocity: Number,
-                direction: Number,
-                duration: Number
+        props: {
+            retain: Boolean,
+            clsActivated: Boolean,
+            clsEmpty: String,
+            queue: Boolean,
+            easing: String,
+            velocity: Number,
+            direction: Number,
+            duration: Number
+        },
+
+        data: {
+            retain: false,
+            easing: 'ease',
+            velocity: 1,
+            direction: 1,
+            stack: [],
+            queue: false,
+            promises: [],
+            percent: 0,
+            clsActive: 'uk-active',
+            clsEmpty: 'uk-empty',
+            clsActivated: false,
+            Transitioner: false,
+            transitionOptions: {}
+        },
+
+        computed: {
+
+            duration: function duration(ref, $el) {
+                var velocity = ref.velocity;
+                var duration = ref.duration;
+
+                if (isNumber(duration)) {
+                    return duration;
+                } else if (this.animation && isNumber(this.animation.duration)) {
+                    return this.animation.duration;
+                }
+                return speedUp$1($el.offsetWidth / velocity);
             },
 
-            defaults: {
-                retain: false,
-                easing: 'ease',
-                velocity: 1,
-                direction: 1,
-                stack: [],
-                queue: false,
-                promises: [],
-                percent: 0,
-                clsActive: 'uk-active',
-                clsEmpty: 'uk-empty',
-                clsActivated: false,
-                Transitioner: false,
-                transitionOptions: {}
+            promise: function promise() {
+                return Promise.all(this.promises);
             },
 
-            computed: {
+            isTransitioning: function isTransitioning() {
+                return this.promises.length > 1;
+            },
 
-                duration: function duration(ref, $el) {
-                    var velocity = ref.velocity;
-                    var duration = ref.duration;
+            isStacking: function isStacking() {
+                return this.stack.length > 1;
+            },
 
-                    if (isNumber(duration)) {
-                        return duration;
-                    } else if (this.animation && isNumber(this.animation.duration)) {
-                        return this.animation.duration;
+            isEmpty: function isEmpty() {
+                return this.views.length === 0 ||
+                    (this.views.length === 1 && hasClass(this.views[0], 'uk-empty-placeholder'));
+            },
+
+            views: function views() {
+                return toNodes(this.$el.children);
+            }
+
+        },
+
+        ready: function ready$$1() {
+            if (this._pending) {
+                this._pending();
+            } else if (this.views[0]) {
+                this.show(this.views[0], this.direction);
+            }
+        },
+
+        update: {
+
+            write: function write() {
+                if (this.clsEmpty) { toggleClass(this.$el, this.clsEmpty, this.isEmpty); }
+            }
+
+        },
+
+        methods: {
+
+            show: function show(elem, direction, force, defer) {
+                var this$1 = this;
+                if ( direction === void 0 ) direction = this.direction;
+                if ( force === void 0 ) force = false;
+                if ( defer === void 0 ) defer = false;
+
+                elem = !elem ? $('<div class="uk-empty-placeholder"></div>') : $(elem);
+
+                if (!elem) { return Promise.reject(); }
+
+                if (!this._isReady) {
+                    return new Promise(function (resolve, reject) {
+                        this$1._pending = function() {
+                            delete this._pending;
+                            return this.show(elem, direction, force, defer).then(resolve, reject);
+                        };
+                    });
+                }
+
+                var ref = this;
+                var stack = ref.stack;
+                var queueIndex = force ? 0 : stack.length;
+                var reset = function (resolve) {
+                    stack.splice(queueIndex, 1);
+                    if (stack.length) {
+                        this$1.show(stack.shift(), direction, true);
                     }
-                    return speedUp$1($el.offsetWidth / velocity);
-                },
-                
-                promise: function promise() {
+                    return resolve ? Promise.resolve() : Promise.reject();
+                };
+
+                if (this.queue) { stack[force ? 'unshift' : 'push'](elem); }
+
+                if (!force && stack.length > 1) {
+                    if (stack.length === 2) {
+                        this.promises.push(this._transitioner.forward(Math.min(this.duration, 200)));
+                    }
                     return Promise.all(this.promises);
-                },
-                
-                isTransitioning: function isTransitioning() {
-                    return this.promises.length > 1;
-                },
-                
-                isStacking: function isStacking() {
-                    return this.stack.length > 1;
-                },
-                
-                isEmpty: function isEmpty() {
-                    return this.views.length === 0 ||
-                        (this.views.length === 1 && hasClass(this.views[0], 'uk-empty-placeholder'));
-                },
-                
-                views: function views() {
-                    return toNodes(this.$el.children);
                 }
 
-            },
-            
-            ready: function() {
-                if (this._pending) {
-                    this._pending();
-                } else if (this.views[0]) {
-                    this.show(this.views[0], this.direction);
-                }
-            },
-            
-            update: {
+                var prev = this.current;
+                var next = elem;
+                var last = null;
 
-                write: function write() {
-                    if (this.clsEmpty) { toggleClass(this.$el, this.clsEmpty, this.isEmpty); }
-                }
+                if (prev === next) { return reset(true); }
 
-            },
+                return this._preload(next).then(function () {
 
-            methods: {
+                    this$1.prev = prev;
+                    this$1.current = next;
 
-                show: function show(elem, direction, force, defer) {
-                    var this$1 = this;
-                    if ( direction === void 0 ) direction = this.direction;
-                    if ( force === void 0 ) force = false;
-                    if ( defer === void 0 ) defer = false;
+                    this$1.$el.appendChild(next);
 
-                    elem = !elem ? $('<div class="uk-empty-placeholder"></div>') : $(elem);
-                    
-                    if (!elem) { return Promise.reject(); }
-                    
-                    if (!this._isReady) {
-                        return new Promise(function (resolve, reject) {
-                            this$1._pending = function() {
-                                delete this._pending;
-                                return this.show(elem, direction, force, defer).then(resolve, reject);
-                            };
+                    var transitionOptions = assign({}, this$1.transitionOptions);
+
+                    function _show(done) {
+                        var this$1 = this;
+
+                        var preventHide = prev ? !trigger(prev, 'beforeitemhide', [this]) : false;
+                        if (preventHide || !trigger(next, 'beforeitemshow', [this])) {
+                            this.current = this.prev;
+                            this.removeItem(next, true);
+                            return defer ? reset : reset();
+                        }
+
+                        trigger(this.$el, 'transition', [this, next, prev]);
+
+                        var _done = function () {
+                            var index$$1 = this$1.promises.indexOf(promise);
+                            if (index$$1 > -1) { this$1.promises.splice(index$$1, 1); }
+                            trigger(this$1.$el, 'transitioned', [this$1, next, prev]);
+                        };
+
+                        var promise = this._show(prev, next, direction, force, transitionOptions).then(function () {
+
+                            prev && trigger(prev, 'itemhidden', [this$1]);
+                            trigger(next, 'itemshown', [this$1]);
+
+                            return new Promise(function (resolve) {
+                                fastdom.write(function () {
+                                    last = stack.shift();
+                                    if (stack.length) {
+                                        this$1.show(stack.shift(), direction, true);
+                                    } else {
+                                        this$1._transitioner = null;
+                                    }
+                                    resolve();
+                                });
+                            });
+
+                        }, _done).then(_done);
+
+                        this.promises.push(promise);
+
+                        prev && trigger(prev, 'itemhide', [this]);
+                        trigger(next, 'itemshow', [this]);
+
+                        return Promise.all(this.promises).then(function() {
+                            if (typeof done === 'function') {
+                                return done(last || next);
+                            }
+                            return last || next;
                         });
                     }
 
-                    var ref = this;
-                    var stack = ref.stack;
-                    var queueIndex = force ? 0 : stack.length;
-                    var reset = function (resolve) {
-                        stack.splice(queueIndex, 1);
-                        if (stack.length) {
-                            this$1.show(stack.shift(), direction, true);
-                        }
-                        return resolve ? Promise.resolve() : Promise.reject();
-                    };
+                    return defer ? _show.bind(this$1) : _show.call(this$1);
+                });
+            },
 
-                    if (this.queue) { stack[force ? 'unshift' : 'push'](elem); }
-                    
-                    if (!force && stack.length > 1) {
-                        if (stack.length === 2) {
-                            this.promises.push(this._transitioner.forward(Math.min(this.duration, 200)));
-                        }
-                        return Promise.all(this.promises);
-                    }
-                    
-                    var prev = this.current;
-                    var next = elem;
-                    var last = null;
-                    
-                    if (prev === next) { return reset(true); }
-                    
-                    return this._preload(next).then(function () {
-                    
-                        this$1.prev = prev;
-                        this$1.current = next;
-                        
-                        this$1.$el.appendChild(next);
-                        
-                        var transitionOptions = assign({}, this$1.transitionOptions);
-                        
-                        function _show(done) {
-                            var this$1 = this;
+            isRetained: function isRetained(target) {
+                return this.retain || hasAttr(target, 'data-retain');
+            },
 
-                            var preventHide = prev ? !trigger(prev, 'beforeitemhide', [this]) : false;
-                            if (preventHide || !trigger(next, 'beforeitemshow', [this])) {
-                                this.current = this.prev;
-                                this.removeItem(next, true);
-                                return defer ? reset : reset();
-                            }
-                            
-                            trigger(this.$el, 'transition', [this, next, prev]);
-                            
-                            var _done = function () {
-                                var index = this$1.promises.indexOf(promise);
-                                if (index > -1) { this$1.promises.splice(index, 1); }
-                                trigger(this$1.$el, 'transitioned', [this$1, next, prev]);
-                            };
-                            
-                            var promise = this._show(prev, next, direction, force, transitionOptions).then(function () {
+            removeItem: function removeItem(target, force) {
+                if (this.views.indexOf(target) === -1 && !force) { return; }
+                if (this.isRetained(target)) {
+                    removeClass(target, this.clsActive, this.clsActivated);
+                    trigger(target, 'retain', [this, attr(target, 'data-retain')]);
+                } else {
+                    remove(target);
+                }
+            },
 
-                                prev && trigger(prev, 'itemhidden', [this$1]);
-                                trigger(next, 'itemshown', [this$1]);
+            _show: function _show(prev, next, direction, force, transitionOptions) {
+                var options = {
+                    direction: direction,
+                    duration: this.duration,
+                    percent: this.percent,
+                    easing: this.easing
+                };
 
-                                return new Promise(function (resolve) {
-                                    fastdom.write(function () {
-                                        last = stack.shift();
-                                        if (stack.length) {
-                                            this$1.show(stack.shift(), direction, true);
-                                        } else {
-                                            this$1._transitioner = null;
-                                        }
-                                        resolve();
-                                    });
-                                });
+                trigger(this.$el, 'createtransition', [this, next, prev, options]);
 
-                            }, _done).then(_done);
-                            
-                            this.promises.push(promise);
+                this._transitioner = new this.Transitioner(
+                    prev,
+                    next,
+                    options.direction,
+                    assign({
+                        easing: force
+                            ? next.offsetWidth < 600
+                                ? 'cubic-bezier(0.25, 0.46, 0.45, 0.94)' /* easeOutQuad */
+                                : 'cubic-bezier(0.165, 0.84, 0.44, 1)' /* easeOutQuart */
+                            : options.easing
+                    }, transitionOptions || this.transitionOptions)
+                );
 
-                            prev && trigger(prev, 'itemhide', [this]);
-                            trigger(next, 'itemshow', [this]);
-                            
-                            return Promise.all(this.promises).then(function() {
-                                if (typeof done === 'function') {
-                                    return done(last || next);
-                                }
-                                return last || next;
-                            });
-                        }                    
-                        return defer ? _show.bind(this$1) : _show.call(this$1);
-                    });
-                },
-                
-                isRetained: function isRetained(target) {
-                    return this.retain || hasAttr(target, 'data-retain');
-                },
-                
-                removeItem: function removeItem(target, force) {
-                    if (this.views.indexOf(target) === -1 && !force) { return; }
-                    if (this.isRetained(target)) {
-                        removeClass(target, this.clsActive, this.clsActivated);
-                        trigger(target, 'retain', [this, attr(target, 'data-retain')]);
-                    } else {
-                        remove(target);
-                    }
-                },
-                
-                _show: function _show(prev, next, direction, force, transitionOptions) {
-                    var options = {
-                        direction: direction,
-                        duration: this.duration,
-                        percent: this.percent,
-                        easing: this.easing
-                    };
-                    
-                    trigger(this.$el, 'createtransition', [this, next, prev, options]);
-                    
-                    this._transitioner = new this.Transitioner(
-                        prev,
-                        next,
-                        options.direction,
-                        assign({
-                            easing: force
-                                ? next.offsetWidth < 600
-                                    ? 'cubic-bezier(0.25, 0.46, 0.45, 0.94)' /* easeOutQuad */
-                                    : 'cubic-bezier(0.165, 0.84, 0.44, 1)' /* easeOutQuart */
-                                : options.easing
-                        }, transitionOptions || this.transitionOptions)
-                    );
-
-                    if (!force && !prev) {
-                        this._transitioner.translate(1);
-                        return Promise.resolve();
-                    }
-                    
-                    return this._transitioner.show(options.duration, options.percent);
-                },
-                
-                _preload: function(elem) {
-                    var promises = $$('img', elem).map(function(img) {
-                        return getImage(img.src);
-                    });
-                    return new Promise(function (resolve) {
-                        Promise.all(promises).then(resolve, resolve);
-                    });
+                if (!force && !prev) {
+                    this._transitioner.translate(1);
+                    return Promise.resolve();
                 }
 
+                return this._transitioner.show(options.duration, options.percent);
+            },
+
+            _preload: function _preload(elem) {
+                var promises = $$('img', elem).map(function(img) {
+                    return getImage(img.src);
+                });
+                return new Promise(function (resolve) {
+                    Promise.all(promises).then(resolve, resolve);
+                });
             }
 
-        };
+        }
 
-    }
+    };
 
     function speedUp$1(x) {
         return .5 * x + 300; // parabola through (400,500; 600,600; 1800,1200)
     }
 
-    function plugin$1(UIkit) {
-
-        if (plugin$1.installed) {
-            return;
-        }
-
-        UIkit.use(plugin);
-
-        var mixin = UIkit.mixin;
-        var UIkit_util = UIkit.util;
-        var addClass = UIkit_util.addClass;
-        var assign = UIkit_util.assign;
-        var fastdom = UIkit_util.fastdom;
-        var attr = UIkit_util.attr;
-        var isNumber = UIkit_util.isNumber;
-        var remove = UIkit_util.remove;
-        var removeClass = UIkit_util.removeClass;
-        var trigger = UIkit_util.trigger;
-
-        var Animations = AnimationsPlugin(UIkit);
-        var Transitioner$$1 = Transitioner(UIkit);
-
-        UIkit.mixin.view = {
-
-            mixins: [mixin.viewControl],
-
-            props: {
-                animation: String
-            },
-
-            defaults: {
-                animation: 'fade',
-                clsActivated: 'uk-transition-active',
-                Animations: Animations,
-                Transitioner: Transitioner$$1
-            },
-
-            computed: {
-
-                animation: function animation(ref) {
-                    var animation = ref.animation;
-                    var Animations = ref.Animations;
-
-                    return assign(animation in Animations ? Animations[animation] : Animations.fade, {name: animation});
-                },
-
-                transitionOptions: function transitionOptions() {
-                    return {animation: this.animation};
-                }
-
-            },
-            
-            events: {
-
-                'itemshow itemhide itemshown itemhidden': function itemshowitemhideitemshownitemhidden(ref) {
-                    var target = ref.target;
-
-                    if (this.views.indexOf(target) === -1) { return; }
-                    UIkit.update(null, target);
-                },
-                
-                beforeitemshow: function beforeitemshow(ref) {
-                    var target = ref.target;
-
-                    addClass(target, this.clsActive);
-                },
-
-                itemshown: function itemshown(ref) {
-                    var target = ref.target;
-
-                    if (this.views.indexOf(target) === -1) { return; }
-                    addClass(target, this.clsActivated);
-                },
-
-                itemhidden: function itemhidden(ref) {
-                    var target = ref.target;
-
-                    this.removeItem(target);
-                }
-
-            }
-
-        };
-
-    }
-
-    function plugin$2(UIkit) {
-
-        if (plugin$2.installed) {
-            return;
-        }
-
-        UIkit.use(plugin$1);
-
-        var mixin = UIkit.mixin;
-        var trigger = UIkit.util.trigger;
-
-        var Animations = AnimationsPlugin$1(UIkit);
+    var View = {
         
-        UIkit.component('view', {
+        mixins: [ViewControl],
 
-            mixins: [mixin.class, mixin.view, mixin.attributesObserver],
-            
-            observedAttrs: 'view',
-            
-            defaults: {
-                Animations: Animations
+        props: {
+            animation: String
+        },
+
+        data: {
+            animation: 'fade',
+            clsActivated: 'uk-transition-active',
+            Animations: Animations,
+            Transitioner: Transitioner
+        },
+
+        computed: {
+
+            animation: function animation(ref) {
+                var animation = ref.animation;
+                var Animations$$1 = ref.Animations;
+
+                return assign(animation in Animations$$1 ? Animations$$1[animation] : Animations$$1.fade, {name: animation});
             },
-            
-            attributeChanged: function attributeChanged(attributeName, value) {
-                if (attributeName === 'view') {
-                    trigger(this.$el, 'switchview', [this, value]);
-                }
+
+            transitionOptions: function transitionOptions() {
+                return {animation: this.animation};
             }
 
-        });
+        },
 
-    }
+        events: {
 
-    function plugin$3(UIkit) {
+            'itemshow itemhide itemshown itemhidden': function itemshowitemhideitemshownitemhidden(ref) {
+                var target = ref.target;
 
-        if (plugin$3.installed) {
-            return;
+                if (this.views.indexOf(target) === -1) { return; }
+                this.$update(target);
+            },
+
+            beforeitemshow: function beforeitemshow(ref) {
+                var target = ref.target;
+
+                addClass(target, this.clsActive);
+            },
+
+            itemshown: function itemshown(ref) {
+                var target = ref.target;
+
+                if (this.views.indexOf(target) === -1) { return; }
+                addClass(target, this.clsActivated);
+            },
+
+            itemhidden: function itemhidden(ref) {
+                var target = ref.target;
+
+                this.removeItem(target);
+            }
+
         }
 
-        var mixin = UIkit.mixin;
-        var UIkit_util = UIkit.util;
-        var height = UIkit_util.height;
-        var css = UIkit_util.css;
-
-        UIkit.component('ratio', {
-
-            mixins: [mixin.class],
-            
-            props: {
-                ratio: String,
-                minHeight: Boolean,
-                maxHeight: Boolean,
-            },
-
-            defaults: {
-                ratio: '1:1',
-                minHeight: false,
-                maxHeight: false
-            },
-
-            update: [{
-                
-                read: function read() {
-                    if (this.ratio === 'auto' || !this.ratio.indexOf(':')) {
-                        return {height: false};
-                    }
-                    
-                    var ref = this.ratio.split(':').map(Number);
-                    var width = ref[0];
-                    var height = ref[1];
-
-                    height = height * this.$el.offsetWidth / width;
-
-                    if (this.minHeight) {
-                        height = Math.max(this.minHeight, height);
-                    }
-
-                    if (this.maxHeight) {
-                        height = Math.min(this.maxHeight, height);
-                    }
-
-                    return {height: height};
-                },
-
-                write: function write(ref) {
-                    var hgt = ref.height;
-
-                    if (hgt === false) {
-                        css(this.$el, 'height', '100%');
-                    } else {
-                        height(this.$el, Math.floor(hgt));
-                    }
-                },
-
-                events: ['load', 'resize']
-
-            }]
-
-        });
-
     }
+
+    var mixin = {
+        class: Class,
+        container: Container,
+        modal: Modal,
+        position: Position,
+        togglable:  Togglable,
+        attributesObserver: AttributesObserver,
+        view: View,
+        viewControl: ViewControl
+    }
+
+    var View$1 = {
+
+        mixins: [mixin.class, mixin.view, mixin.attributesObserver],
+
+        observedAttrs: 'view',
+
+        data: {
+            Animations: Animations$1
+        },
+
+        attributeChanged: function attributeChanged(attributeName, value) {
+            if (attributeName === 'view') {
+                trigger(this.$el, 'switchview', [this, value]);
+            }
+        }
+
+    };
+
+    var Ratio = {
+
+        mixins: [mixin.class],
+
+        props: {
+            ratio: String,
+            minHeight: Boolean,
+            maxHeight: Boolean,
+        },
+
+        data: {
+            ratio: '1:1',
+            minHeight: false,
+            maxHeight: false
+        },
+
+        update: [{
+
+            read: function read() {
+                if (this.ratio === 'auto' || !this.ratio.indexOf(':')) {
+                    return {height: false};
+                }
+
+                var ref = this.ratio.split(':').map(Number);
+                var width$$1 = ref[0];
+                var height$$1 = ref[1];
+
+                height$$1 = height$$1 * this.$el.offsetWidth / width$$1;
+
+                if (this.minHeight) {
+                    height$$1 = Math.max(this.minHeight, height$$1);
+                }
+
+                if (this.maxHeight) {
+                    height$$1 = Math.min(this.maxHeight, height$$1);
+                }
+
+                return {height: height$$1};
+            },
+
+            write: function write(ref) {
+                var hgt = ref.height;
+
+                if (hgt === false) {
+                    css$1(this.$el, 'height', '100%');
+                } else {
+                    height(this.$el, Math.floor(hgt));
+                }
+            },
+
+            events: ['load', 'resize']
+
+        }]
+
+    };
 
     UIkit.component('countdown', Countdown);
     UIkit.component('filter', Filter);
@@ -12228,8 +12295,8 @@
     UIkit.component('sortable', Sortable);
     UIkit.component('tooltip', Tooltip);
     UIkit.component('upload', Upload);
-    UIkit.component('ratio', plugin$3);
-    UIkit.component('view', plugin$2);
+    UIkit.component('ratio', Ratio);
+    UIkit.component('view', View$1);
 
     {
         custom(UIkit);

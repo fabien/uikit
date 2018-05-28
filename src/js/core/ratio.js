@@ -1,28 +1,29 @@
-const {mixin, util: {height, css}} = UIkit;
+import {height, css} from 'uikit-util';
+import mixin from '../mixin/index';
 
 export default {
 
     mixins: [mixin.class],
-    
+
     props: {
         ratio: String,
         minHeight: Boolean,
         maxHeight: Boolean,
     },
 
-    defaults: {
+    data: {
         ratio: '1:1',
         minHeight: false,
         maxHeight: false
     },
 
     update: [{
-        
+
         read() {
             if (this.ratio === 'auto' || !this.ratio.indexOf(':')) {
                 return {height: false};
             }
-            
+
             let [width, height] = this.ratio.split(':').map(Number);
 
             height = height * this.$el.offsetWidth / width;
@@ -50,4 +51,4 @@ export default {
 
     }]
 
-}
+};

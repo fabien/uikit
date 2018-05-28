@@ -2,7 +2,12 @@ import {getPos, includes, isRtl, isTouch, off, on, pointerDown, pointerMove, poi
 
 export default {
 
+    props: {
+        draggable: Boolean
+    },
+
     data: {
+        draggable: true,
         threshold: 10,
         preventCatch: false
     },
@@ -37,6 +42,7 @@ export default {
             },
 
             handler(e) {
+                if (!this.draggable) return;
 
                 if (!isTouch(e) && hasTextNodesOnly(e.target)
                     || e.button > 0
@@ -103,10 +109,13 @@ export default {
             this.dir = (distance < 0 ? 1 : -1);
 
             const {slides} = this;
+
+            if (slides.length === 0) return;
+
             let {prevIndex} = this;
             let dis = Math.abs(distance);
             let nextIndex = this.getIndex(prevIndex + this.dir, prevIndex);
-            let width = this._getDistance(prevIndex, nextIndex) || slides[prevIndex].offsetWidth;
+            let width = this._getDistance(prevIndex, nextIndex) || slides[prevIndex ? prevIndex : 0].offsetWidth;
 
             while (nextIndex !== prevIndex && dis > width) {
 
@@ -115,7 +124,7 @@ export default {
                 prevIndex = nextIndex;
                 dis -= width;
                 nextIndex = this.getIndex(prevIndex + this.dir, prevIndex);
-                width = this._getDistance(prevIndex, nextIndex) || slides[prevIndex].offsetWidth;
+                width = this._getDistance(prevIndex, nextIndex) || slides[prevIndex ? prevIndex : 0].offsetWidth;
 
             }
 

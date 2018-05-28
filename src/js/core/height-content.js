@@ -11,7 +11,7 @@ export default {
         maxHeight: Number
     },
 
-    defaults: {
+    data: {
         target: '> *',
         property: 'height',
         minHeight: 0,
@@ -46,16 +46,16 @@ export default {
             if (elements.length === 0) {
                 return {};
             }
-            
+
             const heights = [];
             const maxHeight = this.maxHeight;
             const minHeight = Math.min(this.minHeight, maxHeight || this.minHeight);
-            
+
             elements
                 .forEach(el => {
 
                     let style, hidden;
-                    
+
                     if (!isVisible(el)) {
                         style = attr(el, 'style');
                         hidden = attr(el, 'hidden');
@@ -65,10 +65,10 @@ export default {
                             hidden: null
                         });
                     }
-                    
+
                     let height = el.offsetHeight;
                     height = Math.max(minHeight, Math.min(height, maxHeight || height));
-                    
+
                     heights.push(height);
 
                     if (!isUndefined(style)) {
@@ -77,7 +77,7 @@ export default {
 
                 });
 
-            let height = heights.reduce(function(memo, height) {
+            const height = heights.reduce(function(memo, height) {
                 return memo + height;
             }, 0);
 
@@ -85,4 +85,4 @@ export default {
         }
     }
 
-}
+};

@@ -41,6 +41,7 @@ export default function (UIkit) {
     UIkit.component('formCustom', FormCustom);
     UIkit.component('gif', Gif);
     UIkit.component('grid', Grid);
+    UIkit.component('heightContent', HeightContent);
     UIkit.component('heightMatch', HeightMatch);
     UIkit.component('heightViewport', HeightViewport);
     UIkit.component('icon', Icon);

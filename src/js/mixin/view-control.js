@@ -1,4 +1,4 @@
-import {$, $$, assign, clamp, fastdom, getIndex, remove, addClass, removeClass, hasClass, toggleClass, attr, hasAttr, isNumber, isRtl, Promise, toNodes, trigger, getImage} from 'uikit-util';
+import {$, $$, assign, clamp, fastdom, remove, addClass, removeClass, hasClass, toggleClass, attr, hasAttr, isNumber, isRtl, Promise, toNodes, trigger, getImage} from 'uikit-util';
 
 export default {
 
@@ -15,7 +15,7 @@ export default {
         duration: Number
     },
 
-    defaults: {
+    data: {
         retain: false,
         easing: 'ease',
         velocity: 1,
@@ -33,7 +33,7 @@ export default {
 
     computed: {
 
-        duration({velocity,duration}, $el) {
+        duration({velocity, duration}, $el) {
             if (isNumber(duration)) {
                 return duration;
             } else if (this.animation && isNumber(this.animation.duration)) {
@@ -41,38 +41,38 @@ export default {
             }
             return speedUp($el.offsetWidth / velocity);
         },
-        
+
         promise() {
             return Promise.all(this.promises);
         },
-        
+
         isTransitioning() {
             return this.promises.length > 1;
         },
-        
+
         isStacking() {
             return this.stack.length > 1;
         },
-        
+
         isEmpty() {
             return this.views.length === 0 ||
                 (this.views.length === 1 && hasClass(this.views[0], 'uk-empty-placeholder'));
         },
-        
+
         views() {
             return toNodes(this.$el.children);
         }
 
     },
-    
-    ready: function() {
+
+    ready() {
         if (this._pending) {
             this._pending();
         } else if (this.views[0]) {
             this.show(this.views[0], this.direction);
         }
     },
-    
+
     update: {
 
         write() {
@@ -85,9 +85,9 @@ export default {
 
         show(elem, direction = this.direction, force = false, defer = false) {
             elem = !elem ? $('<div class="uk-empty-placeholder"></div>') : $(elem);
-            
+
             if (!elem) return Promise.reject();
-            
+
             if (!this._isReady) {
                 return new Promise((resolve, reject) => {
                     this._pending = function() {
@@ -108,29 +108,29 @@ export default {
             };
 
             if (this.queue) stack[force ? 'unshift' : 'push'](elem);
-            
+
             if (!force && stack.length > 1) {
                 if (stack.length === 2) {
                     this.promises.push(this._transitioner.forward(Math.min(this.duration, 200)));
                 }
                 return Promise.all(this.promises);
             }
-            
+
             const prev = this.current;
             const next = elem;
             let last = null;
-            
+
             if (prev === next) return reset(true);
-            
+
             return this._preload(next).then(() => {
-            
+
                 this.prev = prev;
                 this.current = next;
-                
+
                 this.$el.appendChild(next);
-                
-                var transitionOptions = assign({}, this.transitionOptions);
-                
+
+                const transitionOptions = assign({}, this.transitionOptions);
+
                 function _show(done) {
                     const preventHide = prev ? !trigger(prev, 'beforeitemhide', [this]) : false;
                     if (preventHide || !trigger(next, 'beforeitemshow', [this])) {
@@ -138,15 +138,15 @@ export default {
                         this.removeItem(next, true);
                         return defer ? reset : reset();
                     }
-                    
+
                     trigger(this.$el, 'transition', [this, next, prev]);
-                    
+
                     const _done = () => {
                         const index = this.promises.indexOf(promise);
                         if (index > -1) this.promises.splice(index, 1);
                         trigger(this.$el, 'transitioned', [this, next, prev]);
                     };
-                    
+
                     const promise = this._show(prev, next, direction, force, transitionOptions).then(() => {
 
                         prev && trigger(prev, 'itemhidden', [this]);
@@ -165,28 +165,28 @@ export default {
                         });
 
                     }, _done).then(_done);
-                    
+
                     this.promises.push(promise);
 
                     prev && trigger(prev, 'itemhide', [this]);
                     trigger(next, 'itemshow', [this]);
-                    
+
                     return Promise.all(this.promises).then(function() {
                         if (typeof done === 'function') {
                             return done(last || next);
                         }
                         return last || next;
                     });
-                };
-                
+                }
+
                 return defer ? _show.bind(this) : _show.call(this);
             });
         },
-        
+
         isRetained(target) {
             return this.retain || hasAttr(target, 'data-retain');
         },
-        
+
         removeItem(target, force) {
             if (this.views.indexOf(target) === -1 && !force) return;
             if (this.isRetained(target)) {
@@ -196,17 +196,17 @@ export default {
                 remove(target);
             }
         },
-        
+
         _show(prev, next, direction, force, transitionOptions) {
             const options = {
-                direction: direction,
+                direction,
                 duration: this.duration,
                 percent: this.percent,
                 easing: this.easing
             };
-            
+
             trigger(this.$el, 'createtransition', [this, next, prev, options]);
-            
+
             this._transitioner = new this.Transitioner(
                 prev,
                 next,
@@ -224,12 +224,12 @@ export default {
                 this._transitioner.translate(1);
                 return Promise.resolve();
             }
-            
+
             return this._transitioner.show(options.duration, options.percent);
         },
-        
-        _preload: function(elem) {
-            var promises = $$('img', elem).map(function(img) {
+
+        _preload(elem) {
+            const promises = $$('img', elem).map(function(img) {
                 return getImage(img.src);
             });
             return new Promise(resolve => {
@@ -239,7 +239,7 @@ export default {
 
     }
 
-}
+};
 
 export function speedUp(x) {
     return .5 * x + 300; // parabola through (400,500; 600,600; 1800,1200)
