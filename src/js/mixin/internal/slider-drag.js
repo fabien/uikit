@@ -111,10 +111,13 @@ export default function (UIkit) {
                 this.dir = (distance < 0 ? 1 : -1);
 
                 const {slides} = this;
+                
+                if (slides.length === 0) return;
+                
                 let {prevIndex} = this;
                 let dis = Math.abs(distance);
                 let nextIndex = this.getIndex(prevIndex + this.dir, prevIndex);
-                let width = this._getDistance(prevIndex, nextIndex) || slides[prevIndex].offsetWidth;
+                let width = this._getDistance(prevIndex, nextIndex) || slides[prevIndex ? prevIndex : 0].offsetWidth;
 
                 while (nextIndex !== prevIndex && dis > width) {
 
@@ -123,7 +126,7 @@ export default function (UIkit) {
                     prevIndex = nextIndex;
                     dis -= width;
                     nextIndex = this.getIndex(prevIndex + this.dir, prevIndex);
-                    width = this._getDistance(prevIndex, nextIndex) || slides[prevIndex].offsetWidth;
+                    width = this._getDistance(prevIndex, nextIndex) || slides[prevIndex ? prevIndex : 0].offsetWidth;
 
                 }
 

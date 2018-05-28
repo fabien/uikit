@@ -68,7 +68,7 @@ export default function (UIkit) {
             },
 
             getDistance() {
-                return prev.offsetWidth;
+                return prev ? prev.offsetWidth : 0;
             }
 
         };

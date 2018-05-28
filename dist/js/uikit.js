@@ -2998,7 +2998,7 @@ function TransitionerPlugin (UIkit) {
             },
 
             getDistance: function getDistance() {
-                return prev.offsetWidth;
+                return prev ? prev.offsetWidth : 0;
             }
 
         };
@@ -8428,11 +8428,14 @@ function DragMixin (UIkit) {
 
                 var ref = this;
                 var slides = ref.slides;
+                
+                if (slides.length === 0) { return; }
+                
                 var ref$1 = this;
                 var prevIndex = ref$1.prevIndex;
                 var dis = Math.abs(distance);
                 var nextIndex = this.getIndex(prevIndex + this.dir, prevIndex);
-                var width = this._getDistance(prevIndex, nextIndex) || slides[prevIndex].offsetWidth;
+                var width = this._getDistance(prevIndex, nextIndex) || slides[prevIndex ? prevIndex : 0].offsetWidth;
 
                 while (nextIndex !== prevIndex && dis > width) {
 
@@ -8441,7 +8444,7 @@ function DragMixin (UIkit) {
                     prevIndex = nextIndex;
                     dis -= width;
                     nextIndex = this$1.getIndex(prevIndex + this$1.dir, prevIndex);
-                    width = this$1._getDistance(prevIndex, nextIndex) || slides[prevIndex].offsetWidth;
+                    width = this$1._getDistance(prevIndex, nextIndex) || slides[prevIndex ? prevIndex : 0].offsetWidth;
 
                 }
 
