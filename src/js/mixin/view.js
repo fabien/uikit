@@ -1,10 +1,10 @@
 import Animations from './internal/slideshow-animations';
 import Transitioner from './internal/slideshow-transitioner';
-import {addClass, assign, fastdom, attr, isNumber, remove, removeClass, trigger} from 'uikit-util';
+import {addClass, assign} from 'uikit-util';
 import ViewControl from '../mixin/view-control';
 
 export default {
-    
+
     mixins: [ViewControl],
 
     props: {
@@ -52,4 +52,4 @@ export default {
 
     }
 
-}
+};

@@ -1,4 +1,4 @@
-import {$, $$, assign, clamp, fastdom, remove, addClass, removeClass, hasClass, toggleClass, attr, hasAttr, isNumber, isRtl, Promise, toNodes, trigger, getImage} from 'uikit-util';
+import {$, $$, assign, fastdom, remove, removeClass, hasClass, toggleClass, attr, hasAttr, isNumber, Promise, toNodes, trigger, getImage} from 'uikit-util';
 
 export default {
 

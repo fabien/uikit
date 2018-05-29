@@ -1210,7 +1210,7 @@
         'zoom': true
     };
 
-    function css$1(element, property, value) {
+    function css(element, property, value) {
 
         return toNodes(element).map(function (element) {
 
@@ -1236,7 +1236,7 @@
                 }, {});
 
             } else if (isObject(property)) {
-                each(property, function (value, property) { return css$1(element, property, value); });
+                each(property, function (value, property) { return css(element, property, value); });
             }
 
             return element;
@@ -1322,9 +1322,9 @@
         return Promise.all(toNodes(element).map(function (element) { return new Promise(function (resolve, reject) {
 
                 for (var name in props) {
-                    var value = css$1(element, name);
+                    var value = css(element, name);
                     if (value === '') {
-                        css$1(element, name, value);
+                        css(element, name, value);
                     }
                 }
 
@@ -1335,7 +1335,7 @@
 
                     clearTimeout(timer);
                     removeClass(element, 'uk-transition');
-                    css$1(element, {
+                    css(element, {
                         'transition-property': '',
                         'transition-duration': '',
                         'transition-timing-function': ''
@@ -1348,7 +1348,7 @@
                 });
 
                 addClass(element, 'uk-transition');
-                css$1(element, assign({
+                css(element, assign({
                     'transition-property': Object.keys(props).map(propName).join(','),
                     'transition-duration': (duration + "ms"),
                     'transition-timing-function': timing
@@ -1442,11 +1442,11 @@
                     return element === target;
                 });
 
-                css$1(element, 'animationDuration', (duration + "ms"));
+                css(element, 'animationDuration', (duration + "ms"));
                 addClass(element, cls);
 
                 function reset() {
-                    css$1(element, 'animationDuration', '');
+                    css(element, 'animationDuration', '');
                     removeClasses(element, (animationPrefix + "\\S*"));
                 }
 
@@ -1600,12 +1600,12 @@
         if (coordinates) {
 
             var currentOffset = offset(element);
-            var pos = css$1(element, 'position');
+            var pos = css(element, 'position');
 
             ['left', 'top'].forEach(function (prop) {
                 if (prop in coordinates) {
-                    var value = css$1(element, prop);
-                    css$1(element, prop, coordinates[prop] - currentOffset[prop]
+                    var value = css(element, prop);
+                    css(element, prop, coordinates[prop] - currentOffset[prop]
                         + toFloat(pos === 'absolute' && value === 'auto'
                             ? position(element)[prop]
                             : value)
@@ -1678,8 +1678,8 @@
         var ref = ['top', 'left'].reduce(function (props, prop) {
             var propName$$1 = ucfirst(prop);
             props[prop] -= parentOffset[prop]
-                + (toFloat(css$1(element, ("margin" + propName$$1))) || 0)
-                + (toFloat(css$1(parent, ("border" + propName$$1 + "Width"))) || 0);
+                + (toFloat(css(element, ("margin" + propName$$1))) || 0)
+                + (toFloat(css(parent, ("border" + propName$$1 + "Width"))) || 0);
             return props;
         }, offset(element));
         var top = ref.top;
@@ -1692,7 +1692,7 @@
 
         var parent = toNode(element).offsetParent;
 
-        while (parent && css$1(parent, 'position') === 'static') {
+        while (parent && css(parent, 'position') === 'static') {
             parent = parent.offsetParent;
         }
 
@@ -1719,14 +1719,14 @@
                     return Math.max(doc[("offset" + propName$$1)], doc[("scroll" + propName$$1)]);
                 }
 
-                value = css$1(element, prop);
+                value = css(element, prop);
                 value = value === 'auto' ? element[("offset" + propName$$1)] : toFloat(value) || 0;
 
                 return value - boxModelAdjust(prop, element);
 
             } else {
 
-                css$1(element, prop, !value && value !== 0
+                css(element, prop, !value && value !== 0
                     ? ''
                     : +value + boxModelAdjust(prop, element) + 'px'
                 );
@@ -1737,10 +1737,10 @@
     }
 
     function boxModelAdjust(prop, element) {
-        return css$1(element, 'boxSizing') === 'border-box'
+        return css(element, 'boxSizing') === 'border-box'
             ? dirs[prop].slice(1).map(ucfirst).reduce(function (value, prop) { return value
-                + toFloat(css$1(element, ("padding" + prop)))
-                + toFloat(css$1(element, ("border" + prop + "Width"))); }
+                + toFloat(css(element, ("padding" + prop)))
+                + toFloat(css(element, ("border" + prop + "Width"))); }
                 , 0)
             : 0;
     }
@@ -1884,7 +1884,7 @@
             offset[0] += element.offsetTop;
             offset[1] += element.offsetLeft;
 
-            if (css$1(element, 'position') === 'fixed') {
+            if (css(element, 'position') === 'fixed') {
                 var win = window$1(element);
                 offset[0] += win.pageYOffset;
                 offset[1] += win.pageXOffset;
@@ -2168,7 +2168,7 @@
     };
 
     function mergeOptions(parent, child, vm) {
-        
+
         var options = {};
 
         if (isFunction(child)) {
@@ -2648,7 +2648,7 @@
         closest: closest,
         parents: parents,
         escape: escape,
-        css: css$1,
+        css: css,
         getStyles: getStyles,
         getStyle: getStyle,
         getCssVar: getCssVar,
@@ -2926,7 +2926,7 @@
     };
 
     function translated(el) {
-        return Math.abs(css$1(el, 'transform').split(',')[4] / el.offsetWidth) || 0;
+        return Math.abs(css(el, 'transform').split(',')[4] / el.offsetWidth) || 0;
     }
 
     function translate(value, unit) {
@@ -2952,7 +2952,7 @@
             },
 
             percent: function percent(current) {
-                return 1 - css$1(current, 'opacity');
+                return 1 - css(current, 'opacity');
             },
 
             translate: function translate$$1(percent) {
@@ -2974,7 +2974,7 @@
             },
 
             percent: function percent(current) {
-                return 1 - css$1(current, 'opacity');
+                return 1 - css(current, 'opacity');
             },
 
             translate: function translate$$1(percent) {
@@ -3101,7 +3101,7 @@
 
             reset: function reset() {
                 for (var prop in props[0]) {
-                    css$1([next, prev], prop, '');
+                    css([next, prev], prop, '');
                 }
             },
 
@@ -3118,8 +3118,8 @@
                 this.reset();
 
                 var props = translate(percent, dir);
-                css$1(next, props[1]);
-                css$1(prev, props[0]);
+                css(next, props[1]);
+                css(prev, props[0]);
                 triggerUpdate(next, 'itemtranslatein', {percent: percent, dir: dir});
                 triggerUpdate(prev, 'itemtranslateout', {percent: 1 - percent, dir: dir});
 
@@ -4011,7 +4011,7 @@
 
 
                 var inProgress = Transition.inProgress(el);
-                var inner = el.hasChildNodes ? toFloat(css$1(el.firstElementChild, 'marginTop')) + toFloat(css$1(el.lastElementChild, 'marginBottom')) : 0;
+                var inner = el.hasChildNodes ? toFloat(css(el.firstElementChild, 'marginTop')) + toFloat(css(el.lastElementChild, 'marginBottom')) : 0;
                 var currentHeight = isVisible(el) ? height(el) + (inProgress ? 0 : inner) : 0;
 
                 Transition.cancel(el);
@@ -4031,7 +4031,7 @@
                 return (show
                     ? Transition.start(el, assign({}, this.initProps, {overflow: 'hidden', height: endHeight}), Math.round(this.duration * (1 - currentHeight / endHeight)), this.transition)
                     : Transition.start(el, this.hideProps, Math.round(this.duration * (currentHeight / endHeight)), this.transition).then(function () { return this$1._toggle(el, false); })
-                ).then(function () { return css$1(el, this$1.initProps); });
+                ).then(function () { return css(el, this$1.initProps); });
 
             },
 
@@ -4250,15 +4250,15 @@
             on(document, 'animationstart', function (ref) {
                 var target = ref.target;
 
-                if ((css$1(target, 'animationName') || '').match(/^uk-.*(left|right)/)) {
+                if ((css(target, 'animationName') || '').match(/^uk-.*(left|right)/)) {
 
                     started++;
-                    css$1(document.body, 'overflowX', 'hidden');
+                    css(document.body, 'overflowX', 'hidden');
                     setTimeout(function () {
                         if (!--started) {
-                            css$1(document.body, 'overflowX', '');
+                            css(document.body, 'overflowX', '');
                         }
-                    }, toMs(css$1(target, 'animationDuration')) + 100);
+                    }, toMs(css(target, 'animationDuration')) + 100);
                 }
             }, true);
 
@@ -4347,7 +4347,7 @@
                     return !this.player || (type === 'scroll' || type === 'resize') && !this.inView
                         ? false
                         : {
-                            visible: isVisible(this.$el) && css$1(this.$el, 'visibility') !== 'hidden',
+                            visible: isVisible(this.$el) && css(this.$el, 'visibility') !== 'hidden',
                             inView: this.inView && isInView(this.$el)
                         };
                 },
@@ -4400,8 +4400,8 @@
                 var height$$1 = ref.offsetHeight;
                 var width$$1 = ref.offsetWidth;
 
-                css$1(
-                    css$1(el, {width: '', height: ''}),
+                css(
+                    css(el, {width: '', height: ''}),
                     Dimensions.cover(
                         {
                             width: this.width || el.clientWidth,
@@ -4469,7 +4469,7 @@
             positionAt: function positionAt$1(element, target, boundary) {
 
                 removeClasses(element, ((this.clsPos) + "-(top|bottom|left|right)(-[a-z]+)?"));
-                css$1(element, {top: '', left: ''});
+                css(element, {top: '', left: ''});
 
                 var node;
                 var ref = this;
@@ -4904,7 +4904,7 @@
             position: function position$$1() {
 
                 removeClasses(this.$el, ((this.clsDrop) + "-(stack|boundary)"));
-                css$1(this.$el, {top: '', left: '', display: 'block'});
+                css(this.$el, {top: '', left: '', display: 'block'});
                 toggleClass(this.$el, ((this.clsDrop) + "-boundary"), this.boundaryAlign);
 
                 var boundary = offset(this.boundary);
@@ -4912,14 +4912,14 @@
 
                 if (this.align === 'justify') {
                     var prop = this.getAxis() === 'y' ? 'width' : 'height';
-                    css$1(this.$el, prop, alignTo[prop]);
+                    css(this.$el, prop, alignTo[prop]);
                 } else if (this.$el.offsetWidth > Math.max(boundary.right - alignTo.left, alignTo.right - boundary.left)) {
                     addClass(this.$el, ((this.clsDrop) + "-stack"));
                 }
 
                 this.positionAt(this.$el, this.boundaryAlign ? this.boundary : this.toggle.$el, this.boundary);
 
-                css$1(this.$el, 'display', '');
+                css(this.$el, 'display', '');
 
             }
 
@@ -5274,9 +5274,9 @@
 
                     toggleClass(this.$el, this.clsStack, stacks);
 
-                    css$1(this.$el, 'paddingBottom', this.parallax && rows.some(function (row) { return row.length > 1; }) ? this.parallax : '');
+                    css(this.$el, 'paddingBottom', this.parallax && rows.some(function (row) { return row.length > 1; }) ? this.parallax : '');
 
-                    height$$1 && css$1(this.$el, 'height', height$$1);
+                    height$$1 && css(this.$el, 'height', height$$1);
 
                 },
 
@@ -5307,7 +5307,7 @@
                         return;
                     }
 
-                    rows.forEach(function (row, i) { return row.forEach(function (el, j) { return css$1(el, 'transform', !scrolled && !translates ? '' : ("translateY(" + ((translates && -translates[i][j]) + (scrolled ? j % 2 ? scrolled : scrolled / 8 : 0)) + "px)")); }
+                    rows.forEach(function (row, i) { return row.forEach(function (el, j) { return css(el, 'transform', !scrolled && !translates ? '' : ("translateY(" + ((translates && -translates[i][j]) + (scrolled ? j % 2 ? scrolled : scrolled / 8 : 0)) + "px)")); }
                         ); }
                     );
 
@@ -5328,8 +5328,8 @@
         var node = ref[0];
 
         return toFloat(node
-            ? css$1(node, 'marginTop')
-            : css$1(nodes[0], 'paddingLeft'));
+            ? css(node, 'marginTop')
+            : css(nodes[0], 'paddingLeft'));
     }
 
     function maxColumnHeight(rows) {
@@ -5376,7 +5376,7 @@
             write: function write(ref) {
                 var height$$1 = ref.height;
 
-                css$1(this.$el, this.property, height$$1);
+                css(this.$el, this.property, height$$1);
             },
 
             events: ['load', 'resize']
@@ -5460,7 +5460,7 @@
                 var this$1 = this;
 
 
-                css$1(this.elements, {
+                css(this.elements, {
                     minHeight: '',
                     boxSizing: ''
                 });
@@ -5480,7 +5480,7 @@
                     var height$$1 = ref.height;
                     var elements = ref.elements;
 
-                    return css$1(elements, {
+                    return css(elements, {
                     minHeight: height$$1,
                     boxSizing: 'border-box'
                 });
@@ -5539,14 +5539,14 @@
 
             write: function write() {
 
-                css$1(this.$el, 'boxSizing', 'border-box');
+                css(this.$el, 'boxSizing', 'border-box');
 
                 var viewport = height(window);
                 var minHeight, offsetTop = 0;
 
                 if (this.expand) {
 
-                    css$1(this.$el, {height: '', minHeight: ''});
+                    css(this.$el, {height: '', minHeight: ''});
 
                     var diff = viewport - offsetHeight(document.documentElement);
 
@@ -5590,16 +5590,16 @@
                     return;
                 }
 
-                css$1(this.$el, {height: '', minHeight: minHeight});
+                css(this.$el, {height: '', minHeight: minHeight});
 
                 var elHeight = this.$el.offsetHeight;
                 if (this.minHeight && this.minHeight > elHeight) {
-                    css$1(this.$el, 'minHeight', this.minHeight);
+                    css(this.$el, 'minHeight', this.minHeight);
                 }
 
                 // IE 11 fix (min-height on a flex container won't apply to its flex items)
                 if (viewport - offsetTop >= elHeight) {
-                    css$1(this.$el, 'height', minHeight);
+                    css(this.$el, 'height', minHeight);
                 }
 
             },
@@ -5970,7 +5970,7 @@
         connected: function connected() {
             var this$1 = this;
 
-            this.svg.then(function (svg) { return this$1.ratio !== 1 && css$1($('circle', svg), 'strokeWidth', 1 / this$1.ratio); }, noop);
+            this.svg.then(function (svg) { return this$1.ratio !== 1 && css($('circle', svg), 'strokeWidth', 1 / this$1.ratio); }, noop);
         }
 
     };
@@ -6163,7 +6163,7 @@
             srcset && (el.srcset = srcset);
             sizes && (el.sizes = sizes);
         } else {
-            src && css$1(el, 'backgroundImage', ("url(" + src + ")"));
+            src && css(el, 'backgroundImage', ("url(" + src + ")"));
         }
 
     }
@@ -6392,7 +6392,7 @@
             },
 
             transitionDuration: function transitionDuration() {
-                return toMs(css$1(this.transitionElement, 'transitionDuration'));
+                return toMs(css(this.transitionElement, 'transitionDuration'));
             },
 
             bgClose: function bgClose(ref) {
@@ -6492,7 +6492,7 @@
 
                     if (!hasClass(document.documentElement, this.clsPage)) {
                         this.scrollbarWidth = width(window) - width(document);
-                        css$1(document.body, 'overflowY', this.scrollbarWidth && this.overlay ? 'scroll' : '');
+                        css(document.body, 'overflowY', this.scrollbarWidth && this.overlay ? 'scroll' : '');
                     }
 
                     addClass(document.documentElement, this.clsPage);
@@ -6531,7 +6531,7 @@
 
                     }
 
-                    !this.prev && css$1(document.body, 'overflowY', '');
+                    !this.prev && css(document.body, 'overflowY', '');
                 }
 
             }
@@ -6642,7 +6642,7 @@
                     if (hasClass(this.panel, 'uk-margin-auto-vertical')) {
                         addClass(this.$el, 'uk-flex');
                     } else {
-                        css$1(this.$el, 'display', 'block');
+                        css(this.$el, 'display', 'block');
                     }
 
                     height(this.$el); // force reflow
@@ -6656,7 +6656,7 @@
 
                 handler: function handler() {
 
-                    css$1(this.$el, 'display', '');
+                    css(this.$el, 'display', '');
                     removeClass(this.$el, 'uk-flex');
 
                 }
@@ -6939,7 +6939,7 @@
                     this.clsDrop && addClass($el, ((this.clsDrop) + "-dropbar"));
 
                     if (dir === 'bottom') {
-                        this.transitionTo($el.offsetHeight + toFloat(css$1($el, 'marginTop')) + toFloat(css$1($el, 'marginBottom')), $el);
+                        this.transitionTo($el.offsetHeight + toFloat(css($el, 'marginTop')) + toFloat(css($el, 'marginBottom')), $el);
                     }
                 }
             },
@@ -7000,14 +7000,14 @@
 
                 el = oldHeight < newHeight && el;
 
-                css$1(el, {height: oldHeight, overflow: 'hidden'});
+                css(el, {height: oldHeight, overflow: 'hidden'});
                 height(dropbar, oldHeight);
 
                 Transition.cancel([el, dropbar]);
                 return Transition
                     .start([el, dropbar], {height: newHeight}, this.duration)
                     .catch(noop)
-                    .then(function () { return css$1(el, {height: '', overflow: ''}); });
+                    .then(function () { return css(el, {height: '', overflow: ''}); });
             },
 
             getDropdown: function getDropdown(el) {
@@ -7178,13 +7178,13 @@
                         addClass(this.panel.parentNode, this.clsMode);
                     }
 
-                    css$1(document.documentElement, 'overflowY', (!this.clsContentAnimation || this.flip) && this.scrollbarWidth && this.overlay ? 'scroll' : '');
+                    css(document.documentElement, 'overflowY', (!this.clsContentAnimation || this.flip) && this.scrollbarWidth && this.overlay ? 'scroll' : '');
                     addClass(document.body, this.clsContainer, this.clsFlip, this.clsOverlay);
                     height(document.body); // force reflow
                     addClass(this.content, this.clsContentAnimation);
                     addClass(this.panel, this.clsSidebarAnimation, this.mode !== 'reveal' ? this.clsMode : '');
                     addClass(this.$el, this.clsOverlay);
-                    css$1(this.$el, 'display', 'block');
+                    css(this.$el, 'display', 'block');
                     height(this.$el); // force reflow
 
                 }
@@ -7227,11 +7227,11 @@
 
                     removeClass(this.panel, this.clsSidebarAnimation, this.clsMode);
                     removeClass(this.$el, this.clsOverlay);
-                    css$1(this.$el, 'display', '');
+                    css(this.$el, 'display', '');
                     removeClass(document.body, this.clsContainer, this.clsFlip, this.clsOverlay);
                     document.body.scrollTop = scroll.y;
 
-                    css$1(document.documentElement, 'overflowY', '');
+                    css(document.documentElement, 'overflowY', '');
 
                     width(this.content, '');
                     height(this.content, '');
@@ -7276,7 +7276,7 @@
         },
 
         connected: function connected() {
-            css$1(this.$el, 'minHeight', 150);
+            css(this.$el, 'minHeight', 150);
         },
 
         update: {
@@ -7287,10 +7287,10 @@
                     return;
                 }
 
-                var current = css$1(this.$el, 'maxHeight');
+                var current = css(this.$el, 'maxHeight');
 
-                css$1(css$1(this.$el, 'maxHeight', 150), 'maxHeight', Math.max(150, 150 + height(this.modal) - this.panel.offsetHeight));
-                if (current !== css$1(this.$el, 'maxHeight')) {
+                css(css(this.$el, 'maxHeight', 150), 'maxHeight', Math.max(150, 150 + height(this.modal) - this.panel.offsetHeight));
+                if (current !== css(this.$el, 'maxHeight')) {
                     trigger(this.$el, 'resize');
                 }
             },
@@ -7443,7 +7443,7 @@
 
                 write: function write() {
                     if (this.hidden) {
-                        css$1(filter(this.elements, (":not(." + (this.inViewClass) + ")")), 'visibility', 'hidden');
+                        css(filter(this.elements, (":not(." + (this.inViewClass) + ")")), 'visibility', 'hidden');
                     }
                 }
 
@@ -7490,7 +7490,7 @@
                         if (elData.show && !elData.inview && !elData.timer) {
 
                             var show = function () {
-                                css$1(el, 'visibility', '');
+                                css(el, 'visibility', '');
                                 addClass(el, this$1.inViewClass);
                                 toggleClass(el, cls);
 
@@ -7517,7 +7517,7 @@
                                 delete elData.timer;
                             }
 
-                            css$1(el, 'visibility', this$1.hidden ? 'hidden' : '');
+                            css(el, 'visibility', this$1.hidden ? 'hidden' : '');
                             removeClass(el, this$1.inViewClass);
                             toggleClass(el, cls);
 
@@ -7796,9 +7796,9 @@
                     var placeholder = ref.placeholder;
                     var offsetHeight = ref.$el.offsetHeight;
 
-                    css$1(placeholder, assign(
-                        {height: css$1(this.$el, 'position') !== 'absolute' ? offsetHeight : ''},
-                        css$1(this.$el, ['marginTop', 'marginBottom', 'marginLeft', 'marginRight'])
+                    css(placeholder, assign(
+                        {height: css(this.$el, 'position') !== 'absolute' ? offsetHeight : ''},
+                        css(this.$el, ['marginTop', 'marginBottom', 'marginLeft', 'marginRight'])
                     ));
 
                     if (!within(placeholder, document)) {
@@ -7902,7 +7902,7 @@
                 }
 
                 removeClass(this.$el, this.clsFixed, this.clsBelow);
-                css$1(this.$el, {position: '', top: '', width: ''});
+                css(this.$el, {position: '', top: '', width: ''});
                 attr(this.placeholder, 'hidden', '');
 
             },
@@ -7916,7 +7916,7 @@
                     top = this.bottom - this.scroll;
                 }
 
-                css$1(this.$el, {
+                css(this.$el, {
                     position: 'fixed',
                     top: (top + "px"),
                     width: this.width
@@ -8576,15 +8576,15 @@
                         });
 
                         addClass(this$1.target, targetClass);
-                        children.forEach(function (el, i) { return propsFrom[i] && css$1(el, propsFrom[i]); });
-                        css$1(this$1.target, 'height', oldHeight);
+                        children.forEach(function (el, i) { return propsFrom[i] && css(el, propsFrom[i]); });
+                        css(this$1.target, 'height', oldHeight);
                         window.scroll(window.pageXOffset, oldScrollY);
 
                         Promise.all(children.map(function (el, i) { return propsFrom[i] && propsTo[i]
                                 ? Transition.start(el, propsTo[i], this$1.animation, 'ease')
                                 : Promise.resolve(); }
                         ).concat(Transition.start(this$1.target, {height: newHeight}, this$1.animation, 'ease'))).then(function () {
-                            children.forEach(function (el, i) { return css$1(el, {display: propsTo[i].opacity === 0 ? 'none' : '', zIndex: ''}); });
+                            children.forEach(function (el, i) { return css(el, {display: propsTo[i].opacity === 0 ? 'none' : '', zIndex: ''}); });
                             reset(this$1.target);
                             this$1.$update(this$1.target);
                             resolve();
@@ -8598,12 +8598,12 @@
 
     function getProps(el, opacity) {
 
-        var zIndex = css$1(el, 'zIndex');
+        var zIndex = css(el, 'zIndex');
 
         return isVisible(el)
             ? assign({
                 display: '',
-                opacity: opacity ? css$1(el, 'opacity') : '0',
+                opacity: opacity ? css(el, 'opacity') : '0',
                 pointerEvents: 'none',
                 position: 'absolute',
                 zIndex: zIndex === 'auto' ? index(el) : zIndex
@@ -8612,7 +8612,7 @@
     }
 
     function reset(el) {
-        css$1(el.children, {
+        css(el.children, {
             height: '',
             left: '',
             opacity: '',
@@ -8622,7 +8622,7 @@
             width: ''
         });
         removeClass(el, targetClass);
-        css$1(el, 'height', '');
+        css(el, 'height', '');
     }
 
     function getPositionWithMargin(el) {
@@ -8632,7 +8632,7 @@
         var ref$1 = position(el);
         var top = ref$1.top;
         var left = ref$1.left;
-        top += toFloat(css$1(el, 'marginTop'));
+        top += toFloat(css(el, 'marginTop'));
 
         return {top: top, left: left, height: height$$1, width: width$$1};
     }
@@ -8762,7 +8762,7 @@
 
                     var selector = getSelector(state);
 
-                    children.forEach(function (el) { return css$1(el, 'display', selector && !matches(el, selector) ? 'none' : ''); });
+                    children.forEach(function (el) { return css(el, 'display', selector && !matches(el, selector) ? 'none' : ''); });
 
                     var ref = state.sort;
                     var sort = ref[0];
@@ -8874,7 +8874,7 @@
             },
 
             percent: function percent(current) {
-                return 1 - css$1(current, 'opacity');
+                return 1 - css(current, 'opacity');
             },
 
             translate: function translate$$1(percent) {
@@ -8896,7 +8896,7 @@
             },
 
             percent: function percent(current) {
-                return 1 - css$1(current, 'opacity');
+                return 1 - css(current, 'opacity');
             },
 
             translate: function translate$$1(percent) {
@@ -9789,7 +9789,7 @@
                     var ref$1 = this.getItem(i);
                     var caption = ref$1.caption;
 
-                    css$1(this.caption, 'display', caption ? '' : 'none');
+                    css(this.caption, 'display', caption ? '' : 'none');
                     html(this.caption, caption);
 
                     for (var j = 0; j <= this.preload; j++) {
@@ -10104,7 +10104,7 @@
                 containers[this.pos] = append(this.$container, ("<div class=\"uk-notification uk-notification-" + (this.pos) + "\"></div>"));
             }
 
-            var container = css$1(containers[this.pos], 'display', 'block');
+            var container = css(containers[this.pos], 'display', 'block');
 
             this.$mount(append(container,
                 ("<div class=\"" + (this.clsMsg) + (this.status ? (" " + (this.clsMsg) + "-" + (this.status)) : '') + "\"> <a href=\"#\" class=\"" + (this.clsClose) + "\" data-uk-close></a> <div>" + (this.message) + "</div> </div>")
@@ -10116,9 +10116,9 @@
             var this$1 = this;
 
 
-            var marginBottom = toFloat(css$1(this.$el, 'marginBottom'));
+            var marginBottom = toFloat(css(this.$el, 'marginBottom'));
             Transition.start(
-                css$1(this.$el, {opacity: 0, marginTop: -this.$el.offsetHeight, marginBottom: 0}),
+                css(this.$el, {opacity: 0, marginTop: -this.$el.offsetHeight, marginBottom: 0}),
                 {opacity: 1, marginTop: 0, marginBottom: marginBottom}
             ).then(function () {
                 if (this$1.timeout) {
@@ -10159,7 +10159,7 @@
                     remove(this$1.$el);
 
                     if (!containers[this$1.pos].children.length) {
-                        css$1(containers[this$1.pos], 'display', 'none');
+                        css(containers[this$1.pos], 'display', 'none');
                     }
 
                 };
@@ -10231,14 +10231,14 @@
                     var steps = properties[prop].slice(0);
 
                     if (isCssProp) {
-                        css$1($el, prop, '');
+                        css($el, prop, '');
                     }
 
                     if (steps.length < 2) {
                         steps.unshift((prop === 'scale'
                             ? 1
                             : isCssProp
-                                ? css$1($el, prop)
+                                ? css($el, prop)
                                 : 0) || 0);
                     }
 
@@ -10259,8 +10259,8 @@
 
                     if (prop.match(/^bg/)) {
 
-                        css$1($el, ("background-position-" + (prop[2])), '');
-                        bgPos = css$1($el, 'backgroundPosition').split(' ')[prop[2] === 'x' ? 0 : 1]; // IE 11 can't read background-position-[x|y]
+                        css($el, ("background-position-" + (prop[2])), '');
+                        bgPos = css($el, 'backgroundPosition').split(' ')[prop[2] === 'x' ? 0 : 1]; // IE 11 can't read background-position-[x|y]
 
                         if (this$1.covers) {
 
@@ -10325,7 +10325,7 @@
                         return;
                     }
 
-                    var src = css$1(this.$el, 'backgroundImage').replace(/^none|url\(["']?(.+?)["']?\)$/, '$1');
+                    var src = css(this.$el, 'backgroundImage').replace(/^none|url\(["']?(.+?)["']?\)$/, '$1');
 
                     if (!src) {
                         return;
@@ -10355,7 +10355,7 @@
                     }
 
                     if (!active) {
-                        css$1(this.$el, {backgroundSize: '', backgroundRepeat: ''});
+                        css(this.$el, {backgroundSize: '', backgroundRepeat: ''});
                         return;
                     }
 
@@ -10390,7 +10390,7 @@
                         dim = Dimensions.cover(image, dimEl);
                     });
 
-                    css$1(this.$el, {
+                    css(this.$el, {
                         backgroundSize: ((dim.width) + "px " + (dim.height) + "px"),
                         backgroundRepeat: 'no-repeat'
                     });
@@ -10408,7 +10408,7 @@
             reset: function reset() {
                 var this$1 = this;
 
-                each(this.getCss(0), function (_, prop) { return css$1(this$1.$el, prop, ''); });
+                each(this.getCss(0), function (_, prop) { return css(this$1.$el, prop, ''); });
             },
 
             getCss: function getCss(percent) {
@@ -10417,7 +10417,7 @@
                 var props = ref.props;
                 var translated = false;
 
-                return Object.keys(props).reduce(function (css, prop) {
+                return Object.keys(props).reduce(function (css$$1, prop) {
 
                     var ref = props[prop];
                     var steps = ref.steps;
@@ -10444,19 +10444,19 @@
                     var x = ref$1[0];
                     var y = ref$1[1];
 
-                            translated = css.transform += " translate3d(" + x + ", " + y + ", 0)";
+                            translated = css$$1.transform += " translate3d(" + x + ", " + y + ", 0)";
                             break;
                         case 'rotate':
-                            css.transform += " rotate(" + value + "deg)";
+                            css$$1.transform += " rotate(" + value + "deg)";
                             break;
                         case 'scale':
-                            css.transform += " scale(" + value + ")";
+                            css$$1.transform += " scale(" + value + ")";
                             break;
 
                         // bg image
                         case 'bgy':
                         case 'bgx':
-                            css[("background-position-" + (prop[2]))] = "calc(" + pos + " + " + (value + unit) + ")";
+                            css$$1[("background-position-" + (prop[2]))] = "calc(" + pos + " + " + (value + unit) + ")";
                             break;
 
                         // color
@@ -10469,7 +10469,7 @@
                     var end = ref$2[1];
                     var p = ref$2[2];
 
-                            css[prop] = "rgba(" + (start.map(function (value, i) {
+                            css$$1[prop] = "rgba(" + (start.map(function (value, i) {
                                     value = value + p * (end[i] - value);
                                     return i === 3 ? toFloat(value) : parseInt(value, 10);
                                 }).join(',')) + ")";
@@ -10477,26 +10477,26 @@
 
                         // CSS Filter
                         case 'blur':
-                            css.filter += " blur(" + value + "px)";
+                            css$$1.filter += " blur(" + value + "px)";
                             break;
                         case 'hue':
-                            css.filter += " hue-rotate(" + value + "deg)";
+                            css$$1.filter += " hue-rotate(" + value + "deg)";
                             break;
                         case 'fopacity':
-                            css.filter += " opacity(" + value + "%)";
+                            css$$1.filter += " opacity(" + value + "%)";
                             break;
                         case 'grayscale':
                         case 'invert':
                         case 'saturate':
                         case 'sepia':
-                            css.filter += " " + prop + "(" + value + "%)";
+                            css$$1.filter += " " + prop + "(" + value + "%)";
                             break;
 
                         default:
-                            css[prop] = value;
+                            css$$1[prop] = value;
                     }
 
-                    return css;
+                    return css$$1;
 
                 }, {transform: '', filter: ''});
 
@@ -10507,7 +10507,7 @@
     };
 
     function parseColor(el, color) {
-        return css$1(css$1(el, 'color', color), 'color').split(/[(),]/g).slice(1, -1).concat(1).slice(0, 4).map(function (n) { return toFloat(n); });
+        return css(css(el, 'color', color), 'color').split(/[(),]/g).slice(1, -1).concat(1).slice(0, 4).map(function (n) { return toFloat(n); });
     }
 
     function getStep(steps, percent) {
@@ -10534,7 +10534,7 @@
     function covers(el) {
         var ref = el.style;
         var backgroundSize = ref.backgroundSize;
-        var covers = css$1(css$1(el, 'backgroundSize', ''), 'backgroundSize') === 'cover';
+        var covers = css(css(el, 'backgroundSize', ''), 'backgroundSize') === 'cover';
         el.style.backgroundSize = backgroundSize;
         return covers;
     }
@@ -10595,7 +10595,7 @@
                     }
 
                     if (prev !== percent) {
-                        css$1(this.$el, this.getCss(percent));
+                        css(this.$el, this.getCss(percent));
                     }
 
                 },
@@ -10688,7 +10688,7 @@
             },
 
             reset: function reset() {
-                css$1(list, 'transform', '');
+                css(list, 'transform', '');
             },
 
             forward: function forward(duration, percent) {
@@ -10702,7 +10702,7 @@
 
                 var distance = this.getDistance() * dir * (isRtl ? -1 : 1);
 
-                css$1(list, 'transform', translate(clamp(
+                css(list, 'transform', translate(clamp(
                     -to + (distance - distance * percent),
                     -getWidth(list),
                     list.offsetWidth
@@ -10719,7 +10719,7 @@
             },
 
             percent: function percent() {
-                return Math.abs((css$1(list, 'transform').split(',')[4] * (isRtl ? -1 : 1) + from) / (to - from));
+                return Math.abs((css(list, 'transform').split(',')[4] * (isRtl ? -1 : 1) + from) / (to - from));
             },
 
             getDistance: function getDistance() {
@@ -10848,7 +10848,7 @@
                     return this.sets[this.sets.length - 1];
                 }
 
-                css$1(this.slides, 'order', '');
+                css(this.slides, 'order', '');
 
                 var max = getMax(this.list);
                 var i = this.length;
@@ -10996,7 +10996,7 @@
                 var this$1 = this;
 
 
-                css$1(this.slides, 'order', '');
+                css(this.slides, 'order', '');
 
                 if (this.finite) {
                     return;
@@ -11004,7 +11004,7 @@
 
                 var index$$1 = this.dir > 0 && this.slides[this.prevIndex] ? this.prevIndex : this.index;
 
-                this.slides.forEach(function (slide, i) { return css$1(slide, 'order', this$1.dir > 0 && i < index$$1
+                this.slides.forEach(function (slide, i) { return css(slide, 'order', this$1.dir > 0 && i < index$$1
                         ? 1
                         : this$1.dir < 0 && i >= this$1.index
                             ? -1
@@ -11024,7 +11024,7 @@
                     var slideIndex = this$1.getIndex(--j + index$$1, index$$1);
                     var slide = this$1.slides[slideIndex];
 
-                    css$1(slide, 'order', slideIndex > index$$1 ? -2 : -1);
+                    css(slide, 'order', slideIndex > index$$1 ? -2 : -1);
                     width$$1 -= slide.offsetWidth;
                 }
 
@@ -11093,7 +11093,7 @@
                 },
 
                 handler: function handler() {
-                    css$1(this.$el, this.getCss(.5));
+                    css(this.$el, this.getCss(.5));
                 }
 
             },
@@ -11117,7 +11117,7 @@
 
 
                     Transition.cancel(this.$el);
-                    css$1(this.$el, this.getCss(getCurrent(type, dir, percent)));
+                    css(this.$el, this.getCss(getCurrent(type, dir, percent)));
 
                     Transition.start(this.$el, this.getCss(isIn(type)
                         ? .5
@@ -11160,7 +11160,7 @@
                     var dir = ref_detail.dir;
 
                     Transition.cancel(this.$el);
-                    css$1(this.$el, this.getCss(getCurrent(type, dir, percent)));
+                    css(this.$el, this.getCss(getCurrent(type, dir, percent)));
                 }
             }
 
@@ -11368,11 +11368,11 @@
 
                 this.drag = append(this.$container, this.placeholder.outerHTML.replace(/^<li/i, '<div').replace(/li>$/i, 'div>'));
 
-                css$1(this.drag, assign({
+                css(this.drag, assign({
                     boxSizing: 'border-box',
                     width: this.placeholder.offsetWidth,
                     height: this.placeholder.offsetHeight
-                }, css$1(this.placeholder, ['paddingLeft', 'paddingRight', 'paddingTop', 'paddingBottom'])));
+                }, css(this.placeholder, ['paddingLeft', 'paddingRight', 'paddingTop', 'paddingBottom'])));
                 attr(this.drag, 'uk-no-boot', '');
                 addClass(this.drag, this.clsDrag, this.clsCustom);
 
@@ -12136,7 +12136,7 @@
     }
 
     var View = {
-        
+
         mixins: [ViewControl],
 
         props: {
@@ -12195,18 +12195,18 @@
 
         }
 
-    }
+    };
 
     var mixin = {
         class: Class,
         container: Container,
         modal: Modal,
         position: Position,
-        togglable:  Togglable,
+        togglable: Togglable,
         attributesObserver: AttributesObserver,
         view: View,
         viewControl: ViewControl
-    }
+    };
 
     var View$1 = {
 
@@ -12270,7 +12270,7 @@
                 var hgt = ref.height;
 
                 if (hgt === false) {
-                    css$1(this.$el, 'height', '100%');
+                    css(this.$el, 'height', '100%');
                 } else {
                     height(this.$el, Math.floor(hgt));
                 }

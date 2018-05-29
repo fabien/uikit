@@ -2,7 +2,7 @@ import Class from '../mixin/class';
 import Slideshow from '../mixin/slideshow';
 import Animations from './internal/slideshow-animations';
 import SliderReactive from '../mixin/slider-reactive';
-import {height} from 'uikit-util';
+import {height, css} from 'uikit-util';
 
 export default {
 

@@ -12,8 +12,8 @@ export default {
     container: Container,
     modal: Modal,
     position: Position,
-    togglable:  Togglable,
+    togglable: Togglable,
     attributesObserver: AttributesObserver,
     view: View,
     viewControl: ViewControl
-}
+};
