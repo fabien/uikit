@@ -17,8 +17,9 @@ export default {
             if (event.target === this.$el &&
                 (observedAttrs.length === 0 || observedAttrs.indexOf(attributeName) > -1)) {
                 const handlers = [].concat(this.$options.attributeChanged || []);
+                var $props = this.parseProps() || {};
                 handlers.forEach((handler) => {
-                    let value = this.$props[attributeName];
+                    let value = $props[attributeName];
                     value = isUndefined(value) ? attr(event.target, attributeName) : value;
                     return handler.call(this, attributeName, value);
                 });

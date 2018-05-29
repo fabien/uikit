@@ -131,6 +131,10 @@ export default function (UIkit) {
 
         this._observer.observe(el, {attributes: true, attributeFilter: attrs.concat([this.$name, `data-${this.$name}`])});
     };
+    
+    UIkit.prototype.parseProps = function() {
+        return getProps(this.$options, this.$name);
+    };
 
     function getProps(opts, name) {
 

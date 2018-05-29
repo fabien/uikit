@@ -3141,7 +3141,961 @@
         trigger(el, createEvent(type, false, false, data$$1));
     }
 
+    var Class = {
+
+        connected: function connected() {
+            addClass(this.$el, this.$name);
+        }
+
+    };
+
+    var Container = {
+
+        props: {
+            container: Boolean
+        },
+
+        data: {
+            container: true
+        },
+
+        computed: {
+
+            container: function container(ref) {
+                var container = ref.container;
+
+                return container === true && this.$container || container && $(container);
+            }
+
+        }
+
+    };
+
+    var Togglable = {
+
+        props: {
+            cls: Boolean,
+            animation: 'list',
+            duration: Number,
+            origin: String,
+            transition: String,
+            queued: Boolean
+        },
+
+        data: {
+            cls: false,
+            animation: [false],
+            duration: 200,
+            origin: false,
+            transition: 'linear',
+            queued: false,
+
+            initProps: {
+                overflow: '',
+                height: '',
+                paddingTop: '',
+                paddingBottom: '',
+                marginTop: '',
+                marginBottom: ''
+            },
+
+            hideProps: {
+                overflow: 'hidden',
+                height: 0,
+                paddingTop: 0,
+                paddingBottom: 0,
+                marginTop: 0,
+                marginBottom: 0
+            }
+
+        },
+
+        computed: {
+
+            hasAnimation: function hasAnimation(ref) {
+                var animation = ref.animation;
+
+                return !!animation[0];
+            },
+
+            hasTransition: function hasTransition(ref) {
+                var animation = ref.animation;
+
+                return this.hasAnimation && animation[0] === true;
+            }
+
+        },
+
+        methods: {
+
+            toggleElement: function toggleElement(targets, show, animate$$1) {
+                var this$1 = this;
+
+                return new Promise(function (resolve) {
+
+                    targets = toNodes(targets);
+
+                    var all = function (targets) { return Promise.all(targets.map(function (el) { return this$1._toggleElement(el, show, animate$$1); })); };
+                    var toggled = targets.filter(function (el) { return this$1.isToggled(el); });
+                    var untoggled = targets.filter(function (el) { return !includes(toggled, el); });
+
+                    var p;
+
+                    if (!this$1.queued || !isUndefined(animate$$1) || !isUndefined(show) || !this$1.hasAnimation || targets.length < 2) {
+
+                        p = all(untoggled.concat(toggled));
+
+                    } else {
+
+                        var body = document.body;
+                        var scroll = body.scrollTop;
+                        var el = toggled[0];
+                        var inProgress = Animation.inProgress(el) && hasClass(el, 'uk-animation-leave')
+                                || Transition.inProgress(el) && el.style.height === '0px';
+
+                        p = all(toggled);
+
+                        if (!inProgress) {
+                            p = p.then(function () {
+                                var p = all(untoggled);
+                                body.scrollTop = scroll;
+                                return p;
+                            });
+                        }
+
+                    }
+
+                    p.then(resolve, noop);
+
+                });
+            },
+
+            toggleNow: function toggleNow(targets, show) {
+                var this$1 = this;
+
+                return new Promise(function (resolve) { return Promise.all(toNodes(targets).map(function (el) { return this$1._toggleElement(el, show, false); })).then(resolve, noop); });
+            },
+
+            isToggled: function isToggled(el) {
+                var nodes = toNodes(el || this.$el);
+                return this.cls
+                    ? hasClass(nodes, this.cls.split(' ')[0])
+                    : !hasAttr(nodes, 'hidden');
+            },
+
+            updateAria: function updateAria(el) {
+                if (this.cls === false) {
+                    attr(el, 'aria-hidden', !this.isToggled(el));
+                }
+            },
+
+            _toggleElement: function _toggleElement(el, show, animate$$1) {
+                var this$1 = this;
+
+
+                show = isBoolean(show)
+                    ? show
+                    : Animation.inProgress(el)
+                        ? hasClass(el, 'uk-animation-leave')
+                        : Transition.inProgress(el)
+                            ? el.style.height === '0px'
+                            : !this.isToggled(el);
+
+                if (!trigger(el, ("before" + (show ? 'show' : 'hide')), [this])) {
+                    return Promise.reject();
+                }
+
+                var promise = (animate$$1 === false || !this.hasAnimation
+                    ? this._toggleImmediate
+                    : this.hasTransition
+                        ? this._toggleHeight
+                        : this._toggleAnimation
+                )(el, show);
+
+                trigger(el, show ? 'show' : 'hide', [this]);
+
+                return promise.then(function () {
+                    trigger(el, show ? 'shown' : 'hidden', [this$1]);
+                    this$1.$update(el);
+                });
+            },
+
+            _toggle: function _toggle(el, toggled) {
+
+                if (!el) {
+                    return;
+                }
+
+                var changed;
+                if (this.cls) {
+                    changed = includes(this.cls, ' ') || Boolean(toggled) !== hasClass(el, this.cls);
+                    changed && toggleClass(el, this.cls, includes(this.cls, ' ') ? undefined : toggled);
+                } else {
+                    changed = Boolean(toggled) === hasAttr(el, 'hidden');
+                    changed && attr(el, 'hidden', !toggled ? '' : null);
+                }
+
+                $$('[autofocus]', el).some(function (el) { return isVisible(el) && (el.focus() || true); });
+
+                this.updateAria(el);
+                changed && this.$update(el);
+            },
+
+            _toggleImmediate: function _toggleImmediate(el, show) {
+                this._toggle(el, show);
+                return Promise.resolve();
+            },
+
+            _toggleHeight: function _toggleHeight(el, show) {
+                var this$1 = this;
+
+
+                var inProgress = Transition.inProgress(el);
+                var inner = el.hasChildNodes ? toFloat(css(el.firstElementChild, 'marginTop')) + toFloat(css(el.lastElementChild, 'marginBottom')) : 0;
+                var currentHeight = isVisible(el) ? height(el) + (inProgress ? 0 : inner) : 0;
+
+                Transition.cancel(el);
+
+                if (!this.isToggled(el)) {
+                    this._toggle(el, true);
+                }
+
+                height(el, '');
+
+                // Update child components first
+                fastdom.flush();
+
+                var endHeight = height(el) + (inProgress ? 0 : inner);
+                height(el, currentHeight);
+
+                return (show
+                    ? Transition.start(el, assign({}, this.initProps, {overflow: 'hidden', height: endHeight}), Math.round(this.duration * (1 - currentHeight / endHeight)), this.transition)
+                    : Transition.start(el, this.hideProps, Math.round(this.duration * (currentHeight / endHeight)), this.transition).then(function () { return this$1._toggle(el, false); })
+                ).then(function () { return css(el, this$1.initProps); });
+
+            },
+
+            _toggleAnimation: function _toggleAnimation(el, show) {
+                var this$1 = this;
+
+
+                Animation.cancel(el);
+
+                if (show) {
+                    this._toggle(el, true);
+                    return Animation.in(el, this.animation[0], this.duration, this.origin);
+                }
+
+                return Animation.out(el, this.animation[1] || this.animation[0], this.duration, this.origin).then(function () { return this$1._toggle(el, false); });
+            }
+
+        }
+
+    };
+
+    var active;
+
+    var Modal = {
+
+        mixins: [Class, Container, Togglable],
+
+        props: {
+            selPanel: String,
+            selClose: String,
+            escClose: Boolean,
+            bgClose: Boolean,
+            stack: Boolean
+        },
+
+        data: {
+            cls: 'uk-open',
+            escClose: true,
+            bgClose: true,
+            overlay: true,
+            stack: false
+        },
+
+        computed: {
+
+            panel: function panel(ref, $el) {
+                var selPanel = ref.selPanel;
+
+                return $(selPanel, $el);
+            },
+
+            transitionElement: function transitionElement() {
+                return this.panel;
+            },
+
+            transitionDuration: function transitionDuration() {
+                return toMs(css(this.transitionElement, 'transitionDuration'));
+            },
+
+            bgClose: function bgClose(ref) {
+                var bgClose = ref.bgClose;
+
+                return bgClose && this.panel;
+            }
+
+        },
+
+        events: [
+
+            {
+
+                name: 'click',
+
+                delegate: function delegate() {
+                    return this.selClose;
+                },
+
+                handler: function handler(e) {
+                    e.preventDefault();
+                    this.hide();
+                }
+
+            },
+
+            {
+
+                name: 'toggle',
+
+                self: true,
+
+                handler: function handler(e) {
+
+                    if (e.defaultPrevented) {
+                        return;
+                    }
+
+                    e.preventDefault();
+                    this.toggle();
+                }
+
+            },
+
+            {
+                name: 'beforeshow',
+
+                self: true,
+
+                handler: function handler(e) {
+
+                    var prev = active && active !== this && active;
+
+                    active = this;
+
+                    if (prev) {
+                        if (this.stack) {
+                            this.prev = prev;
+                        } else {
+                            prev.hide().then(this.show);
+                            e.preventDefault();
+                            return;
+                        }
+                    }
+
+                    registerEvents();
+
+                }
+
+            },
+
+            {
+                name: 'beforehide',
+
+                self: true,
+
+                handler: function handler() {
+
+                    active = active && active !== this && active || this.prev;
+
+                    if (!active) {
+                        deregisterEvents();
+                    }
+
+                }
+
+            },
+
+            {
+
+                name: 'show',
+
+                self: true,
+
+                handler: function handler() {
+
+                    if (!hasClass(document.documentElement, this.clsPage)) {
+                        this.scrollbarWidth = width(window) - width(document);
+                        css(document.body, 'overflowY', this.scrollbarWidth && this.overlay ? 'scroll' : '');
+                    }
+
+                    addClass(document.documentElement, this.clsPage);
+
+                }
+
+            },
+
+            {
+
+                name: 'hidden',
+
+                self: true,
+
+                handler: function handler() {
+                    var this$1 = this;
+
+
+                    var found;
+                    var ref = this;
+                    var prev = ref.prev;
+
+                    while (prev) {
+
+                        if (prev.clsPage === this$1.clsPage) {
+                            found = true;
+                            break;
+                        }
+
+                        prev = prev.prev;
+
+                    }
+
+                    if (!found) {
+                        removeClass(document.documentElement, this.clsPage);
+
+                    }
+
+                    !this.prev && css(document.body, 'overflowY', '');
+                }
+
+            }
+
+        ],
+
+        methods: {
+
+            toggle: function toggle() {
+                return this.isToggled() ? this.hide() : this.show();
+            },
+
+            show: function show() {
+
+                if (this.isToggled()) {
+                    return Promise.resolve();
+                }
+
+                if (this.container && this.$el.parentNode !== this.container) {
+                    append(this.container, this.$el);
+                    this._callConnected();
+                }
+
+                return this.toggleNow(this.$el, true);
+            },
+
+            hide: function hide() {
+                return this.isToggled()
+                    ? this.toggleNow(this.$el, false)
+                    : Promise.resolve();
+            },
+
+            getActive: function getActive() {
+                return active;
+            },
+
+            _toggleImmediate: function _toggleImmediate(el, show) {
+                var this$1 = this;
+
+                return new Promise(function (resolve) { return requestAnimationFrame(function () {
+                        this$1._toggle(el, show);
+
+                        if (this$1.transitionDuration) {
+                            once(this$1.transitionElement, 'transitionend', resolve, false, function (e) { return e.target === this$1.transitionElement; });
+                        } else {
+                            resolve();
+                        }
+                    }); }
+                );
+            }
+
+        }
+
+    };
+
+    var events;
+
+    function registerEvents() {
+
+        if (events) {
+            return;
+        }
+
+        events = [
+            on(document, 'click', function (ref) {
+                var target = ref.target;
+                var defaultPrevented = ref.defaultPrevented;
+
+                if (active && active.bgClose && !defaultPrevented && (!active.overlay || within(target, active.$el)) && !within(target, active.panel)) {
+                    active.hide();
+                }
+            }),
+            on(document, 'keydown', function (e) {
+                if (e.keyCode === 27 && active && active.escClose) {
+                    e.preventDefault();
+                    active.hide();
+                }
+            })
+        ];
+    }
+
+    function deregisterEvents() {
+        events && events.forEach(function (unbind) { return unbind(); });
+        events = null;
+    }
+
+    var Position = {
+
+        props: {
+            pos: String,
+            offset: null,
+            flip: Boolean,
+            clsPos: String
+        },
+
+        data: {
+            pos: ("bottom-" + (!isRtl ? 'left' : 'right')),
+            flip: true,
+            offset: false,
+            clsPos: ''
+        },
+
+        computed: {
+
+            pos: function pos(ref) {
+                var pos = ref.pos;
+
+                return (pos + (!includes(pos, '-') ? '-center' : '')).split('-');
+            },
+
+            dir: function dir() {
+                return this.pos[0];
+            },
+
+            align: function align() {
+                return this.pos[1];
+            }
+
+        },
+
+        methods: {
+
+            positionAt: function positionAt$1(element, target, boundary) {
+
+                removeClasses(element, ((this.clsPos) + "-(top|bottom|left|right)(-[a-z]+)?"));
+                css(element, {top: '', left: ''});
+
+                var node;
+                var ref = this;
+                var offset$$1 = ref.offset;
+
+                offset$$1 = isNumeric(offset$$1)
+                    ? offset$$1
+                    : (node = $(offset$$1))
+                        ? offset(node)[axis === 'x' ? 'left' : 'top'] - offset(target)[axis === 'x' ? 'right' : 'bottom']
+                        : 0;
+
+                var axis = this.getAxis();
+                var ref$1 = positionAt(
+                    element,
+                    target,
+                    axis === 'x' ? ((flipPosition(this.dir)) + " " + (this.align)) : ((this.align) + " " + (flipPosition(this.dir))),
+                    axis === 'x' ? ((this.dir) + " " + (this.align)) : ((this.align) + " " + (this.dir)),
+                    axis === 'x' ? ("" + (this.dir === 'left' ? -offset$$1 : offset$$1)) : (" " + (this.dir === 'top' ? -offset$$1 : offset$$1)),
+                    null,
+                    this.flip,
+                    boundary
+                ).target;
+                var x = ref$1.x;
+                var y = ref$1.y;
+
+                this.dir = axis === 'x' ? x : y;
+                this.align = axis === 'x' ? y : x;
+
+                toggleClass(element, ((this.clsPos) + "-" + (this.dir) + "-" + (this.align)), this.offset === false);
+
+            },
+
+            getAxis: function getAxis() {
+                return this.dir === 'top' || this.dir === 'bottom' ? 'y' : 'x';
+            }
+
+        }
+
+    };
+
+    var AttributesObserver = {
+
+        props: {
+            observeAttributes: Boolean
+        },
+
+        data: {
+            observeAttributes: false
+        },
+
+        init: function init() {
+            var this$1 = this;
+
+            if (!this.$props.observeAttributes) { return; }
+            var observedAttrs = [].concat(this.$options.observedAttrs || []);
+            on(this.$el, 'attributechanged', function (event, attributeName) {
+                if (event.target === this$1.$el &&
+                    (observedAttrs.length === 0 || observedAttrs.indexOf(attributeName) > -1)) {
+                    var handlers = [].concat(this$1.$options.attributeChanged || []);
+                    var $props = this$1.parseProps() || {};
+                    handlers.forEach(function (handler) {
+                        var value = $props[attributeName];
+                        value = isUndefined(value) ? attr(event.target, attributeName) : value;
+                        return handler.call(this$1, attributeName, value);
+                    });
+                }
+            });
+        }
+
+    };
+
+    var ViewControl = {
+
+        attrs: true,
+
+        props: {
+            retain: Boolean,
+            clsActivated: Boolean,
+            clsEmpty: String,
+            queue: Boolean,
+            easing: String,
+            velocity: Number,
+            direction: Number,
+            duration: Number
+        },
+
+        data: {
+            retain: false,
+            easing: 'ease',
+            velocity: 1,
+            direction: 1,
+            stack: [],
+            queue: false,
+            promises: [],
+            percent: 0,
+            clsActive: 'uk-active',
+            clsEmpty: 'uk-empty',
+            clsActivated: false,
+            Transitioner: false,
+            transitionOptions: {}
+        },
+
+        computed: {
+
+            duration: function duration(ref, $el) {
+                var velocity = ref.velocity;
+                var duration = ref.duration;
+
+                if (isNumber(duration)) {
+                    return duration;
+                } else if (this.animation && isNumber(this.animation.duration)) {
+                    return this.animation.duration;
+                }
+                return speedUp($el.offsetWidth / velocity);
+            },
+
+            promise: function promise() {
+                return Promise.all(this.promises);
+            },
+
+            isTransitioning: function isTransitioning() {
+                return this.promises.length > 1;
+            },
+
+            isStacking: function isStacking() {
+                return this.stack.length > 1;
+            },
+
+            isEmpty: function isEmpty() {
+                return this.views.length === 0 ||
+                    (this.views.length === 1 && hasClass(this.views[0], 'uk-empty-placeholder'));
+            },
+
+            views: function views() {
+                return toNodes(this.$el.children);
+            }
+
+        },
+
+        ready: function ready$$1() {
+            if (this._pending) {
+                this._pending();
+            } else if (this.views[0]) {
+                this.show(this.views[0], this.direction);
+            }
+        },
+
+        update: {
+
+            write: function write() {
+                if (this.clsEmpty) { toggleClass(this.$el, this.clsEmpty, this.isEmpty); }
+            }
+
+        },
+
+        methods: {
+
+            show: function show(elem, direction, force, defer) {
+                var this$1 = this;
+                if ( direction === void 0 ) direction = this.direction;
+                if ( force === void 0 ) force = false;
+                if ( defer === void 0 ) defer = false;
+
+                elem = !elem ? $('<div class="uk-empty-placeholder"></div>') : $(elem);
+
+                if (!elem) { return Promise.reject(); }
+
+                if (!this._isReady) {
+                    return new Promise(function (resolve, reject) {
+                        this$1._pending = function() {
+                            delete this._pending;
+                            return this.show(elem, direction, force, defer).then(resolve, reject);
+                        };
+                    });
+                }
+
+                var ref = this;
+                var stack = ref.stack;
+                var queueIndex = force ? 0 : stack.length;
+                var reset = function (resolve) {
+                    stack.splice(queueIndex, 1);
+                    if (stack.length) {
+                        this$1.show(stack.shift(), direction, true);
+                    }
+                    return resolve ? Promise.resolve() : Promise.reject();
+                };
+
+                if (this.queue) { stack[force ? 'unshift' : 'push'](elem); }
+
+                if (!force && stack.length > 1) {
+                    if (stack.length === 2) {
+                        this.promises.push(this._transitioner.forward(Math.min(this.duration, 200)));
+                    }
+                    return Promise.all(this.promises);
+                }
+
+                var prev = this.current;
+                var next = elem;
+                var last = null;
+
+                if (prev === next) { return reset(true); }
+
+                return this._preload(next).then(function () {
+
+                    this$1.prev = prev;
+                    this$1.current = next;
+
+                    this$1.$el.appendChild(next);
+
+                    var transitionOptions = assign({}, this$1.transitionOptions);
+
+                    function _show(done) {
+                        var this$1 = this;
+
+                        var preventHide = prev ? !trigger(prev, 'beforeitemhide', [this]) : false;
+                        if (preventHide || !trigger(next, 'beforeitemshow', [this])) {
+                            this.current = this.prev;
+                            this.removeItem(next, true);
+                            return defer ? reset : reset();
+                        }
+
+                        trigger(this.$el, 'transition', [this, next, prev]);
+
+                        var _done = function () {
+                            var index$$1 = this$1.promises.indexOf(promise);
+                            if (index$$1 > -1) { this$1.promises.splice(index$$1, 1); }
+                            trigger(this$1.$el, 'transitioned', [this$1, next, prev]);
+                        };
+
+                        var promise = this._show(prev, next, direction, force, transitionOptions).then(function () {
+
+                            prev && trigger(prev, 'itemhidden', [this$1]);
+                            trigger(next, 'itemshown', [this$1]);
+
+                            return new Promise(function (resolve) {
+                                fastdom.write(function () {
+                                    last = stack.shift();
+                                    if (stack.length) {
+                                        this$1.show(stack.shift(), direction, true);
+                                    } else {
+                                        this$1._transitioner = null;
+                                    }
+                                    resolve();
+                                });
+                            });
+
+                        }, _done).then(_done);
+
+                        this.promises.push(promise);
+
+                        prev && trigger(prev, 'itemhide', [this]);
+                        trigger(next, 'itemshow', [this]);
+
+                        return Promise.all(this.promises).then(function() {
+                            if (typeof done === 'function') {
+                                return done(last || next);
+                            }
+                            return last || next;
+                        });
+                    }
+
+                    return defer ? _show.bind(this$1) : _show.call(this$1);
+                });
+            },
+
+            isRetained: function isRetained(target) {
+                return this.retain || hasAttr(target, 'data-retain');
+            },
+
+            removeItem: function removeItem(target, force) {
+                if (this.views.indexOf(target) === -1 && !force) { return; }
+                if (this.isRetained(target)) {
+                    removeClass(target, this.clsActive, this.clsActivated);
+                    trigger(target, 'retain', [this, attr(target, 'data-retain')]);
+                } else {
+                    remove(target);
+                }
+            },
+
+            _show: function _show(prev, next, direction, force, transitionOptions) {
+                var options = {
+                    direction: direction,
+                    duration: this.duration,
+                    percent: this.percent,
+                    easing: this.easing
+                };
+
+                trigger(this.$el, 'createtransition', [this, next, prev, options]);
+
+                this._transitioner = new this.Transitioner(
+                    prev,
+                    next,
+                    options.direction,
+                    assign({
+                        easing: force
+                            ? next.offsetWidth < 600
+                                ? 'cubic-bezier(0.25, 0.46, 0.45, 0.94)' /* easeOutQuad */
+                                : 'cubic-bezier(0.165, 0.84, 0.44, 1)' /* easeOutQuart */
+                            : options.easing
+                    }, transitionOptions || this.transitionOptions)
+                );
+
+                if (!force && !prev) {
+                    this._transitioner.translate(1);
+                    return Promise.resolve();
+                }
+
+                return this._transitioner.show(options.duration, options.percent);
+            },
+
+            _preload: function _preload(elem) {
+                var promises = $$('img', elem).map(function(img) {
+                    return getImage(img.src);
+                });
+                return new Promise(function (resolve) {
+                    Promise.all(promises).then(resolve, resolve);
+                });
+            }
+
+        }
+
+    };
+
+    function speedUp(x) {
+        return .5 * x + 300; // parabola through (400,500; 600,600; 1800,1200)
+    }
+
+    var View = {
+
+        mixins: [ViewControl],
+
+        props: {
+            animation: String
+        },
+
+        data: {
+            animation: 'fade',
+            clsActivated: 'uk-transition-active',
+            Animations: Animations,
+            Transitioner: Transitioner
+        },
+
+        computed: {
+
+            animation: function animation(ref) {
+                var animation = ref.animation;
+                var Animations$$1 = ref.Animations;
+
+                return assign(animation in Animations$$1 ? Animations$$1[animation] : Animations$$1.fade, {name: animation});
+            },
+
+            transitionOptions: function transitionOptions() {
+                return {animation: this.animation};
+            }
+
+        },
+
+        events: {
+
+            'itemshow itemhide itemshown itemhidden': function itemshowitemhideitemshownitemhidden(ref) {
+                var target = ref.target;
+
+                if (this.views.indexOf(target) === -1) { return; }
+                this.$update(target);
+            },
+
+            beforeitemshow: function beforeitemshow(ref) {
+                var target = ref.target;
+
+                addClass(target, this.clsActive);
+            },
+
+            itemshown: function itemshown(ref) {
+                var target = ref.target;
+
+                if (this.views.indexOf(target) === -1) { return; }
+                addClass(target, this.clsActivated);
+            },
+
+            itemhidden: function itemhidden(ref) {
+                var target = ref.target;
+
+                this.removeItem(target);
+            }
+
+        }
+
+    };
+
+    var mixin = {
+        class: Class,
+        container: Container,
+        modal: Modal,
+        position: Position,
+        togglable: Togglable,
+        attributesObserver: AttributesObserver,
+        view: View,
+        viewControl: ViewControl
+    };
+
     function custom (UIkit) {
+        UIkit.mixins = mixin;
         UIkit.plugins = UIkit.plugins || {};
         UIkit.plugins.Animations = Animations$1;
         UIkit.plugins.Transitioner = Transitioner;
@@ -3522,6 +4476,10 @@
 
             this._observer.observe(el, {attributes: true, attributeFilter: attrs.concat([this.$name, ("data-" + (this.$name))])});
         };
+        
+        UIkit.prototype.parseProps = function() {
+            return getProps(this.$options, this.$name);
+        };
 
         function getProps(opts, name) {
 
@@ -3822,236 +4780,6 @@
     stateAPI(UIkit);
     componentAPI(UIkit);
     instanceAPI(UIkit);
-
-    var Class = {
-
-        connected: function connected() {
-            addClass(this.$el, this.$name);
-        }
-
-    };
-
-    var Togglable = {
-
-        props: {
-            cls: Boolean,
-            animation: 'list',
-            duration: Number,
-            origin: String,
-            transition: String,
-            queued: Boolean
-        },
-
-        data: {
-            cls: false,
-            animation: [false],
-            duration: 200,
-            origin: false,
-            transition: 'linear',
-            queued: false,
-
-            initProps: {
-                overflow: '',
-                height: '',
-                paddingTop: '',
-                paddingBottom: '',
-                marginTop: '',
-                marginBottom: ''
-            },
-
-            hideProps: {
-                overflow: 'hidden',
-                height: 0,
-                paddingTop: 0,
-                paddingBottom: 0,
-                marginTop: 0,
-                marginBottom: 0
-            }
-
-        },
-
-        computed: {
-
-            hasAnimation: function hasAnimation(ref) {
-                var animation = ref.animation;
-
-                return !!animation[0];
-            },
-
-            hasTransition: function hasTransition(ref) {
-                var animation = ref.animation;
-
-                return this.hasAnimation && animation[0] === true;
-            }
-
-        },
-
-        methods: {
-
-            toggleElement: function toggleElement(targets, show, animate$$1) {
-                var this$1 = this;
-
-                return new Promise(function (resolve) {
-
-                    targets = toNodes(targets);
-
-                    var all = function (targets) { return Promise.all(targets.map(function (el) { return this$1._toggleElement(el, show, animate$$1); })); };
-                    var toggled = targets.filter(function (el) { return this$1.isToggled(el); });
-                    var untoggled = targets.filter(function (el) { return !includes(toggled, el); });
-
-                    var p;
-
-                    if (!this$1.queued || !isUndefined(animate$$1) || !isUndefined(show) || !this$1.hasAnimation || targets.length < 2) {
-
-                        p = all(untoggled.concat(toggled));
-
-                    } else {
-
-                        var body = document.body;
-                        var scroll = body.scrollTop;
-                        var el = toggled[0];
-                        var inProgress = Animation.inProgress(el) && hasClass(el, 'uk-animation-leave')
-                                || Transition.inProgress(el) && el.style.height === '0px';
-
-                        p = all(toggled);
-
-                        if (!inProgress) {
-                            p = p.then(function () {
-                                var p = all(untoggled);
-                                body.scrollTop = scroll;
-                                return p;
-                            });
-                        }
-
-                    }
-
-                    p.then(resolve, noop);
-
-                });
-            },
-
-            toggleNow: function toggleNow(targets, show) {
-                var this$1 = this;
-
-                return new Promise(function (resolve) { return Promise.all(toNodes(targets).map(function (el) { return this$1._toggleElement(el, show, false); })).then(resolve, noop); });
-            },
-
-            isToggled: function isToggled(el) {
-                var nodes = toNodes(el || this.$el);
-                return this.cls
-                    ? hasClass(nodes, this.cls.split(' ')[0])
-                    : !hasAttr(nodes, 'hidden');
-            },
-
-            updateAria: function updateAria(el) {
-                if (this.cls === false) {
-                    attr(el, 'aria-hidden', !this.isToggled(el));
-                }
-            },
-
-            _toggleElement: function _toggleElement(el, show, animate$$1) {
-                var this$1 = this;
-
-
-                show = isBoolean(show)
-                    ? show
-                    : Animation.inProgress(el)
-                        ? hasClass(el, 'uk-animation-leave')
-                        : Transition.inProgress(el)
-                            ? el.style.height === '0px'
-                            : !this.isToggled(el);
-
-                if (!trigger(el, ("before" + (show ? 'show' : 'hide')), [this])) {
-                    return Promise.reject();
-                }
-
-                var promise = (animate$$1 === false || !this.hasAnimation
-                    ? this._toggleImmediate
-                    : this.hasTransition
-                        ? this._toggleHeight
-                        : this._toggleAnimation
-                )(el, show);
-
-                trigger(el, show ? 'show' : 'hide', [this]);
-
-                return promise.then(function () {
-                    trigger(el, show ? 'shown' : 'hidden', [this$1]);
-                    this$1.$update(el);
-                });
-            },
-
-            _toggle: function _toggle(el, toggled) {
-
-                if (!el) {
-                    return;
-                }
-
-                var changed;
-                if (this.cls) {
-                    changed = includes(this.cls, ' ') || Boolean(toggled) !== hasClass(el, this.cls);
-                    changed && toggleClass(el, this.cls, includes(this.cls, ' ') ? undefined : toggled);
-                } else {
-                    changed = Boolean(toggled) === hasAttr(el, 'hidden');
-                    changed && attr(el, 'hidden', !toggled ? '' : null);
-                }
-
-                $$('[autofocus]', el).some(function (el) { return isVisible(el) && (el.focus() || true); });
-
-                this.updateAria(el);
-                changed && this.$update(el);
-            },
-
-            _toggleImmediate: function _toggleImmediate(el, show) {
-                this._toggle(el, show);
-                return Promise.resolve();
-            },
-
-            _toggleHeight: function _toggleHeight(el, show) {
-                var this$1 = this;
-
-
-                var inProgress = Transition.inProgress(el);
-                var inner = el.hasChildNodes ? toFloat(css(el.firstElementChild, 'marginTop')) + toFloat(css(el.lastElementChild, 'marginBottom')) : 0;
-                var currentHeight = isVisible(el) ? height(el) + (inProgress ? 0 : inner) : 0;
-
-                Transition.cancel(el);
-
-                if (!this.isToggled(el)) {
-                    this._toggle(el, true);
-                }
-
-                height(el, '');
-
-                // Update child components first
-                fastdom.flush();
-
-                var endHeight = height(el) + (inProgress ? 0 : inner);
-                height(el, currentHeight);
-
-                return (show
-                    ? Transition.start(el, assign({}, this.initProps, {overflow: 'hidden', height: endHeight}), Math.round(this.duration * (1 - currentHeight / endHeight)), this.transition)
-                    : Transition.start(el, this.hideProps, Math.round(this.duration * (currentHeight / endHeight)), this.transition).then(function () { return this$1._toggle(el, false); })
-                ).then(function () { return css(el, this$1.initProps); });
-
-            },
-
-            _toggleAnimation: function _toggleAnimation(el, show) {
-                var this$1 = this;
-
-
-                Animation.cancel(el);
-
-                if (show) {
-                    this._toggle(el, true);
-                    return Animation.in(el, this.animation[0], this.duration, this.origin);
-                }
-
-                return Animation.out(el, this.animation[1] || this.animation[0], this.duration, this.origin).then(function () { return this$1._toggle(el, false); });
-            }
-
-        }
-
-    };
 
     var Accordion = {
 
@@ -4430,87 +5158,7 @@
 
     };
 
-    var Position = {
-
-        props: {
-            pos: String,
-            offset: null,
-            flip: Boolean,
-            clsPos: String
-        },
-
-        data: {
-            pos: ("bottom-" + (!isRtl ? 'left' : 'right')),
-            flip: true,
-            offset: false,
-            clsPos: ''
-        },
-
-        computed: {
-
-            pos: function pos(ref) {
-                var pos = ref.pos;
-
-                return (pos + (!includes(pos, '-') ? '-center' : '')).split('-');
-            },
-
-            dir: function dir() {
-                return this.pos[0];
-            },
-
-            align: function align() {
-                return this.pos[1];
-            }
-
-        },
-
-        methods: {
-
-            positionAt: function positionAt$1(element, target, boundary) {
-
-                removeClasses(element, ((this.clsPos) + "-(top|bottom|left|right)(-[a-z]+)?"));
-                css(element, {top: '', left: ''});
-
-                var node;
-                var ref = this;
-                var offset$$1 = ref.offset;
-
-                offset$$1 = isNumeric(offset$$1)
-                    ? offset$$1
-                    : (node = $(offset$$1))
-                        ? offset(node)[axis === 'x' ? 'left' : 'top'] - offset(target)[axis === 'x' ? 'right' : 'bottom']
-                        : 0;
-
-                var axis = this.getAxis();
-                var ref$1 = positionAt(
-                    element,
-                    target,
-                    axis === 'x' ? ((flipPosition(this.dir)) + " " + (this.align)) : ((this.align) + " " + (flipPosition(this.dir))),
-                    axis === 'x' ? ((this.dir) + " " + (this.align)) : ((this.align) + " " + (this.dir)),
-                    axis === 'x' ? ("" + (this.dir === 'left' ? -offset$$1 : offset$$1)) : (" " + (this.dir === 'top' ? -offset$$1 : offset$$1)),
-                    null,
-                    this.flip,
-                    boundary
-                ).target;
-                var x = ref$1.x;
-                var y = ref$1.y;
-
-                this.dir = axis === 'x' ? x : y;
-                this.align = axis === 'x' ? y : x;
-
-                toggleClass(element, ((this.clsPos) + "-" + (this.dir) + "-" + (this.align)), this.offset === false);
-
-            },
-
-            getAxis: function getAxis() {
-                return this.dir === 'top' || this.dir === 'bottom' ? 'y' : 'x';
-            }
-
-        }
-
-    };
-
-    var active;
+    var active$1;
 
     var Drop = {
 
@@ -4668,14 +5316,14 @@
                         return;
                     }
 
-                    if (active
-                        && active !== this
-                        && active.toggle
-                        && includes(active.toggle.mode, 'hover')
-                        && !within(e.target, active.toggle.$el)
-                        && !pointInRect({x: e.pageX, y: e.pageY}, offset(active.$el))
+                    if (active$1
+                        && active$1 !== this
+                        && active$1.toggle
+                        && includes(active$1.toggle.mode, 'hover')
+                        && !within(e.target, active$1.toggle.$el)
+                        && !pointInRect({x: e.pageX, y: e.pageY}, offset(active$1.$el))
                     ) {
-                        active.hide(false);
+                        active$1.hide(false);
                     }
 
                     e.preventDefault();
@@ -4771,11 +5419,11 @@
 
 
                     if (this.$el !== target) {
-                        active = active === null && within(target, this.$el) && this.isToggled() ? this : active;
+                        active$1 = active$1 === null && within(target, this.$el) && this.isToggled() ? this : active$1;
                         return;
                     }
 
-                    active = this.isActive() ? null : active;
+                    active$1 = this.isActive() ? null : active$1;
 
                     if (this.toggle) {
                         removeClass(this.toggle.$el, this.cls);
@@ -4821,23 +5469,23 @@
 
                     if (this$1.isActive()) {
                         return;
-                    } else if (delay && active && active !== this$1 && active.isDelaying) {
+                    } else if (delay && active$1 && active$1 !== this$1 && active$1.isDelaying) {
                         this$1.showTimer = setTimeout(this$1.show, 10);
                         return;
-                    } else if (this$1.isParentOf(active)) {
+                    } else if (this$1.isParentOf(active$1)) {
 
-                        if (active.hideTimer) {
-                            active.hide(false);
+                        if (active$1.hideTimer) {
+                            active$1.hide(false);
                         } else {
                             return;
                         }
 
-                    } else if (active && !this$1.isChildOf(active) && !this$1.isParentOf(active)) {
+                    } else if (active$1 && !this$1.isChildOf(active$1) && !this$1.isParentOf(active$1)) {
 
                         var prev;
-                        while (active && active !== prev && !this$1.isChildOf(active)) {
-                            prev = active;
-                            active.hide(false);
+                        while (active$1 && active$1 !== prev && !this$1.isChildOf(active$1)) {
+                            prev = active$1;
+                            active$1.hide(false);
                         }
 
                     }
@@ -4848,7 +5496,7 @@
                         show();
                     }
 
-                    active = this$1;
+                    active$1 = this$1;
                 };
 
                 if (toggle && this.toggle && toggle.$el !== this.toggle.$el) {
@@ -4890,7 +5538,7 @@
             },
 
             isActive: function isActive() {
-                return active === this;
+                return active$1 === this;
             },
 
             isChildOf: function isChildOf(drop) {
@@ -4946,9 +5594,9 @@
                 return;
             }
 
-            while (active && active !== prev && !within(target, active.$el) && !(active.toggle && within(target, active.toggle.$el))) {
-                prev = active;
-                active.hide(false);
+            while (active$1 && active$1 !== prev && !within(target, active$1.$el) && !(active$1.toggle && within(target, active$1.toggle.$el))) {
+                prev = active$1;
+                active$1.hide(false);
             }
         });
     }
@@ -6038,7 +6686,6 @@
             height: false,
             offsetTop: '50vh',
             offsetLeft: 0,
-            loaded: false,
             target: false
         },
 
@@ -6097,8 +6744,6 @@
 
         connected: function connected() {
 
-            this.loaded = false;
-
             if (storage[this.cacheKey] || this.isImg && (!this.width || !this.height)) {
                 setSrcAttrs(this.$el, storage[this.cacheKey] || this.dataSrc, this.dataSrcset, this.sizes);
             } else if (this.isImg) {
@@ -6113,13 +6758,15 @@
 
                 read: function read(ref) {
                     var this$1 = this;
+                    var delay = ref.delay;
                     var image = ref.image;
 
 
-                    if (image
-                        || !this.loaded && this.isImg
-                        || !this.target.some(function (el) { return isInView(el, this$1.offsetTop, this$1.offsetLeft, true); })
-                    ) {
+                    if (!delay) {
+                        return;
+                    }
+
+                    if (image || !this.target.some(function (el) { return isInView(el, this$1.offsetTop, this$1.offsetLeft, true); })) {
 
                         if (!this.isImg && image) {
                             image.then(function (img) { return img && setSrcAttrs(this$1.$el, currentSrc(img)); });
@@ -6140,19 +6787,21 @@
 
                 },
 
+                write: function write(data$$1) {
+
+                    // Give placeholder images time to apply their dimensions
+                    if (!data$$1.delay) {
+                        this.$emit();
+                        return data$$1.delay = true;
+                    }
+
+                },
+
                 events: ['scroll', 'load', 'resize']
 
             }
 
-        ],
-
-        events: {
-
-            load: function load() {
-                this.loaded = true;
-            }
-
-        }
+        ]
 
     };
 
@@ -6334,289 +6983,6 @@
         ]
 
     };
-
-    var Container = {
-
-        props: {
-            container: Boolean
-        },
-
-        data: {
-            container: true
-        },
-
-        computed: {
-
-            container: function container(ref) {
-                var container = ref.container;
-
-                return container === true && this.$container || container && $(container);
-            }
-
-        }
-
-    };
-
-    var active$1;
-
-    var Modal = {
-
-        mixins: [Class, Container, Togglable],
-
-        props: {
-            selPanel: String,
-            selClose: String,
-            escClose: Boolean,
-            bgClose: Boolean,
-            stack: Boolean
-        },
-
-        data: {
-            cls: 'uk-open',
-            escClose: true,
-            bgClose: true,
-            overlay: true,
-            stack: false
-        },
-
-        computed: {
-
-            panel: function panel(ref, $el) {
-                var selPanel = ref.selPanel;
-
-                return $(selPanel, $el);
-            },
-
-            transitionElement: function transitionElement() {
-                return this.panel;
-            },
-
-            transitionDuration: function transitionDuration() {
-                return toMs(css(this.transitionElement, 'transitionDuration'));
-            },
-
-            bgClose: function bgClose(ref) {
-                var bgClose = ref.bgClose;
-
-                return bgClose && this.panel;
-            }
-
-        },
-
-        events: [
-
-            {
-
-                name: 'click',
-
-                delegate: function delegate() {
-                    return this.selClose;
-                },
-
-                handler: function handler(e) {
-                    e.preventDefault();
-                    this.hide();
-                }
-
-            },
-
-            {
-
-                name: 'toggle',
-
-                self: true,
-
-                handler: function handler(e) {
-
-                    if (e.defaultPrevented) {
-                        return;
-                    }
-
-                    e.preventDefault();
-                    this.toggle();
-                }
-
-            },
-
-            {
-                name: 'beforeshow',
-
-                self: true,
-
-                handler: function handler(e) {
-
-                    var prev = active$1 && active$1 !== this && active$1;
-
-                    active$1 = this;
-
-                    if (prev) {
-                        if (this.stack) {
-                            this.prev = prev;
-                        } else {
-                            prev.hide().then(this.show);
-                            e.preventDefault();
-                            return;
-                        }
-                    }
-
-                    registerEvents();
-
-                }
-
-            },
-
-            {
-                name: 'beforehide',
-
-                self: true,
-
-                handler: function handler() {
-
-                    active$1 = active$1 && active$1 !== this && active$1 || this.prev;
-
-                    if (!active$1) {
-                        deregisterEvents();
-                    }
-
-                }
-
-            },
-
-            {
-
-                name: 'show',
-
-                self: true,
-
-                handler: function handler() {
-
-                    if (!hasClass(document.documentElement, this.clsPage)) {
-                        this.scrollbarWidth = width(window) - width(document);
-                        css(document.body, 'overflowY', this.scrollbarWidth && this.overlay ? 'scroll' : '');
-                    }
-
-                    addClass(document.documentElement, this.clsPage);
-
-                }
-
-            },
-
-            {
-
-                name: 'hidden',
-
-                self: true,
-
-                handler: function handler() {
-                    var this$1 = this;
-
-
-                    var found;
-                    var ref = this;
-                    var prev = ref.prev;
-
-                    while (prev) {
-
-                        if (prev.clsPage === this$1.clsPage) {
-                            found = true;
-                            break;
-                        }
-
-                        prev = prev.prev;
-
-                    }
-
-                    if (!found) {
-                        removeClass(document.documentElement, this.clsPage);
-
-                    }
-
-                    !this.prev && css(document.body, 'overflowY', '');
-                }
-
-            }
-
-        ],
-
-        methods: {
-
-            toggle: function toggle() {
-                return this.isToggled() ? this.hide() : this.show();
-            },
-
-            show: function show() {
-
-                if (this.isToggled()) {
-                    return Promise.resolve();
-                }
-
-                if (this.container && this.$el.parentNode !== this.container) {
-                    append(this.container, this.$el);
-                    this._callConnected();
-                }
-
-                return this.toggleNow(this.$el, true);
-            },
-
-            hide: function hide() {
-                return this.isToggled()
-                    ? this.toggleNow(this.$el, false)
-                    : Promise.resolve();
-            },
-
-            getActive: function getActive() {
-                return active$1;
-            },
-
-            _toggleImmediate: function _toggleImmediate(el, show) {
-                var this$1 = this;
-
-                return new Promise(function (resolve) { return requestAnimationFrame(function () {
-                        this$1._toggle(el, show);
-
-                        if (this$1.transitionDuration) {
-                            once(this$1.transitionElement, 'transitionend', resolve, false, function (e) { return e.target === this$1.transitionElement; });
-                        } else {
-                            resolve();
-                        }
-                    }); }
-                );
-            }
-
-        }
-
-    };
-
-    var events;
-
-    function registerEvents() {
-
-        if (events) {
-            return;
-        }
-
-        events = [
-            on(document, 'click', function (ref) {
-                var target = ref.target;
-                var defaultPrevented = ref.defaultPrevented;
-
-                if (active$1 && active$1.bgClose && !defaultPrevented && (!active$1.overlay || within(target, active$1.$el)) && !within(target, active$1.panel)) {
-                    active$1.hide();
-                }
-            }),
-            on(document, 'keydown', function (e) {
-                if (e.keyCode === 27 && active$1 && active$1.escClose) {
-                    e.preventDefault();
-                    active$1.hide();
-                }
-            })
-        ];
-    }
-
-    function deregisterEvents() {
-        events && events.forEach(function (unbind) { return unbind(); });
-        events = null;
-    }
 
     var Modal$1 = {
 
@@ -7455,9 +7821,7 @@
                     var this$1 = this;
 
 
-                    // Let child components be applied at least once first
-                    if ((els.delay = !els.delay)) {
-                        this.$emit();
+                    if (!els.delay) {
                         return;
                     }
 
@@ -7479,6 +7843,12 @@
                 write: function write(els) {
                     var this$1 = this;
 
+
+                    // Let child components be applied at least once first
+                    if (!els.delay) {
+                        this.$emit();
+                        return els.delay = true;
+                    }
 
                     var index$$1 = this.elements.length === 1 ? 1 : 0;
 
@@ -9370,7 +9740,7 @@
                 } else if (this.animation && isNumber(this.animation.duration)) {
                     return this.animation.duration;
                 }
-                return speedUp($el.offsetWidth / velocity);
+                return speedUp$1($el.offsetWidth / velocity);
             },
 
             length: function length() {
@@ -9568,7 +9938,7 @@
                     : 1;
     }
 
-    function speedUp(x) {
+    function speedUp$1(x) {
         return .5 * x + 300; // parabola through (400,500; 600,600; 1800,1200)
     }
 
@@ -10965,7 +11335,7 @@
                     return;
                 }
 
-                this.duration = speedUp(this.avgWidth / this.velocity)
+                this.duration = speedUp$1(this.avgWidth / this.velocity)
                     * ((
                         this.dir < 0 || !this.slides[this.prevIndex]
                             ? this.slides[this.index]
@@ -11848,365 +12218,6 @@
         e.preventDefault();
         e.stopPropagation();
     }
-
-    var AttributesObserver = {
-
-        props: {
-            observeAttributes: Boolean
-        },
-
-        data: {
-            observeAttributes: false
-        },
-
-        init: function init() {
-            var this$1 = this;
-
-            if (!this.$props.observeAttributes) { return; }
-            var observedAttrs = [].concat(this.$options.observedAttrs || []);
-            on(this.$el, 'attributechanged', function (event, attributeName) {
-                if (event.target === this$1.$el &&
-                    (observedAttrs.length === 0 || observedAttrs.indexOf(attributeName) > -1)) {
-                    var handlers = [].concat(this$1.$options.attributeChanged || []);
-                    handlers.forEach(function (handler) {
-                        var value = this$1.$props[attributeName];
-                        value = isUndefined(value) ? attr(event.target, attributeName) : value;
-                        return handler.call(this$1, attributeName, value);
-                    });
-                }
-            });
-        }
-
-    };
-
-    var ViewControl = {
-
-        attrs: true,
-
-        props: {
-            retain: Boolean,
-            clsActivated: Boolean,
-            clsEmpty: String,
-            queue: Boolean,
-            easing: String,
-            velocity: Number,
-            direction: Number,
-            duration: Number
-        },
-
-        data: {
-            retain: false,
-            easing: 'ease',
-            velocity: 1,
-            direction: 1,
-            stack: [],
-            queue: false,
-            promises: [],
-            percent: 0,
-            clsActive: 'uk-active',
-            clsEmpty: 'uk-empty',
-            clsActivated: false,
-            Transitioner: false,
-            transitionOptions: {}
-        },
-
-        computed: {
-
-            duration: function duration(ref, $el) {
-                var velocity = ref.velocity;
-                var duration = ref.duration;
-
-                if (isNumber(duration)) {
-                    return duration;
-                } else if (this.animation && isNumber(this.animation.duration)) {
-                    return this.animation.duration;
-                }
-                return speedUp$1($el.offsetWidth / velocity);
-            },
-
-            promise: function promise() {
-                return Promise.all(this.promises);
-            },
-
-            isTransitioning: function isTransitioning() {
-                return this.promises.length > 1;
-            },
-
-            isStacking: function isStacking() {
-                return this.stack.length > 1;
-            },
-
-            isEmpty: function isEmpty() {
-                return this.views.length === 0 ||
-                    (this.views.length === 1 && hasClass(this.views[0], 'uk-empty-placeholder'));
-            },
-
-            views: function views() {
-                return toNodes(this.$el.children);
-            }
-
-        },
-
-        ready: function ready$$1() {
-            if (this._pending) {
-                this._pending();
-            } else if (this.views[0]) {
-                this.show(this.views[0], this.direction);
-            }
-        },
-
-        update: {
-
-            write: function write() {
-                if (this.clsEmpty) { toggleClass(this.$el, this.clsEmpty, this.isEmpty); }
-            }
-
-        },
-
-        methods: {
-
-            show: function show(elem, direction, force, defer) {
-                var this$1 = this;
-                if ( direction === void 0 ) direction = this.direction;
-                if ( force === void 0 ) force = false;
-                if ( defer === void 0 ) defer = false;
-
-                elem = !elem ? $('<div class="uk-empty-placeholder"></div>') : $(elem);
-
-                if (!elem) { return Promise.reject(); }
-
-                if (!this._isReady) {
-                    return new Promise(function (resolve, reject) {
-                        this$1._pending = function() {
-                            delete this._pending;
-                            return this.show(elem, direction, force, defer).then(resolve, reject);
-                        };
-                    });
-                }
-
-                var ref = this;
-                var stack = ref.stack;
-                var queueIndex = force ? 0 : stack.length;
-                var reset = function (resolve) {
-                    stack.splice(queueIndex, 1);
-                    if (stack.length) {
-                        this$1.show(stack.shift(), direction, true);
-                    }
-                    return resolve ? Promise.resolve() : Promise.reject();
-                };
-
-                if (this.queue) { stack[force ? 'unshift' : 'push'](elem); }
-
-                if (!force && stack.length > 1) {
-                    if (stack.length === 2) {
-                        this.promises.push(this._transitioner.forward(Math.min(this.duration, 200)));
-                    }
-                    return Promise.all(this.promises);
-                }
-
-                var prev = this.current;
-                var next = elem;
-                var last = null;
-
-                if (prev === next) { return reset(true); }
-
-                return this._preload(next).then(function () {
-
-                    this$1.prev = prev;
-                    this$1.current = next;
-
-                    this$1.$el.appendChild(next);
-
-                    var transitionOptions = assign({}, this$1.transitionOptions);
-
-                    function _show(done) {
-                        var this$1 = this;
-
-                        var preventHide = prev ? !trigger(prev, 'beforeitemhide', [this]) : false;
-                        if (preventHide || !trigger(next, 'beforeitemshow', [this])) {
-                            this.current = this.prev;
-                            this.removeItem(next, true);
-                            return defer ? reset : reset();
-                        }
-
-                        trigger(this.$el, 'transition', [this, next, prev]);
-
-                        var _done = function () {
-                            var index$$1 = this$1.promises.indexOf(promise);
-                            if (index$$1 > -1) { this$1.promises.splice(index$$1, 1); }
-                            trigger(this$1.$el, 'transitioned', [this$1, next, prev]);
-                        };
-
-                        var promise = this._show(prev, next, direction, force, transitionOptions).then(function () {
-
-                            prev && trigger(prev, 'itemhidden', [this$1]);
-                            trigger(next, 'itemshown', [this$1]);
-
-                            return new Promise(function (resolve) {
-                                fastdom.write(function () {
-                                    last = stack.shift();
-                                    if (stack.length) {
-                                        this$1.show(stack.shift(), direction, true);
-                                    } else {
-                                        this$1._transitioner = null;
-                                    }
-                                    resolve();
-                                });
-                            });
-
-                        }, _done).then(_done);
-
-                        this.promises.push(promise);
-
-                        prev && trigger(prev, 'itemhide', [this]);
-                        trigger(next, 'itemshow', [this]);
-
-                        return Promise.all(this.promises).then(function() {
-                            if (typeof done === 'function') {
-                                return done(last || next);
-                            }
-                            return last || next;
-                        });
-                    }
-
-                    return defer ? _show.bind(this$1) : _show.call(this$1);
-                });
-            },
-
-            isRetained: function isRetained(target) {
-                return this.retain || hasAttr(target, 'data-retain');
-            },
-
-            removeItem: function removeItem(target, force) {
-                if (this.views.indexOf(target) === -1 && !force) { return; }
-                if (this.isRetained(target)) {
-                    removeClass(target, this.clsActive, this.clsActivated);
-                    trigger(target, 'retain', [this, attr(target, 'data-retain')]);
-                } else {
-                    remove(target);
-                }
-            },
-
-            _show: function _show(prev, next, direction, force, transitionOptions) {
-                var options = {
-                    direction: direction,
-                    duration: this.duration,
-                    percent: this.percent,
-                    easing: this.easing
-                };
-
-                trigger(this.$el, 'createtransition', [this, next, prev, options]);
-
-                this._transitioner = new this.Transitioner(
-                    prev,
-                    next,
-                    options.direction,
-                    assign({
-                        easing: force
-                            ? next.offsetWidth < 600
-                                ? 'cubic-bezier(0.25, 0.46, 0.45, 0.94)' /* easeOutQuad */
-                                : 'cubic-bezier(0.165, 0.84, 0.44, 1)' /* easeOutQuart */
-                            : options.easing
-                    }, transitionOptions || this.transitionOptions)
-                );
-
-                if (!force && !prev) {
-                    this._transitioner.translate(1);
-                    return Promise.resolve();
-                }
-
-                return this._transitioner.show(options.duration, options.percent);
-            },
-
-            _preload: function _preload(elem) {
-                var promises = $$('img', elem).map(function(img) {
-                    return getImage(img.src);
-                });
-                return new Promise(function (resolve) {
-                    Promise.all(promises).then(resolve, resolve);
-                });
-            }
-
-        }
-
-    };
-
-    function speedUp$1(x) {
-        return .5 * x + 300; // parabola through (400,500; 600,600; 1800,1200)
-    }
-
-    var View = {
-
-        mixins: [ViewControl],
-
-        props: {
-            animation: String
-        },
-
-        data: {
-            animation: 'fade',
-            clsActivated: 'uk-transition-active',
-            Animations: Animations,
-            Transitioner: Transitioner
-        },
-
-        computed: {
-
-            animation: function animation(ref) {
-                var animation = ref.animation;
-                var Animations$$1 = ref.Animations;
-
-                return assign(animation in Animations$$1 ? Animations$$1[animation] : Animations$$1.fade, {name: animation});
-            },
-
-            transitionOptions: function transitionOptions() {
-                return {animation: this.animation};
-            }
-
-        },
-
-        events: {
-
-            'itemshow itemhide itemshown itemhidden': function itemshowitemhideitemshownitemhidden(ref) {
-                var target = ref.target;
-
-                if (this.views.indexOf(target) === -1) { return; }
-                this.$update(target);
-            },
-
-            beforeitemshow: function beforeitemshow(ref) {
-                var target = ref.target;
-
-                addClass(target, this.clsActive);
-            },
-
-            itemshown: function itemshown(ref) {
-                var target = ref.target;
-
-                if (this.views.indexOf(target) === -1) { return; }
-                addClass(target, this.clsActivated);
-            },
-
-            itemhidden: function itemhidden(ref) {
-                var target = ref.target;
-
-                this.removeItem(target);
-            }
-
-        }
-
-    };
-
-    var mixin = {
-        class: Class,
-        container: Container,
-        modal: Modal,
-        position: Position,
-        togglable: Togglable,
-        attributesObserver: AttributesObserver,
-        view: View,
-        viewControl: ViewControl
-    };
 
     var View$1 = {
 
