@@ -21,6 +21,7 @@ export default {
     computed: {
 
         animation({animation, Animations}) {
+            animation = this.__force ? 'none' : animation;
             return assign(animation in Animations ? Animations[animation] : Animations.fade, {name: animation});
         },
 
@@ -44,6 +45,7 @@ export default {
         itemshown({target}) {
             if (this.views.indexOf(target) === -1) return;
             addClass(target, this.clsActivated);
+            delete this.__force;
         },
 
         itemhidden({target}) {

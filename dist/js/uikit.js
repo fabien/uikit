@@ -3850,6 +3850,15 @@
         },
 
         methods: {
+            
+            replace: function replace(elem, direction, force, defer) {
+                if ( direction === void 0 ) direction = this.direction;
+                if ( force === void 0 ) force = false;
+                if ( defer === void 0 ) defer = false;
+
+                this.__force = true;
+                return this.show(elem, direction, force, defer);
+            },
 
             show: function show(elem, direction, force, defer) {
                 var this$1 = this;
@@ -3902,7 +3911,7 @@
                     this$1.current = next;
 
                     this$1.$el.appendChild(next);
-
+                    
                     var transitionOptions = assign({}, this$1.transitionOptions);
 
                     function _show(done) {
@@ -4042,6 +4051,7 @@
                 var animation = ref.animation;
                 var Animations$$1 = ref.Animations;
 
+                animation = this.__force ? 'none' : animation;
                 return assign(animation in Animations$$1 ? Animations$$1[animation] : Animations$$1.fade, {name: animation});
             },
 
@@ -4071,6 +4081,7 @@
 
                 if (this.views.indexOf(target) === -1) { return; }
                 addClass(target, this.clsActivated);
+                delete this.__force;
             },
 
             itemhidden: function itemhidden(ref) {
