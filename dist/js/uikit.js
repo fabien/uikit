@@ -1,4 +1,4 @@
-/*! UIkit 3.0.0-rc.3 | http://www.getuikit.com | (c) 2014 - 2017 YOOtheme | MIT License */
+/*! UIkit 3.0.0-rc.4 | http://www.getuikit.com | (c) 2014 - 2017 YOOtheme | MIT License */
 
 (function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -671,12 +671,12 @@
 
     /* global setImmediate */
 
-    var Promise = 'Promise' in window ? window.Promise : PromiseFn;
+    var Promise$1 = 'Promise' in window ? window.Promise : PromiseFn;
 
     var Deferred = function Deferred() {
         var this$1 = this;
 
-        this.promise = new Promise(function (resolve, reject) {
+        this.promise = new Promise$1(function (resolve, reject) {
             this$1.reject = reject;
             this$1.resolve = resolve;
         });
@@ -868,7 +868,7 @@
     };
 
     function ajax(url, options) {
-        return new Promise(function (resolve, reject) {
+        return new Promise$1(function (resolve, reject) {
 
             var env = assign({
                 data: null,
@@ -921,7 +921,7 @@
 
     function getImage(src, srcset, sizes) {
 
-        return new Promise(function (resolve, reject) {
+        return new Promise$1(function (resolve, reject) {
             var img = new Image();
 
             img.onerror = reject;
@@ -1319,7 +1319,7 @@
         if ( timing === void 0 ) timing = 'linear';
 
 
-        return Promise.all(toNodes(element).map(function (element) { return new Promise(function (resolve, reject) {
+        return Promise$1.all(toNodes(element).map(function (element) { return new Promise$1(function (resolve, reject) {
 
                 for (var name in props) {
                     var value = css(element, name);
@@ -1365,7 +1365,7 @@
 
         stop: function stop(element) {
             trigger(element, 'transitionend');
-            return Promise.resolve();
+            return Promise$1.resolve();
         },
 
         cancel: function cancel(element) {
@@ -1386,10 +1386,10 @@
         if ( duration === void 0 ) duration = 200;
 
 
-        return Promise.all(toNodes(element).map(function (element) { return new Promise(function (resolve, reject) {
+        return Promise$1.all(toNodes(element).map(function (element) { return new Promise$1(function (resolve, reject) {
 
                 if (hasClass(element, clsCancelAnimation)) {
-                    requestAnimationFrame(function () { return Promise.resolve().then(function () { return animate.apply(void 0, arguments$1).then(resolve, reject); }
+                    requestAnimationFrame(function () { return Promise$1.resolve().then(function () { return animate.apply(void 0, arguments$1).then(resolve, reject); }
                         ); }
                     );
                     return;
@@ -1422,7 +1422,7 @@
                         reset();
                     } else {
                         resolve();
-                        Promise.resolve().then(function () {
+                        Promise$1.resolve().then(function () {
                             hasReset = true;
                             reset();
                         });
@@ -2273,7 +2273,7 @@
 
         if (youtube || vimeo) {
 
-            return this.ready = new Promise(function (resolve) {
+            return this.ready = new Promise$1(function (resolve) {
 
                 once(this$1.el, 'load', function () {
                     if (youtube) {
@@ -2295,7 +2295,7 @@
 
         }
 
-        return Promise.resolve();
+        return Promise$1.resolve();
 
     };
 
@@ -2360,7 +2360,7 @@
 
     function listen(cb) {
 
-        return new Promise(function (resolve) {
+        return new Promise$1(function (resolve) {
 
             once(window, 'message', function (_, data$$1) { return resolve(data$$1); }, false, function (ref) {
                 var data$$1 = ref.data;
@@ -2638,7 +2638,7 @@
         mergeOptions: mergeOptions,
         parseOptions: parseOptions,
         Player: Player,
-        Promise: Promise,
+        Promise: Promise$1,
         Deferred: Deferred,
         query: query,
         queryAll: queryAll,
@@ -3080,7 +3080,7 @@
                 triggerUpdate(next, 'itemin', {percent: percent, duration: duration, timing: timing, dir: dir});
                 triggerUpdate(prev, 'itemout', {percent: 1 - percent, duration: duration, timing: timing, dir: dir});
 
-                Promise.all([
+                Promise$1.all([
                     Transition.start(next, props[1], duration, timing),
                     Transition.start(prev, props[0], duration, timing)
                 ]).then(function () {
@@ -3231,11 +3231,11 @@
             toggleElement: function toggleElement(targets, show, animate$$1) {
                 var this$1 = this;
 
-                return new Promise(function (resolve) {
+                return new Promise$1(function (resolve) {
 
                     targets = toNodes(targets);
 
-                    var all = function (targets) { return Promise.all(targets.map(function (el) { return this$1._toggleElement(el, show, animate$$1); })); };
+                    var all = function (targets) { return Promise$1.all(targets.map(function (el) { return this$1._toggleElement(el, show, animate$$1); })); };
                     var toggled = targets.filter(function (el) { return this$1.isToggled(el); });
                     var untoggled = targets.filter(function (el) { return !includes(toggled, el); });
 
@@ -3273,7 +3273,7 @@
             toggleNow: function toggleNow(targets, show) {
                 var this$1 = this;
 
-                return new Promise(function (resolve) { return Promise.all(toNodes(targets).map(function (el) { return this$1._toggleElement(el, show, false); })).then(resolve, noop); });
+                return new Promise$1(function (resolve) { return Promise$1.all(toNodes(targets).map(function (el) { return this$1._toggleElement(el, show, false); })).then(resolve, noop); });
             },
 
             isToggled: function isToggled(el) {
@@ -3302,7 +3302,7 @@
                             : !this.isToggled(el);
 
                 if (!trigger(el, ("before" + (show ? 'show' : 'hide')), [this])) {
-                    return Promise.reject();
+                    return Promise$1.reject();
                 }
 
                 var promise = (animate$$1 === false || !this.hasAnimation
@@ -3343,7 +3343,7 @@
 
             _toggleImmediate: function _toggleImmediate(el, show) {
                 this._toggle(el, show);
-                return Promise.resolve();
+                return Promise$1.resolve();
             },
 
             _toggleHeight: function _toggleHeight(el, show) {
@@ -3583,7 +3583,7 @@
             show: function show() {
 
                 if (this.isToggled()) {
-                    return Promise.resolve();
+                    return Promise$1.resolve();
                 }
 
                 if (this.container && this.$el.parentNode !== this.container) {
@@ -3597,7 +3597,7 @@
             hide: function hide() {
                 return this.isToggled()
                     ? this.toggleNow(this.$el, false)
-                    : Promise.resolve();
+                    : Promise$1.resolve();
             },
 
             getActive: function getActive() {
@@ -3607,7 +3607,7 @@
             _toggleImmediate: function _toggleImmediate(el, show) {
                 var this$1 = this;
 
-                return new Promise(function (resolve) { return requestAnimationFrame(function () {
+                return new Promise$1(function (resolve) { return requestAnimationFrame(function () {
                         this$1._toggle(el, show);
 
                         if (this$1.transitionDuration) {
@@ -3811,7 +3811,7 @@
             },
 
             promise: function promise() {
-                return Promise.all(this.promises);
+                return Promise$1.all(this.promises);
             },
 
             isTransitioning: function isTransitioning() {
@@ -3868,10 +3868,10 @@
 
                 elem = !elem ? $('<div class="uk-empty-placeholder"></div>') : $(elem);
 
-                if (!elem) { return Promise.reject(); }
+                if (!elem) { return Promise$1.reject(); }
 
                 if (!this._isReady) {
-                    return new Promise(function (resolve, reject) {
+                    return new Promise$1(function (resolve, reject) {
                         this$1._pending = function() {
                             delete this._pending;
                             return this.show(elem, direction, force, defer).then(resolve, reject);
@@ -3887,7 +3887,7 @@
                     if (stack.length) {
                         this$1.show(stack.shift(), direction, true);
                     }
-                    return resolve ? Promise.resolve() : Promise.reject();
+                    return resolve ? Promise$1.resolve() : Promise$1.reject();
                 };
 
                 if (this.queue) { stack[force ? 'unshift' : 'push'](elem); }
@@ -3896,7 +3896,7 @@
                     if (stack.length === 2) {
                         this.promises.push(this._transitioner.forward(Math.min(this.duration, 200)));
                     }
-                    return Promise.all(this.promises);
+                    return Promise$1.all(this.promises);
                 }
 
                 var prev = this.current;
@@ -3937,7 +3937,7 @@
                             prev && trigger(prev, 'itemhidden', [this$1]);
                             trigger(next, 'itemshown', [this$1]);
 
-                            return new Promise(function (resolve) {
+                            return new Promise$1(function (resolve) {
                                 fastdom.write(function () {
                                     last = stack.shift();
                                     if (stack.length) {
@@ -3956,7 +3956,7 @@
                         prev && trigger(prev, 'itemhide', [this]);
                         trigger(next, 'itemshow', [this]);
 
-                        return Promise.all(this.promises).then(function() {
+                        return Promise$1.all(this.promises).then(function() {
                             if (typeof done === 'function') {
                                 return done(last || next);
                             }
@@ -4007,7 +4007,7 @@
 
                 if (!force && !prev) {
                     this._transitioner.translate(1);
-                    return Promise.resolve();
+                    return Promise$1.resolve();
                 }
 
                 return this._transitioner.show(options.duration, options.percent);
@@ -4017,8 +4017,8 @@
                 var promises = $$('img', elem).map(function(img) {
                     return getImage(img.src);
                 });
-                return new Promise(function (resolve) {
-                    Promise.all(promises).then(resolve, resolve);
+                return new Promise$1(function (resolve) {
+                    Promise$1.all(promises).then(resolve, resolve);
                 });
             }
 
@@ -6330,7 +6330,7 @@
                 }
 
                 if (!el) {
-                    return Promise.reject('SVG not found.');
+                    return Promise$1.reject('SVG not found.');
                 }
 
                 var dimensions = attr(el, 'viewBox');
@@ -6416,14 +6416,14 @@
 
 
                 if (!this.src) {
-                    return Promise.reject();
+                    return Promise$1.reject();
                 }
 
                 if (svgs[this.src]) {
                     return svgs[this.src];
                 }
 
-                svgs[this.src] = new Promise(function (resolve, reject) {
+                svgs[this.src] = new Promise$1(function (resolve, reject) {
 
                     if (startsWith(this$1.src, 'data:')) {
                         resolve(decodeURIComponent(this$1.src.split(',')[1]));
@@ -6546,10 +6546,10 @@
                 var icon = getIcon(applyRtl(this.icon));
 
                 if (!icon) {
-                    return Promise.reject('Icon not found.');
+                    return Promise$1.reject('Icon not found.');
                 }
 
-                return Promise.resolve(icon);
+                return Promise$1.resolve(icon);
             }
 
         }
@@ -7067,7 +7067,7 @@
 
             options = assign({bgClose: false, escClose: false, labels: UIkit.modal.labels}, options);
 
-            return new Promise(
+            return new Promise$1(
                 function (resolve) { return on(UIkit.modal.dialog((" <div class=\"uk-modal-body\">" + (isString(message) ? message : html(message)) + "</div> <div class=\"uk-modal-footer uk-text-right\"> <button class=\"uk-button uk-button-primary uk-modal-close\" autofocus>" + (options.labels.ok) + "</button> </div> "), options).$el, 'hide', resolve); }
             );
         };
@@ -7076,7 +7076,7 @@
 
             options = assign({bgClose: false, escClose: true, labels: UIkit.modal.labels}, options);
 
-            return new Promise(function (resolve, reject) {
+            return new Promise$1(function (resolve, reject) {
 
                 var confirm = UIkit.modal.dialog((" <form> <div class=\"uk-modal-body\">" + (isString(message) ? message : html(message)) + "</div> <div class=\"uk-modal-footer uk-text-right\"> <button class=\"uk-button uk-button-default uk-modal-close\" type=\"button\">" + (options.labels.cancel) + "</button> <button class=\"uk-button uk-button-primary\" autofocus>" + (options.labels.ok) + "</button> </div> </form> "), options);
 
@@ -7101,7 +7101,7 @@
 
             options = assign({bgClose: false, escClose: true, labels: UIkit.modal.labels}, options);
 
-            return new Promise(function (resolve) {
+            return new Promise$1(function (resolve) {
 
                 var prompt = UIkit.modal.dialog((" <form class=\"uk-form-stacked\"> <div class=\"uk-modal-body\"> <label>" + (isString(message) ? message : html(message)) + "</label> <input class=\"uk-input\" autofocus> </div> <div class=\"uk-modal-footer uk-text-right\"> <button class=\"uk-button uk-button-default uk-modal-close\" type=\"button\">" + (options.labels.cancel) + "</button> <button class=\"uk-button uk-button-primary\">" + (options.labels.ok) + "</button> </div> </form> "), options),
                     input = $('input', prompt.$el);
@@ -7216,7 +7216,7 @@
             var ref = this.$props;
             var dropbar = ref.dropbar;
 
-            this.dropbar = dropbar && (isString(dropbar) && query(dropbar, this.$el) || $('<div></div>'));
+            this.dropbar = dropbar && (query(dropbar, this.$el) || $('+ .uk-navbar-dropbar', this.$el) || $('<div></div>'));
 
             if (this.dropbar) {
 
@@ -7377,14 +7377,17 @@
 
                 el = oldHeight < newHeight && el;
 
-                css(el, {height: oldHeight, overflow: 'hidden'});
+                css(el, 'clip', ("rect(0," + (el.offsetWidth) + "px," + oldHeight + "px,0)"));
+
                 height(dropbar, oldHeight);
 
                 Transition.cancel([el, dropbar]);
-                return Transition
-                    .start([el, dropbar], {height: newHeight}, this.duration)
+                return Promise.all([
+                    Transition.start(dropbar, {height: newHeight}, this.duration),
+                    Transition.start(el, {clip: ("rect(0," + (el.offsetWidth) + "px," + newHeight + "px,0)")}, this.duration)
+                ])
                     .catch(noop)
-                    .then(function () { return css(el, {height: '', overflow: ''}); });
+                    .then(function () { return css(el, {clip: ''}); });
             },
 
             getDropdown: function getDropdown(el) {
@@ -8701,7 +8704,7 @@
 
     }
 
-    UIkit.version = '3.0.0-rc.3';
+    UIkit.version = '3.0.0-rc.4';
 
     core(UIkit);
 
@@ -8917,7 +8920,7 @@
                 reset(this.target);
                 this.$update(this.target);
 
-                return new Promise(function (resolve) {
+                return new Promise$1(function (resolve) {
                     cancelAnimationFrame(this$1._raf);
                     this$1._raf = requestAnimationFrame(function () {
 
@@ -8961,9 +8964,9 @@
                         css(this$1.target, 'height', oldHeight);
                         window.scroll(window.pageXOffset, oldScrollY);
 
-                        Promise.all(children.map(function (el, i) { return propsFrom[i] && propsTo[i]
+                        Promise$1.all(children.map(function (el, i) { return propsFrom[i] && propsTo[i]
                                 ? Transition.start(el, propsTo[i], this$1.animation, 'ease')
-                                : Promise.resolve(); }
+                                : Promise$1.resolve(); }
                         ).concat(Transition.start(this$1.target, {height: newHeight}, this$1.animation, 'ease'))).then(function () {
                             children.forEach(function (el, i) { return css(el, {display: propsTo[i].opacity === 0 ? 'none' : '', zIndex: ''}); });
                             reset(this$1.target);
@@ -9847,7 +9850,7 @@
                     prev && trigger(prev, 'itemhidden', [this$1]);
                     trigger(next, 'itemshown', [this$1]);
 
-                    return new Promise(function (resolve) {
+                    return new Promise$1(function (resolve) {
                         fastdom.write(function () {
                             stack.shift();
                             if (stack.length) {
@@ -9899,7 +9902,7 @@
 
                 if (!force && !prev) {
                     this._transitioner.translate(1);
-                    return Promise.resolve();
+                    return Promise$1.resolve();
                 }
 
                 var ref = this.stack;
