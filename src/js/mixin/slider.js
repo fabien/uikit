@@ -67,7 +67,7 @@ export default {
     events: {
 
         itemshown() {
-            this.$update(this.$el);
+            this.$update(this.list);
         }
 
     },
