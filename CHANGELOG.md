@@ -1,5 +1,16 @@
 # Changelog
 
+## WIP
+
+### Fixed
+
+- Fix single components to auto-install only when UIkit is attached to window object
+- Fix component naming (camelCase) in single component auto-install wrapper
+- Fix active row style for striped table
+- Fix height of Masonry Grid
+- Fix attribute change listener
+- Cover component updates on image load
+
 ## 3.0.0 rc 5 (June 4, 2018)
 
 ### Fixed
