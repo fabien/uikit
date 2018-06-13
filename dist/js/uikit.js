@@ -4472,7 +4472,7 @@
                 return;
             }
 
-            attrs = isArray(attrs) ? attrs : Object.keys(props).map(function (key) { return hyphenate(key); });
+            attrs = isArray(attrs) ? attrs : Object.keys(props);
 
             this._observer = new MutationObserver(function () {
 
@@ -4483,7 +4483,10 @@
 
             });
 
-            this._observer.observe(el, {attributes: true, attributeFilter: attrs.concat([this.$name, ("data-" + (this.$name))])});
+            this._observer.observe(el, {
+                attributes: true,
+                attributeFilter: attrs.map(function (key) { return hyphenate(key); }).concat([this.$name, ("data-" + (this.$name))])
+            });
         };
         
         UIkit.prototype.parseProps = function() {
@@ -5159,7 +5162,7 @@
 
         events: {
 
-            loadedmetadata: function() {
+            'loadedmetadata load': function() {
                 this.$emit();
             }
 
@@ -5875,10 +5878,14 @@
 
         computed: {
 
+            length: function(_, $el) {
+                return $el.children.length;
+            },
+
             parallax: function(ref) {
                 var parallax = ref.parallax;
 
-                return Math.abs(parallax);
+                return parallax && this.length ? Math.abs(parallax) : '';
             }
 
         },
@@ -5902,7 +5909,7 @@
                     var translates = false;
                     var elHeight = false;
 
-                    if (this.masonry) {
+                    if (this.masonry && this.length) {
 
                         var height$$1 = 0;
 
@@ -5931,9 +5938,10 @@
 
                     toggleClass(this.$el, this.clsStack, stacks);
 
-                    css(this.$el, 'paddingBottom', this.parallax && rows.some(function (row) { return row.length > 1; }) ? this.parallax : '');
-
-                    height$$1 && css(this.$el, 'minHeight', height$$1);
+                    css(this.$el, {
+                        paddingBottom: this.parallax,
+                        height: height$$1 || ''
+                    });
 
                 },
 
@@ -5948,7 +5956,7 @@
                     var height$$1 = ref.height;
 
                     return {
-                        scrolled: this.parallax && rows.some(function (row) { return row.length > 1; })
+                        scrolled: this.parallax
                             ? scrolledOver(this.$el, height$$1 ? height$$1 - height(this.$el) : 0) * this.parallax
                             : false
                     };
@@ -6752,12 +6760,16 @@
         },
 
         connected: function() {
+            var this$1 = this;
+
 
             if (storage[this.cacheKey]) {
                 setSrcAttrs(this.$el, storage[this.cacheKey] || this.dataSrc, this.dataSrcset, this.sizes);
             } else if (this.isImg && this.width && this.height) {
                 setSrcAttrs(this.$el, getPlaceholderImage(this.width, this.height, this.sizes));
             }
+
+            once(this.$el, 'load', function () { return this$1.$update(this$1.$el, 'resize'); });
 
         },
 
@@ -8956,13 +8968,13 @@
 
                 addClass(this.target, targetClass);
                 children.forEach(function (el, i) { return propsFrom[i] && css(el, propsFrom[i]); });
-                css(this.target, 'minHeight', oldHeight);
+                css(this.target, 'height', oldHeight);
                 window.scroll(window.pageXOffset, oldScrollY);
 
                 return Promise$1.all(children.map(function (el, i) { return propsFrom[i] && propsTo[i]
                         ? Transition.start(el, propsTo[i], this$1.animation, 'ease')
                         : Promise$1.resolve(); }
-                ).concat(Transition.start(this.target, {minHeight: newHeight}, this.animation, 'ease'))).then(function () {
+                ).concat(Transition.start(this.target, {height: newHeight}, this.animation, 'ease'))).then(function () {
                     children.forEach(function (el, i) { return css(el, {display: propsTo[i].opacity === 0 ? 'none' : '', zIndex: ''}); });
                     reset(this$1.target);
                     this$1.$update(this$1.target);
@@ -8998,7 +9010,7 @@
             width: ''
         });
         removeClass(el, targetClass);
-        css(el, 'minHeight', '');
+        css(el, 'height', '');
     }
 
     function getPositionWithMargin(el) {
