@@ -1,6 +1,10 @@
 # Changelog
 
-## WIP
+## 3.0.0 rc 6 (June 15, 2018)
+
+### Added
+
+- Add development builds to npm registry (`npm i uikit@dev` / `yarn add uikit@dev`)
 
 ### Fixed
 
@@ -10,6 +14,7 @@
 - Fix height of Masonry Grid
 - Fix attribute change listener
 - Cover component updates on image load
+- Fix Lightbox options handling 
 
 ## 3.0.0 rc 5 (June 4, 2018)
 

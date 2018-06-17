@@ -1,4 +1,4 @@
-/*! UIkit 3.0.0-rc.5 | http://www.getuikit.com | (c) 2014 - 2017 YOOtheme | MIT License */
+/*! UIkit 3.0.0-rc.6 | http://www.getuikit.com | (c) 2014 - 2017 YOOtheme | MIT License */
 
 (function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -7653,14 +7653,28 @@
 
         mixins: [Class],
 
+        props: {
+            selModal: String,
+            selPanel: String,
+        },
+
+        data: {
+            selModal: '.uk-modal',
+            selPanel: '.uk-modal-dialog',
+        },
+
         computed: {
 
-            modal: function(_, $el) {
-                return closest($el, '.uk-modal');
+            modal: function(ref, $el) {
+                var selModal = ref.selModal;
+
+                return closest($el, selModal);
             },
 
-            panel: function(_, $el) {
-                return closest($el, '.uk-modal-dialog');
+            panel: function(ref, $el) {
+                var selPanel = ref.selPanel;
+
+                return closest($el, selPanel);
             }
 
         },
@@ -7671,16 +7685,24 @@
 
         update: {
 
-            write: function() {
+            read: function() {
 
                 if (!this.panel || !this.modal) {
-                    return;
+                    return false;
                 }
 
-                var current = css(this.$el, 'maxHeight');
+                return {
+                    current: toFloat(css(this.$el, 'maxHeight')),
+                    max: Math.max(150, height(this.modal) - (this.panel.offsetHeight - height(this.$el)))
+                }
+            },
 
-                css(css(this.$el, 'maxHeight', 150), 'maxHeight', Math.max(150, 150 + height(this.modal) - this.panel.offsetHeight));
-                if (current !== css(this.$el, 'maxHeight')) {
+            write: function(ref) {
+                var current = ref.current;
+                var max = ref.max;
+
+                css(this.$el, 'maxHeight', max);
+                if (current !== max) {
                     trigger(this.$el, 'resize');
                 }
             },
@@ -8714,7 +8736,7 @@
 
     }
 
-    UIkit.version = '3.0.0-rc.5';
+    UIkit.version = '3.0.0-rc.6';
 
     core(UIkit);
 
@@ -10354,21 +10376,15 @@
         return ("<iframe src=\"" + src + "\" width=\"" + width$$1 + "\" height=\"" + height$$1 + "\" style=\"max-width: 100%; box-sizing: border-box;\" frameborder=\"0\" allowfullscreen uk-video=\"autoplay: " + autoplay + "\" uk-responsive></iframe>");
     }
 
-    var props = merge(LightboxPanel, 'props');
-    var defaults = merge(LightboxPanel, 'data');
-
     var Lightbox = {
 
         install: install$2,
 
         attrs: true,
 
-        props: assign({toggle: String}, props),
+        props: {toggle: String},
 
-        data: assign({toggle: 'a'}, Object.keys(props).reduce(function (data$$1, key) {
-            data$$1[key] = defaults[key];
-            return data$$1;
-        }, {})),
+        data: {toggle: 'a'},
 
         computed: {
 
@@ -10469,16 +10485,17 @@
             && listA.every(function (el, i) { return el === listB[i]; });
     }
 
-    function merge(options, prop) {
-        return assign.apply(
-            void 0, [ {} ].concat( (options.mixins ? options.mixins.map(function (mixin) { return merge(mixin, prop); }) : []),
-            [isFunction(options[prop]) ? options[prop]() : options[prop]] ));
-    }
+    function install$2(UIkit, Lightbox) {
 
-    function install$2(UIkit) {
         if (!UIkit.lightboxPanel) {
             UIkit.component('lightboxPanel', LightboxPanel);
         }
+
+        assign(
+            Lightbox.props,
+            UIkit.component('lightboxPanel').options.props
+        );
+
     }
 
     var obj;
@@ -10599,18 +10616,18 @@
         };
     }
 
-    var props$1 = ['x', 'y', 'bgx', 'bgy', 'rotate', 'scale', 'color', 'backgroundColor', 'borderColor', 'opacity', 'blur', 'hue', 'grayscale', 'invert', 'saturate', 'sepia', 'fopacity'];
+    var props = ['x', 'y', 'bgx', 'bgy', 'rotate', 'scale', 'color', 'backgroundColor', 'borderColor', 'opacity', 'blur', 'hue', 'grayscale', 'invert', 'saturate', 'sepia', 'fopacity'];
 
     var Parallax = {
 
-        props: props$1.reduce(function (props, prop) {
+        props: props.reduce(function (props, prop) {
             props[prop] = 'list';
             return props;
         }, {
             media: 'media'
         }),
 
-        data: props$1.reduce(function (data$$1, prop) {
+        data: props.reduce(function (data$$1, prop) {
             data$$1[prop] = undefined;
             return data$$1;
         }, {
@@ -10623,7 +10640,7 @@
                 var this$1 = this;
 
 
-                return props$1.reduce(function (props, prop) {
+                return props.reduce(function (props, prop) {
 
                     if (isUndefined(properties[prop])) {
                         return props;
