@@ -7496,15 +7496,24 @@
             write: function() {
 
                 if (this.getActive() === this) {
+                    var bodyContainer = this.container === document.body;
 
                     if (this.overlay || this.clsContentAnimation) {
-                        width(this.content, width(window) - this.scrollbarWidth);
+                        if (bodyContainer) {
+                            width(this.content, width(window) - this.scrollbarWidth);
+                        } else {
+                            width(this.content, width(this.container));
+                        }
                     }
 
                     if (this.overlay) {
-                        height(this.content, height(window));
-                        if (scroll) {
-                            this.content.scrollTop = scroll.y;
+                        if (bodyContainer) {
+                            height(this.content, height(window));
+                            if (scroll) {
+                                this.content.scrollTop = scroll.y;
+                            }
+                        } else {
+                            height(this.content, height(this.container));
                         }
                     }
 
