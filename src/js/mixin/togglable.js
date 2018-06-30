@@ -111,7 +111,6 @@ export default {
         },
 
         _toggleElement(el, show, animate) {
-
             show = isBoolean(show)
                 ? show
                 : Animation.inProgress(el)
@@ -135,6 +134,7 @@ export default {
 
             return promise.then(() => {
                 trigger(el, show ? 'shown' : 'hidden', [this]);
+                trigger(el, show ? '_shown' : '_hidden', [this]);
                 this.$update(el);
             });
         },

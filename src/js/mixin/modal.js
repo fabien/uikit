@@ -131,6 +131,9 @@ export default {
             self: true,
 
             handler() {
+                const bodyContainer = this.container === document.body;
+
+                if (!bodyContainer) return;
 
                 if (!hasClass(document.documentElement, this.clsPage)) {
                     this.scrollbarWidth = width(window) - width(document);

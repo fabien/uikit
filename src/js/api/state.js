@@ -134,7 +134,7 @@ export default function (UIkit) {
             attributeFilter: attrs.map(key => hyphenate(key)).concat([this.$name, `data-${this.$name}`])
         });
     };
-    
+
     UIkit.prototype.parseProps = function() {
         return getProps(this.$options, this.$name);
     };

@@ -1,4 +1,4 @@
-import {$, $$, assign, fastdom, remove, addClass, removeClass, hasClass, toggleClass, attr, hasAttr, isNumber, Promise, toNodes, trigger, getImage} from 'uikit-util';
+import {$, $$, assign, fastdom, remove, removeClass, hasClass, toggleClass, attr, hasAttr, isNumber, Promise, toNodes, trigger, getImage} from 'uikit-util';
 
 export default {
 
@@ -82,7 +82,7 @@ export default {
     },
 
     methods: {
-        
+
         replace(elem, direction = this.direction, force = false, defer = false) {
             this.__force = true;
             return this.show(elem, direction, force, defer);
@@ -133,7 +133,7 @@ export default {
                 this.current = next;
 
                 this.$el.appendChild(next);
-                
+
                 const transitionOptions = assign({}, this.transitionOptions);
 
                 function _show(done) {

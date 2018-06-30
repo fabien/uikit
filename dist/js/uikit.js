@@ -3290,7 +3290,6 @@
             _toggleElement: function(el, show, animate$$1) {
                 var this$1 = this;
 
-
                 show = isBoolean(show)
                     ? show
                     : Animation.inProgress(el)
@@ -3314,6 +3313,7 @@
 
                 return promise.then(function () {
                     trigger(el, show ? 'shown' : 'hidden', [this$1]);
+                    trigger(el, show ? '_shown' : '_hidden', [this$1]);
                     this$1.$update(el);
                 });
             },
@@ -3523,6 +3523,9 @@
                 self: true,
 
                 handler: function() {
+                    var bodyContainer = this.container === document.body;
+
+                    if (!bodyContainer) { return; }
 
                     if (!hasClass(document.documentElement, this.clsPage)) {
                         this.scrollbarWidth = width(window) - width(document);
@@ -3848,7 +3851,7 @@
         },
 
         methods: {
-            
+
             replace: function(elem, direction, force, defer) {
                 if ( direction === void 0 ) direction = this.direction;
                 if ( force === void 0 ) force = false;
@@ -3909,7 +3912,7 @@
                     this$1.current = next;
 
                     this$1.$el.appendChild(next);
-                    
+
                     var transitionOptions = assign({}, this$1.transitionOptions);
 
                     function _show(done) {
@@ -4488,7 +4491,7 @@
                 attributeFilter: attrs.map(function (key) { return hyphenate(key); }).concat([this.$name, ("data-" + (this.$name))])
             });
         };
-        
+
         UIkit.prototype.parseProps = function() {
             return getProps(this.$options, this.$name);
         };
@@ -7420,7 +7423,8 @@
             content: String,
             mode: String,
             flip: Boolean,
-            overlay: Boolean
+            overlay: Boolean,
+            swipeClose: Boolean
         },
 
         data: {
@@ -7428,6 +7432,7 @@
             mode: 'slide',
             flip: false,
             overlay: false,
+            swipeClose: true,
             clsPage: 'uk-offcanvas-page',
             clsContainer: 'uk-offcanvas-container',
             selPanel: '.uk-offcanvas-bar',
@@ -7496,24 +7501,14 @@
             write: function() {
 
                 if (this.getActive() === this) {
-                    var bodyContainer = this.container === document.body;
-
                     if (this.overlay || this.clsContentAnimation) {
-                        if (bodyContainer) {
-                            width(this.content, width(window) - this.scrollbarWidth);
-                        } else {
-                            width(this.content, width(this.container));
-                        }
+                        width(this.content, width(window) - this.scrollbarWidth);
                     }
 
                     if (this.overlay) {
-                        if (bodyContainer) {
-                            height(this.content, height(window));
-                            if (scroll) {
-                                this.content.scrollTop = scroll.y;
-                            }
-                        } else {
-                            height(this.content, height(this.container));
+                        height(this.content, height(window));
+                        if (scroll) {
+                            this.content.scrollTop = scroll.y;
                         }
                     }
 
@@ -7646,7 +7641,7 @@
                 name: 'swipeLeft swipeRight',
 
                 handler: function(e) {
-
+                    if (!this.swipeClose) { return; }
                     if (this.isToggled() && isTouch(e) && (e.type === 'swipeLeft' && !this.flip || e.type === 'swipeRight' && this.flip)) {
                         this.hide();
                     }
@@ -7703,7 +7698,7 @@
                 return {
                     current: toFloat(css(this.$el, 'maxHeight')),
                     max: Math.max(150, height(this.modal) - (this.panel.offsetHeight - height(this.$el)))
-                }
+                };
             },
 
             write: function(ref) {

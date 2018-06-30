@@ -13,7 +13,8 @@ export default {
         content: String,
         mode: String,
         flip: Boolean,
-        overlay: Boolean
+        overlay: Boolean,
+        swipeClose: Boolean
     },
 
     data: {
@@ -21,6 +22,7 @@ export default {
         mode: 'slide',
         flip: false,
         overlay: false,
+        swipeClose: true,
         clsPage: 'uk-offcanvas-page',
         clsContainer: 'uk-offcanvas-container',
         selPanel: '.uk-offcanvas-bar',
@@ -70,24 +72,14 @@ export default {
         write() {
 
             if (this.getActive() === this) {
-                const bodyContainer = this.container === document.body;
-
                 if (this.overlay || this.clsContentAnimation) {
-                    if (bodyContainer) {
-                        width(this.content, width(window) - this.scrollbarWidth);
-                    } else {
-                        width(this.content, width(this.container))
-                    }
+                    width(this.content, width(window) - this.scrollbarWidth);
                 }
 
                 if (this.overlay) {
-                    if (bodyContainer) {
-                        height(this.content, height(window));
-                        if (scroll) {
-                            this.content.scrollTop = scroll.y;
-                        }
-                    } else {
-                        height(this.content, height(this.container));
+                    height(this.content, height(window));
+                    if (scroll) {
+                        this.content.scrollTop = scroll.y;
                     }
                 }
 
@@ -216,7 +208,7 @@ export default {
             name: 'swipeLeft swipeRight',
 
             handler(e) {
-
+                if (!this.swipeClose) return;
                 if (this.isToggled() && isTouch(e) && (e.type === 'swipeLeft' && !this.flip || e.type === 'swipeRight' && this.flip)) {
                     this.hide();
                 }
