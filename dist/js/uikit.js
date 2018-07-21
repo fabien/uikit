@@ -12201,8 +12201,10 @@
                 if (!this.multiple) {
                     files = [files[0]];
                 }
+                
+                // NOTE return false to prevent upload
 
-                this.beforeAll(this, files);
+                if (this.beforeAll(this, files) === false) { return; }
 
                 var chunks = chunk(files, this.concurrent);
                 var upload = function (files) {
