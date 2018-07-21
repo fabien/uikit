@@ -50,8 +50,9 @@ export default {
                     rows = rows.map(elements => sortBy(elements, 'offsetLeft'));
                 }
 
+                const hasStaticContent = rows.some(elements => elements.some(element => css(element, 'position') === 'static'));
                 let translates = false;
-                let elHeight = false;
+                let elHeight = '';
 
                 if (this.masonry && this.length) {
 
@@ -70,18 +71,16 @@ export default {
 
                 }
 
-                return {rows, translates, height: elHeight};
+                return {rows, translates, height: hasStaticContent ? elHeight : false};
 
             },
 
-            write({rows, stacks, height}) {
+            write({stacks, height}) {
 
                 toggleClass(this.$el, this.clsStack, stacks);
 
-                css(this.$el, {
-                    paddingBottom: this.parallax,
-                    height: height || ''
-                });
+                css(this.$el, 'paddingBottom', this.parallax);
+                height !== false && css(this.$el, 'height', height);
 
             },
 
@@ -91,7 +90,7 @@ export default {
 
         {
 
-            read({rows, height}) {
+            read({height}) {
                 return {
                     scrolled: this.parallax
                         ? scrolledOver(this.$el, height ? height - getHeight(this.$el) : 0) * this.parallax

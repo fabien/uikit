@@ -1,4 +1,4 @@
-import {assign, attr, bind, camelize, data as getData, getCssVar, hasAttr, hasOwn, hyphenate, isArray, isFunction, isPlainObject, isString, isUndefined, mergeOptions, on, parseOptions, startsWith, toBoolean, toFloat, toList, toNumber} from 'uikit-util';
+import {assign, bind, camelize, data as getData, getCssVar, hasOwn, hyphenate, isArray, isBoolean, isFunction, isPlainObject, isString, isUndefined, mergeOptions, on, parseOptions, startsWith, toBoolean, toFloat, toList, toNumber} from 'uikit-util';
 
 export default function (UIkit) {
 
@@ -129,9 +129,11 @@ export default function (UIkit) {
 
         });
 
+        const filter = attrs.map(key => hyphenate(key)).concat(this.$name);
+
         this._observer.observe(el, {
             attributes: true,
-            attributeFilter: attrs.map(key => hyphenate(key)).concat([this.$name, `data-${this.$name}`])
+            attributeFilter: filter.concat(filter.map(key => `data-${key}`))
         });
     };
 
@@ -150,9 +152,11 @@ export default function (UIkit) {
 
         for (const key in props) {
             const prop = hyphenate(key);
-            if (hasAttr(el, prop)) {
+            let value = getData(el, prop);
 
-                const value = coerce(props[key], attr(el, prop));
+            if (!isUndefined(value)) {
+
+                value = coerce(props[key], value);
 
                 if (prop === 'target' && (!value || startsWith(value, '_'))) {
                     continue;
@@ -203,7 +207,7 @@ export default function (UIkit) {
             event = ({name: key, handler: event});
         }
 
-        let {name, el, handler, capture, delegate, filter, self} = event;
+        let {name, el, handler, capture, passive, delegate, filter, self} = event;
         el = isFunction(el)
             ? el.call(component)
             : el || component.$el;
@@ -233,7 +237,9 @@ export default function (UIkit) {
                         ? delegate
                         : delegate.call(component),
                 handler,
-                capture
+                isBoolean(passive)
+                    ? {passive, capture}
+                    : capture
             )
         );
 

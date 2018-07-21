@@ -1,4 +1,4 @@
-/*! UIkit 3.0.0-rc.6 | http://www.getuikit.com | (c) 2014 - 2017 YOOtheme | MIT License */
+/*! UIkit 3.0.0-rc.9 | http://www.getuikit.com | (c) 2014 - 2017 YOOtheme | MIT License */
 
 (function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -13,8 +13,8 @@
         };
     }
 
-    var ref = Object.prototype;
-    var hasOwnProperty = ref.hasOwnProperty;
+    var objPrototype = Object.prototype;
+    var hasOwnProperty = objPrototype.hasOwnProperty;
 
     function hasOwn(obj, key) {
         return hasOwnProperty.call(obj, key);
@@ -80,7 +80,7 @@
     }
 
     function isPlainObject(obj) {
-        return isObject(obj) && Object.getPrototypeOf(obj) === Object.prototype;
+        return isObject(obj) && Object.getPrototypeOf(obj) === objPrototype;
     }
 
     function isWindow(obj) {
@@ -95,12 +95,13 @@
         return isObject(obj) && !!obj.jquery;
     }
 
-    function isNode(element) {
-        return element instanceof Node || isObject(element) && element.nodeType === 1;
+    function isNode(obj) {
+        return obj instanceof Node || isObject(obj) && obj.nodeType === 1;
     }
 
-    function isNodeCollection(element) {
-        return element instanceof NodeList || element instanceof HTMLCollection;
+    var toString = objPrototype.toString;
+    function isNodeCollection(obj) {
+        return toString.call(obj).match(/^\[object (NodeList|HTMLCollection)\]$/);
     }
 
     function isBoolean(value) {
@@ -250,7 +251,7 @@
 
             var aProp = prop === 'width' ? 'height' : 'width';
 
-            return ( obj = {}, obj[aProp] = Math.round(value * dimensions[aProp] / dimensions[prop]), obj[prop] = value, obj );
+            return ( obj = {}, obj[aProp] = dimensions[prop] ? Math.round(value * dimensions[aProp] / dimensions[prop]) : dimensions[aProp], obj[prop] = value, obj );
         },
 
         contain: function(dimensions, maxDimensions) {
@@ -531,31 +532,35 @@
 
 
         var ref = getArgs(args);
-        var target = ref[0];
+        var targets = ref[0];
         var type = ref[1];
         var selector = ref[2];
         var listener = ref[3];
         var useCapture = ref[4];
 
-        target = toEventTarget(target);
+        targets = toEventTargets(targets);
 
         if (selector) {
-            listener = delegate(target, selector, listener);
+            listener = delegate(targets, selector, listener);
         }
 
         if (listener.length > 1) {
             listener = detail(listener);
         }
 
-        type.split(' ').forEach(function (type) { return target && target.addEventListener(type, listener, useCapture); });
-        return function () { return off(target, type, listener, useCapture); };
+        type.split(' ').forEach(function (type) { return targets.forEach(function (target) { return target.addEventListener(type, listener, useCapture); }
+            ); }
+        );
+        return function () { return off(targets, type, listener, useCapture); };
     }
 
-    function off(target, type, listener, useCapture) {
+    function off(targets, type, listener, useCapture) {
         if ( useCapture === void 0 ) useCapture = false;
 
-        target = toEventTarget(target);
-        target && type.split(' ').forEach(function (type) { return target.removeEventListener(type, listener, useCapture); });
+        targets = toEventTargets(targets);
+        type.split(' ').forEach(function (type) { return targets.forEach(function (target) { return target.removeEventListener(type, listener, useCapture); }
+            ); }
+        );
     }
 
     function once() {
@@ -581,8 +586,8 @@
         return off;
     }
 
-    function trigger(target, event, detail) {
-        return toEventTargets(target).reduce(function (notCanceled, target) { return notCanceled && target.dispatchEvent(createEvent(event, true, true, detail)); }
+    function trigger(targets, event, detail) {
+        return toEventTargets(targets).reduce(function (notCanceled, target) { return notCanceled && target.dispatchEvent(createEvent(event, true, true, detail)); }
             , true);
     }
 
@@ -600,33 +605,32 @@
     }
 
     function getArgs(args) {
-
-        if (isString(args[0])) {
-            args[0] = find(args[0]);
-        }
-
         if (isFunction(args[2])) {
             args.splice(2, 0, false);
         }
         return args;
     }
 
-    function delegate(element, selector, listener) {
+    function delegate(delegates, selector, listener) {
         var this$1 = this;
 
         return function (e) {
 
-            var target = e.target;
-            var current = selector[0] === '>'
-                ? findAll(selector, element).reverse().filter(function (element) { return within(target, element); })[0]
-                : closest(target, selector);
+            delegates.forEach(function (delegate) {
 
-            if (current) {
-                e.delegate = element;
-                e.current = current;
+                var current = selector[0] === '>'
+                    ? findAll(selector, delegate).reverse().filter(function (element) { return within(e.target, element); })[0]
+                    : closest(e.target, selector);
 
-                listener.call(this$1, e);
-            }
+                if (current) {
+                    e.delegate = delegate;
+                    e.current = current;
+
+                    listener.call(this$1, e);
+                }
+
+            });
+
         };
     }
 
@@ -645,11 +649,13 @@
     }
 
     function toEventTargets(target) {
-        return isEventTarget(target)
-            ? [target]
-            : isArray(target)
+        return isArray(target)
                 ? target.map(toEventTarget).filter(Boolean)
-                : toNodes(target);
+                : isString(target)
+                    ? findAll(target)
+                    : isEventTarget(target)
+                        ? [target]
+                        : toNodes(target);
     }
 
     function preventClick() {
@@ -669,12 +675,12 @@
 
     /* global setImmediate */
 
-    var Promise$1 = 'Promise' in window ? window.Promise : PromiseFn;
+    var Promise = 'Promise' in window ? window.Promise : PromiseFn;
 
     var Deferred = function() {
         var this$1 = this;
 
-        this.promise = new Promise$1(function (resolve, reject) {
+        this.promise = new Promise(function (resolve, reject) {
             this$1.reject = reject;
             this$1.resolve = resolve;
         });
@@ -866,7 +872,7 @@
     };
 
     function ajax(url, options) {
-        return new Promise$1(function (resolve, reject) {
+        return new Promise(function (resolve, reject) {
 
             var env = assign({
                 data: null,
@@ -919,7 +925,7 @@
 
     function getImage(src, srcset, sizes) {
 
-        return new Promise$1(function (resolve, reject) {
+        return new Promise(function (resolve, reject) {
             var img = new Image();
 
             img.onerror = reject;
@@ -1291,8 +1297,8 @@
     }
 
     var cssPrefixes = ['webkit', 'moz', 'ms'];
-    var ref$1 = document.createElement('_');
-    var style = ref$1.style;
+    var ref = document.createElement('_');
+    var style = ref.style;
 
     function vendorPropName(name) {
 
@@ -1317,7 +1323,7 @@
         if ( timing === void 0 ) timing = 'linear';
 
 
-        return Promise$1.all(toNodes(element).map(function (element) { return new Promise$1(function (resolve, reject) {
+        return Promise.all(toNodes(element).map(function (element) { return new Promise(function (resolve, reject) {
 
                 for (var name in props) {
                     var value = css(element, name);
@@ -1363,7 +1369,7 @@
 
         stop: function(element) {
             trigger(element, 'transitionend');
-            return Promise$1.resolve();
+            return Promise.resolve();
         },
 
         cancel: function(element) {
@@ -1384,10 +1390,10 @@
         if ( duration === void 0 ) duration = 200;
 
 
-        return Promise$1.all(toNodes(element).map(function (element) { return new Promise$1(function (resolve, reject) {
+        return Promise.all(toNodes(element).map(function (element) { return new Promise(function (resolve, reject) {
 
                 if (hasClass(element, clsCancelAnimation)) {
-                    requestAnimationFrame(function () { return Promise$1.resolve().then(function () { return animate.apply(void 0, arguments$1).then(resolve, reject); }
+                    requestAnimationFrame(function () { return Promise.resolve().then(function () { return animate.apply(void 0, arguments$1).then(resolve, reject); }
                         ); }
                     );
                     return;
@@ -1420,7 +1426,7 @@
                         reset();
                     } else {
                         resolve();
-                        Promise$1.resolve().then(function () {
+                        Promise.resolve().then(function () {
                             hasReset = true;
                             reset();
                         });
@@ -1671,30 +1677,19 @@
     function position(element) {
         element = toNode(element);
 
-        var parent = offsetParent(element);
-        var parentOffset = parent === docEl(element) ? {top: 0, left: 0} : offset(parent);
+        var parent = element.offsetParent || docEl(element);
+        var parentOffset = offset(parent);
         var ref = ['top', 'left'].reduce(function (props, prop) {
             var propName$$1 = ucfirst(prop);
             props[prop] -= parentOffset[prop]
-                + (toFloat(css(element, ("margin" + propName$$1))) || 0)
-                + (toFloat(css(parent, ("border" + propName$$1 + "Width"))) || 0);
+                + toFloat(css(element, ("margin" + propName$$1)))
+                + toFloat(css(parent, ("border" + propName$$1 + "Width")));
             return props;
         }, offset(element));
         var top = ref.top;
         var left = ref.left;
 
         return {top: top, left: left};
-    }
-
-    function offsetParent(element) {
-
-        var parent = toNode(element).offsetParent;
-
-        while (parent && css(parent, 'position') === 'static') {
-            parent = parent.offsetParent;
-        }
-
-        return parent || docEl(element);
     }
 
     var height = dimension('height');
@@ -1908,6 +1903,7 @@
 
     /* global DocumentTouch */
 
+    var isIE = /msie|trident/i.test(window.navigator.userAgent);
     var isRtl = attr(document.documentElement, 'dir') === 'rtl';
 
     var hasTouchEvents = 'ontouchstart' in window;
@@ -2271,7 +2267,7 @@
 
         if (youtube || vimeo) {
 
-            return this.ready = new Promise$1(function (resolve) {
+            return this.ready = new Promise(function (resolve) {
 
                 once(this$1.el, 'load', function () {
                     if (youtube) {
@@ -2293,7 +2289,7 @@
 
         }
 
-        return Promise$1.resolve();
+        return Promise.resolve();
 
     };
 
@@ -2358,7 +2354,7 @@
 
     function listen(cb) {
 
-        return new Promise$1(function (resolve) {
+        return new Promise(function (resolve) {
 
             once(window, 'message', function (_, data$$1) { return resolve(data$$1); }, false, function (ref) {
                 var data$$1 = ref.data;
@@ -2573,6 +2569,7 @@
         unwrap: unwrap,
         fragment: fragment,
         apply: apply,
+        isIE: isIE,
         isRtl: isRtl,
         hasTouch: hasTouch,
         pointerDown: pointerDown,
@@ -2636,7 +2633,7 @@
         mergeOptions: mergeOptions,
         parseOptions: parseOptions,
         Player: Player,
-        Promise: Promise$1,
+        Promise: Promise,
         Deferred: Deferred,
         query: query,
         queryAll: queryAll,
@@ -3078,7 +3075,7 @@
                 triggerUpdate(next, 'itemin', {percent: percent, duration: duration, timing: timing, dir: dir});
                 triggerUpdate(prev, 'itemout', {percent: 1 - percent, duration: duration, timing: timing, dir: dir});
 
-                Promise$1.all([
+                Promise.all([
                     Transition.start(next, props[1], duration, timing),
                     Transition.start(prev, props[0], duration, timing)
                 ]).then(function () {
@@ -3229,11 +3226,11 @@
             toggleElement: function(targets, show, animate$$1) {
                 var this$1 = this;
 
-                return new Promise$1(function (resolve) {
+                return new Promise(function (resolve) {
 
                     targets = toNodes(targets);
 
-                    var all = function (targets) { return Promise$1.all(targets.map(function (el) { return this$1._toggleElement(el, show, animate$$1); })); };
+                    var all = function (targets) { return Promise.all(targets.map(function (el) { return this$1._toggleElement(el, show, animate$$1); })); };
                     var toggled = targets.filter(function (el) { return this$1.isToggled(el); });
                     var untoggled = targets.filter(function (el) { return !includes(toggled, el); });
 
@@ -3271,7 +3268,7 @@
             toggleNow: function(targets, show) {
                 var this$1 = this;
 
-                return new Promise$1(function (resolve) { return Promise$1.all(toNodes(targets).map(function (el) { return this$1._toggleElement(el, show, false); })).then(resolve, noop); });
+                return new Promise(function (resolve) { return Promise.all(toNodes(targets).map(function (el) { return this$1._toggleElement(el, show, false); })).then(resolve, noop); });
             },
 
             isToggled: function(el) {
@@ -3299,7 +3296,7 @@
                             : !this.isToggled(el);
 
                 if (!trigger(el, ("before" + (show ? 'show' : 'hide')), [this])) {
-                    return Promise$1.reject();
+                    return Promise.reject();
                 }
 
                 var promise = (animate$$1 === false || !this.hasAnimation
@@ -3341,7 +3338,7 @@
 
             _toggleImmediate: function(el, show) {
                 this._toggle(el, show);
-                return Promise$1.resolve();
+                return Promise.resolve();
             },
 
             _toggleHeight: function(el, show) {
@@ -3584,7 +3581,7 @@
             show: function() {
 
                 if (this.isToggled()) {
-                    return Promise$1.resolve();
+                    return Promise.resolve();
                 }
 
                 if (this.container && this.$el.parentNode !== this.container) {
@@ -3598,7 +3595,7 @@
             hide: function() {
                 return this.isToggled()
                     ? this.toggleNow(this.$el, false)
-                    : Promise$1.resolve();
+                    : Promise.resolve();
             },
 
             getActive: function() {
@@ -3608,7 +3605,7 @@
             _toggleImmediate: function(el, show) {
                 var this$1 = this;
 
-                return new Promise$1(function (resolve) { return requestAnimationFrame(function () {
+                return new Promise(function (resolve) { return requestAnimationFrame(function () {
                         this$1._toggle(el, show);
 
                         if (this$1.transitionDuration) {
@@ -3812,7 +3809,7 @@
             },
 
             promise: function() {
-                return Promise$1.all(this.promises);
+                return Promise.all(this.promises);
             },
 
             isTransitioning: function() {
@@ -3869,10 +3866,10 @@
 
                 elem = !elem ? $('<div class="uk-empty-placeholder"></div>') : $(elem);
 
-                if (!elem) { return Promise$1.reject(); }
+                if (!elem) { return Promise.reject(); }
 
                 if (!this._isReady) {
-                    return new Promise$1(function (resolve, reject) {
+                    return new Promise(function (resolve, reject) {
                         this$1._pending = function() {
                             delete this._pending;
                             return this.show(elem, direction, force, defer).then(resolve, reject);
@@ -3888,7 +3885,7 @@
                     if (stack.length) {
                         this$1.show(stack.shift(), direction, true);
                     }
-                    return resolve ? Promise$1.resolve() : Promise$1.reject();
+                    return resolve ? Promise.resolve() : Promise.reject();
                 };
 
                 if (this.queue) { stack[force ? 'unshift' : 'push'](elem); }
@@ -3897,7 +3894,7 @@
                     if (stack.length === 2) {
                         this.promises.push(this._transitioner.forward(Math.min(this.duration, 200)));
                     }
-                    return Promise$1.all(this.promises);
+                    return Promise.all(this.promises);
                 }
 
                 var prev = this.current;
@@ -3938,7 +3935,7 @@
                             prev && trigger(prev, 'itemhidden', [this$1]);
                             trigger(next, 'itemshown', [this$1]);
 
-                            return new Promise$1(function (resolve) {
+                            return new Promise(function (resolve) {
                                 fastdom.write(function () {
                                     last = stack.shift();
                                     if (stack.length) {
@@ -3957,7 +3954,7 @@
                         prev && trigger(prev, 'itemhide', [this]);
                         trigger(next, 'itemshow', [this]);
 
-                        return Promise$1.all(this.promises).then(function() {
+                        return Promise.all(this.promises).then(function() {
                             if (typeof done === 'function') {
                                 return done(last || next);
                             }
@@ -4008,7 +4005,7 @@
 
                 if (!force && !prev) {
                     this._transitioner.translate(1);
-                    return Promise$1.resolve();
+                    return Promise.resolve();
                 }
 
                 return this._transitioner.show(options.duration, options.percent);
@@ -4018,8 +4015,8 @@
                 var promises = $$('img', elem).map(function(img) {
                     return getImage(img.src);
                 });
-                return new Promise$1(function (resolve) {
-                    Promise$1.all(promises).then(resolve, resolve);
+                return new Promise(function (resolve) {
+                    Promise.all(promises).then(resolve, resolve);
                 });
             }
 
@@ -4486,9 +4483,11 @@
 
             });
 
+            var filter$$1 = attrs.map(function (key) { return hyphenate(key); }).concat(this.$name);
+
             this._observer.observe(el, {
                 attributes: true,
-                attributeFilter: attrs.map(function (key) { return hyphenate(key); }).concat([this.$name, ("data-" + (this.$name))])
+                attributeFilter: filter$$1.concat(filter$$1.map(function (key) { return ("data-" + key); }))
             });
         };
 
@@ -4509,9 +4508,11 @@
 
             for (var key in props) {
                 var prop = hyphenate(key);
-                if (hasAttr(el, prop)) {
+                var value = data(el, prop);
 
-                    var value = coerce(props[key], attr(el, prop));
+                if (!isUndefined(value)) {
+
+                    value = coerce(props[key], value);
 
                     if (prop === 'target' && (!value || startsWith(value, '_'))) {
                         continue;
@@ -4568,6 +4569,7 @@
             var el = event.el;
             var handler = event.handler;
             var capture = event.capture;
+            var passive = event.passive;
             var delegate = event.delegate;
             var filter$$1 = event.filter;
             var self = event.self;
@@ -4600,7 +4602,9 @@
                             ? delegate
                             : delegate.call(component),
                     handler,
-                    capture
+                    isBoolean(passive)
+                        ? {passive: passive, capture: capture}
+                        : capture
                 )
             );
 
@@ -4928,11 +4932,11 @@
 
     var Alert = {
 
-        attrs: true,
-
         mixins: [Class, Togglable],
 
         args: 'animation',
+
+        attrs: true,
 
         props: {
             close: String
@@ -4985,10 +4989,16 @@
 
             on(window, 'load resize', function (e) { return UIkit.update(null, e); });
             on(window, 'scroll', function (e) {
+                var target = e.target;
                 e.dir = scroll <= window.pageYOffset ? 'down' : 'up';
                 e.pageYOffset = scroll = window.pageYOffset;
-                UIkit.update(null, e);
-            }, {capture: true, passive: false});
+                UIkit.update(target.nodeType !== 1 ? document.body : target, e);
+            }, {passive: true, capture: true});
+            on(document, 'loadedmetadata load', function (ref) {
+                var target = ref.target;
+
+                return UIkit.update(target, 'load');
+            }, true);
 
             on(document, 'animationstart', function (ref) {
                 var target = ref.target;
@@ -5131,43 +5141,48 @@
 
         update: {
 
-            write: function() {
+            read: function() {
 
                 var el = this.$el;
 
                 if (!isVisible(el)) {
-                    return;
+                    return false;
                 }
 
                 var ref = el.parentNode;
                 var height$$1 = ref.offsetHeight;
                 var width$$1 = ref.offsetWidth;
 
-                css(
-                    css(el, {width: '', height: ''}),
-                    Dimensions.cover(
-                        {
-                            width: this.width || el.clientWidth,
-                            height: this.height || el.clientHeight
-                        },
-                        {
-                            width: width$$1 + (width$$1 % 2 ? 1 : 0),
-                            height: height$$1 + (height$$1 % 2 ? 1 : 0)
-                        }
-                    )
-                );
+                return {height: height$$1, width: width$$1};
+            },
+
+            write: function(ref) {
+                var height$$1 = ref.height;
+                var width$$1 = ref.width;
+
+
+                var el = this.$el;
+                var elWidth = this.width || el.naturalWidth || el.videoWidth || el.clientWidth;
+                var elHeight = this.height || el.naturalHeight || el.videoHeight || el.clientHeight;
+
+                if (!elWidth || !elHeight) {
+                    return;
+                }
+
+                css(el, Dimensions.cover(
+                    {
+                        width: elWidth,
+                        height: elHeight
+                    },
+                    {
+                        width: width$$1 + (width$$1 % 2 ? 1 : 0),
+                        height: height$$1 + (height$$1 % 2 ? 1 : 0)
+                    }
+                ));
 
             },
 
             events: ['load', 'resize']
-
-        },
-
-        events: {
-
-            'loadedmetadata load': function() {
-                this.$emit();
-            }
 
         }
 
@@ -5909,8 +5924,9 @@
                         rows = rows.map(function (elements) { return sortBy(elements, 'offsetLeft'); });
                     }
 
+                    var hasStaticContent = rows.some(function (elements) { return elements.some(function (element) { return css(element, 'position') === 'static'; }); });
                     var translates = false;
-                    var elHeight = false;
+                    var elHeight = '';
 
                     if (this.masonry && this.length) {
 
@@ -5929,22 +5945,19 @@
 
                     }
 
-                    return {rows: rows, translates: translates, height: elHeight};
+                    return {rows: rows, translates: translates, height: hasStaticContent ? elHeight : false};
 
                 },
 
                 write: function(ref) {
-                    var rows = ref.rows;
                     var stacks = ref.stacks;
                     var height$$1 = ref.height;
 
 
                     toggleClass(this.$el, this.clsStack, stacks);
 
-                    css(this.$el, {
-                        paddingBottom: this.parallax,
-                        height: height$$1 || ''
-                    });
+                    css(this.$el, 'paddingBottom', this.parallax);
+                    height$$1 !== false && css(this.$el, 'height', height$$1);
 
                 },
 
@@ -5955,7 +5968,6 @@
             {
 
                 read: function(ref) {
-                    var rows = ref.rows;
                     var height$$1 = ref.height;
 
                     return {
@@ -6203,71 +6215,72 @@
             minHeight: 0
         },
 
+        connected: function() {
+            css(this.$el, 'boxSizing', 'border-box');
+        },
+
         update: {
 
-            write: function() {
-
-                css(this.$el, 'boxSizing', 'border-box');
+            read: function() {
 
                 var viewport = height(window);
-                var minHeight, offsetTop = 0;
+                var minHeight = '';
 
                 if (this.expand) {
 
-                    css(this.$el, {height: '', minHeight: ''});
-
-                    var diff = viewport - offsetHeight(document.documentElement);
-
-                    if (diff > 0) {
-                        minHeight = offsetHeight(this.$el) + diff;
-                    }
+                    minHeight = viewport - (offsetHeight(document.documentElement) - offsetHeight(this.$el)) || '';
 
                 } else {
 
                     var ref = offset(this.$el);
                     var top = ref.top;
 
+                    // on mobile devices (iOS and Android) window.innerHeight !== 100vh
+                    minHeight = 'calc(100vh';
+
                     if (top < viewport / 2 && this.offsetTop) {
-                        offsetTop += top;
+                        minHeight += " - " + top + "px";
                     }
 
                     if (this.offsetBottom === true) {
 
-                        offsetTop += offsetHeight(this.$el.nextElementSibling);
+                        minHeight += " - " + (offsetHeight(this.$el.nextElementSibling)) + "px";
 
                     } else if (isNumeric(this.offsetBottom)) {
 
-                        offsetTop += (viewport / 100) * this.offsetBottom;
+                        minHeight += " - " + (this.offsetBottom) + "vh";
 
                     } else if (this.offsetBottom && endsWith(this.offsetBottom, 'px')) {
 
-                        offsetTop += toFloat(this.offsetBottom);
+                        minHeight += " - " + (toFloat(this.offsetBottom)) + "px";
 
                     } else if (isString(this.offsetBottom)) {
 
-                        offsetTop += offsetHeight(query(this.offsetBottom, this.$el));
+                        minHeight += " - " + (offsetHeight(query(this.offsetBottom, this.$el))) + "px";
 
                     }
 
-                    // on mobile devices (iOS and Android) window.innerHeight !== 100vh
-                    minHeight = offsetTop ? ("calc(100vh - " + offsetTop + "px)") : '100vh';
+                    minHeight += ')';
 
                 }
 
-                if (!minHeight) {
-                    return;
-                }
+                return {minHeight: minHeight, viewport: viewport};
+            },
+
+            write: function(ref) {
+                var minHeight = ref.minHeight;
+
 
                 css(this.$el, {height: '', minHeight: minHeight});
 
-                var elHeight = this.$el.offsetHeight;
-                if (this.minHeight && this.minHeight > elHeight) {
+                if (this.minHeight && toFloat(css(this.$el, 'minHeight')) < this.minHeight) {
                     css(this.$el, 'minHeight', this.minHeight);
                 }
 
                 // IE 11 fix (min-height on a flex container won't apply to its flex items)
-                if (viewport - offsetTop >= elHeight) {
-                    css(this.$el, 'height', minHeight);
+                var height$$1;
+                if (/*isIE && */(height$$1 = Math.round(toFloat(css(this.$el, 'minHeight')))) >= offsetHeight(this.$el)) {
+                    css(this.$el, 'height', height$$1);
                 }
 
             },
@@ -6339,7 +6352,7 @@
                 }
 
                 if (!el) {
-                    return Promise$1.reject('SVG not found.');
+                    return Promise.reject('SVG not found.');
                 }
 
                 var dimensions = attr(el, 'viewBox');
@@ -6425,14 +6438,14 @@
 
 
                 if (!this.src) {
-                    return Promise$1.reject();
+                    return Promise.reject();
                 }
 
                 if (svgs[this.src]) {
                     return svgs[this.src];
                 }
 
-                svgs[this.src] = new Promise$1(function (resolve, reject) {
+                svgs[this.src] = new Promise(function (resolve, reject) {
 
                     if (startsWith(this$1.src, 'data:')) {
                         resolve(decodeURIComponent(this$1.src.split(',')[1]));
@@ -6555,10 +6568,10 @@
                 var icon = getIcon(applyRtl(this.icon));
 
                 if (!icon) {
-                    return Promise$1.reject('Icon not found.');
+                    return Promise.reject('Icon not found.');
                 }
 
-                return Promise$1.resolve(icon);
+                return Promise.resolve(icon);
             }
 
         }
@@ -6686,12 +6699,9 @@
         props: {
             dataSrc: String,
             dataSrcset: Boolean,
-            dataSizes: Boolean,
             sizes: String,
             width: Number,
             height: Number,
-            dataWidth: Number,
-            dataHeight: Number,
             offsetTop: String,
             offsetLeft: String,
             target: String
@@ -6700,7 +6710,6 @@
         data: {
             dataSrc: '',
             dataSrcset: false,
-            dataSizes: false,
             sizes: false,
             width: false,
             height: false,
@@ -6763,16 +6772,12 @@
         },
 
         connected: function() {
-            var this$1 = this;
-
 
             if (storage[this.cacheKey]) {
                 setSrcAttrs(this.$el, storage[this.cacheKey] || this.dataSrc, this.dataSrcset, this.sizes);
             } else if (this.isImg && this.width && this.height) {
                 setSrcAttrs(this.$el, getPlaceholderImage(this.width, this.height, this.sizes));
             }
-
-            once(this.$el, 'load', function () { return this$1.$update(this$1.$el, 'resize'); });
 
         },
 
@@ -6835,18 +6840,22 @@
             src && (el.src = src);
             srcset && (el.srcset = srcset);
             sizes && (el.sizes = sizes);
-        } else {
-            src && css(el, 'backgroundImage', ("url(" + src + ")"));
+        } else if (src) {
+
+            var change = !includes(el.style.backgroundImage, src);
+            css(el, 'backgroundImage', ("url(" + src + ")"));
+            if (change) {
+                trigger(el, createEvent('load', false));
+            }
+
         }
 
     }
 
-    var urlCache = {};
     var sizesRe = /\s*(.*?)\s*(\w+|calc\(.*?\))\s*(?:,|$)/g;
-    function getPlaceholderImage(width$$1, height$$1, sizes, color) {
+    function getPlaceholderImage(width$$1, height$$1, sizes) {
         var assign$$1;
 
-        if ( color === void 0 ) color = 'transparent';
 
         if (sizes) {
             var matches$$1;
@@ -6864,20 +6873,7 @@
 
         }
 
-        var key = width$$1 + "." + height$$1 + "." + color;
-        if (urlCache[key]) {
-            return urlCache[key];
-        }
-
-        var canvas = fragment('<canvas>');
-        canvas.width = width$$1;
-        canvas.height = height$$1;
-
-        var context = canvas.getContext('2d');
-        context.fillStyle = color;
-        context.fillRect(0, 0, width$$1, height$$1);
-
-        return urlCache[key] = canvas.toDataURL('image/png');
+        return ("data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"" + width$$1 + "\" height=\"" + height$$1 + "\"></svg>");
     }
 
     var sizeRe = /\d+(?:\w+|%)/g;
@@ -7080,7 +7076,7 @@
 
             options = assign({bgClose: false, escClose: false, labels: UIkit.modal.labels}, options);
 
-            return new Promise$1(
+            return new Promise(
                 function (resolve) { return on(UIkit.modal.dialog((" <div class=\"uk-modal-body\">" + (isString(message) ? message : html(message)) + "</div> <div class=\"uk-modal-footer uk-text-right\"> <button class=\"uk-button uk-button-primary uk-modal-close\" autofocus>" + (options.labels.ok) + "</button> </div> "), options).$el, 'hide', resolve); }
             );
         };
@@ -7089,7 +7085,7 @@
 
             options = assign({bgClose: false, escClose: true, labels: UIkit.modal.labels}, options);
 
-            return new Promise$1(function (resolve, reject) {
+            return new Promise(function (resolve, reject) {
 
                 var confirm = UIkit.modal.dialog((" <form> <div class=\"uk-modal-body\">" + (isString(message) ? message : html(message)) + "</div> <div class=\"uk-modal-footer uk-text-right\"> <button class=\"uk-button uk-button-default uk-modal-close\" type=\"button\">" + (options.labels.cancel) + "</button> <button class=\"uk-button uk-button-primary\" autofocus>" + (options.labels.ok) + "</button> </div> </form> "), options);
 
@@ -7114,7 +7110,7 @@
 
             options = assign({bgClose: false, escClose: true, labels: UIkit.modal.labels}, options);
 
-            return new Promise$1(function (resolve) {
+            return new Promise(function (resolve) {
 
                 var prompt = UIkit.modal.dialog((" <form class=\"uk-form-stacked\"> <div class=\"uk-modal-body\"> <label>" + (isString(message) ? message : html(message)) + "</label> <input class=\"uk-input\" autofocus> </div> <div class=\"uk-modal-footer uk-text-right\"> <button class=\"uk-button uk-button-default uk-modal-close\" type=\"button\">" + (options.labels.cancel) + "</button> <button class=\"uk-button uk-button-primary\">" + (options.labels.ok) + "</button> </div> </form> "), options),
                     input = $('input', prompt.$el);
@@ -7697,7 +7693,7 @@
 
                 return {
                     current: toFloat(css(this.$el, 'maxHeight')),
-                    max: Math.max(150, height(this.modal) - (this.panel.offsetHeight - height(this.$el)))
+                    max: Math.max(150, height(this.modal) - (offset(this.panel).height - height(this.$el)))
                 };
             },
 
@@ -7706,7 +7702,7 @@
                 var max = ref.max;
 
                 css(this.$el, 'maxHeight', max);
-                if (current !== max) {
+                if (Math.round(current) !== Math.round(max)) {
                     trigger(this.$el, 'resize');
                 }
             },
@@ -8210,14 +8206,23 @@
 
             {
 
-                write: function() {
+                read: function() {
+                    return {
+                        height: this.$el.offsetHeight,
+                        top: offset(this.isActive ? this.placeholder : this.$el).top
+                    };
+                },
 
-                    var ref = this;
-                    var placeholder = ref.placeholder;
-                    var offsetHeight = ref.$el.offsetHeight;
+                write: function(ref) {
+                    var height$$1 = ref.height;
+                    var top = ref.top;
+
+
+                    var ref$1 = this;
+                    var placeholder = ref$1.placeholder;
 
                     css(placeholder, assign(
-                        {height: css(this.$el, 'position') !== 'absolute' ? offsetHeight : ''},
+                        {height: css(this.$el, 'position') !== 'absolute' ? height$$1 : ''},
                         css(this.$el, ['marginTop', 'marginBottom', 'marginLeft', 'marginRight'])
                     ));
 
@@ -8226,13 +8231,13 @@
                         attr(placeholder, 'hidden', '');
                     }
 
-                    this.topOffset = offset(this.isActive ? placeholder : this.$el).top;
-                    this.bottomOffset = this.topOffset + offsetHeight;
+                    this.topOffset = top;
+                    this.bottomOffset = this.topOffset + height$$1;
 
                     var bottom = parseProp('bottom', this);
 
                     this.top = Math.max(toFloat(parseProp('top', this)), this.topOffset) - this.offset;
-                    this.bottom = bottom && bottom - offsetHeight;
+                    this.bottom = bottom && bottom - height$$1;
                     this.inactive = this.media && !window.matchMedia(this.media).matches;
 
                 },
@@ -8502,13 +8507,17 @@
 
         methods: {
 
+            index: function() {
+                return !!this.connects.length && index(filter(this.connects[0].children, ("." + (this.cls)))[0]);
+            },
+
             show: function(item) {
                 var this$1 = this;
 
 
                 var ref = this.toggles;
                 var length = ref.length;
-                var prev = !!this.connects.length && index(filter(this.connects[0].children, ("." + (this.cls)))[0]);
+                var prev = this.index();
                 var hasPrev = prev >= 0;
                 var dir = item === 'previous' ? -1 : 1;
 
@@ -8740,7 +8749,7 @@
 
     }
 
-    UIkit.version = '3.0.0-rc.6';
+    UIkit.version = '3.0.0-rc.9';
 
     core(UIkit);
 
@@ -8997,13 +9006,14 @@
                 css(this.target, 'height', oldHeight);
                 window.scroll(window.pageXOffset, oldScrollY);
 
-                return Promise$1.all(children.map(function (el, i) { return propsFrom[i] && propsTo[i]
+                return Promise.all(children.map(function (el, i) { return propsFrom[i] && propsTo[i]
                         ? Transition.start(el, propsTo[i], this$1.animation, 'ease')
-                        : Promise$1.resolve(); }
+                        : Promise.resolve(); }
                 ).concat(Transition.start(this.target, {height: newHeight}, this.animation, 'ease'))).then(function () {
                     children.forEach(function (el, i) { return css(el, {display: propsTo[i].opacity === 0 ? 'none' : '', zIndex: ''}); });
                     reset(this$1.target);
                     this$1.$update(this$1.target);
+                    fastdom.flush(); // needed for IE11
                 }, noop);
 
             }
@@ -9057,7 +9067,7 @@
         if (!style$1) {
             style$1 = append(document.head, '<style>').sheet;
             style$1.insertRule(
-                ("." + targetClass + " > * {\n                    margin-top: 0 !important;\n                    transform: none !important;\n                }")
+                ("." + targetClass + " > * {\n                    margin-top: 0 !important;\n                    transform: none !important;\n                }"), 0
             );
         }
     }
@@ -9067,6 +9077,8 @@
         mixins: [Animate],
 
         args: 'target',
+
+        attrs: true,
 
         props: {
             target: Boolean,
@@ -9273,7 +9285,7 @@
     }
 
     function sortItems(nodes, sort, order) {
-        return toNodes(nodes).sort(function (a, b) { return data(a, sort).localeCompare(data(b, sort)) * (order === 'asc' || -1); });
+        return toNodes(nodes).sort(function (a, b) { return data(a, sort).localeCompare(data(b, sort), undefined, {numeric: true}) * (order === 'asc' || -1); });
     }
 
     var Animations$2 = assign({}, Animations, {
@@ -9488,6 +9500,19 @@
             },
 
             {
+
+                // Workaround for iOS 11 bug: https://bugs.webkit.org/show_bug.cgi?id=184250
+
+                name: 'touchmove',
+                passive: false,
+                handler: 'move',
+                delegate: function() {
+                    return this.slidesSelector;
+                }
+
+            },
+
+            {
                 name: 'dragstart',
 
                 handler: function(e) {
@@ -9500,6 +9525,8 @@
         methods: {
 
             start: function() {
+                var this$1 = this;
+
 
                 this.drag = this.pos;
 
@@ -9508,8 +9535,8 @@
                     this.percent = this._transitioner.percent();
                     this.drag += this._transitioner.getDistance() * this.percent * this.dir;
 
-                    this._transitioner.translate(this.percent);
                     this._transitioner.cancel();
+                    this._transitioner.translate(this.percent);
 
                     this.dragging = true;
 
@@ -9519,7 +9546,12 @@
                     this.prevIndex = this.index;
                 }
 
-                this.unbindMove = on(document, pointerMove, this.move, {capture: true, passive: false});
+                // See above workaround notice
+                var off$$1 = on(document, pointerMove.replace(' touchmove', ''), this.move, {passive: false});
+                this.unbindMove = function () {
+                    off$$1();
+                    this$1.unbindMove = null;
+                };
                 on(window, 'scroll', this.unbindMove);
                 on(document, pointerUp, this.end, true);
 
@@ -9528,6 +9560,11 @@
             move: function(e) {
                 var this$1 = this;
 
+
+                // See above workaround notice
+                if (!this.unbindMove) {
+                    return;
+                }
 
                 var distance = this.pos - this.drag;
 
@@ -9605,7 +9642,7 @@
             end: function() {
 
                 off(window, 'scroll', this.unbindMove);
-                this.unbindMove();
+                this.unbindMove && this.unbindMove();
                 off(document, pointerUp, this.end, true);
 
                 if (this.dragging) {
@@ -9747,9 +9784,9 @@
 
     var Slider = {
 
-        attrs: true,
-
         mixins: [SliderAutoplay, SliderDrag, SliderNav],
+
+        attrs: true,
 
         props: {
             clsActivated: Boolean,
@@ -9880,7 +9917,7 @@
                     prev && trigger(prev, 'itemhidden', [this$1]);
                     trigger(next, 'itemshown', [this$1]);
 
-                    return new Promise$1(function (resolve) {
+                    return new Promise(function (resolve) {
                         fastdom.write(function () {
                             stack.shift();
                             if (stack.length) {
@@ -9932,7 +9969,7 @@
 
                 if (!force && !prev) {
                     this._transitioner.translate(1);
-                    return Promise$1.resolve();
+                    return Promise.resolve();
                 }
 
                 var ref = this.stack;
@@ -10426,12 +10463,7 @@
 
         update: function(data$$1) {
 
-            data$$1.toggles = data$$1.toggles || this.toggles;
-
-            if (this.panel && this.animation) {
-                this.panel.$props.animation = this.animation;
-                this.panel.$emit();
-            }
+            data$$1.toggles = this.panel && data$$1.toggles || this.toggles;
 
             if (!this.panel || isEqualList$1(data$$1.toggles, this.toggles)) {
                 return;
@@ -11968,11 +12000,11 @@
 
     var Tooltip = {
 
-        attrs: true,
+        mixins: [Container, Togglable, Position],
 
         args: 'title',
 
-        mixins: [Container, Togglable, Position],
+        attrs: true,
 
         props: {
             delay: Number,

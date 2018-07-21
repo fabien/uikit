@@ -1,4 +1,4 @@
-import {getPos, includes, isRtl, isTouch, off, on, pointerDown, pointerMove, pointerUp, preventClick, trigger} from 'uikit-util';
+import {css, getPos, includes, isRtl, isTouch, off, on, pointerDown, pointerMove, pointerUp, preventClick, trigger} from 'uikit-util';
 
 export default {
 
@@ -58,6 +58,19 @@ export default {
         },
 
         {
+
+            // Workaround for iOS 11 bug: https://bugs.webkit.org/show_bug.cgi?id=184250
+
+            name: 'touchmove',
+            passive: false,
+            handler: 'move',
+            delegate() {
+                return this.slidesSelector;
+            }
+
+        },
+
+        {
             name: 'dragstart',
 
             handler(e) {
@@ -78,8 +91,8 @@ export default {
                 this.percent = this._transitioner.percent();
                 this.drag += this._transitioner.getDistance() * this.percent * this.dir;
 
-                this._transitioner.translate(this.percent);
                 this._transitioner.cancel();
+                this._transitioner.translate(this.percent);
 
                 this.dragging = true;
 
@@ -89,13 +102,23 @@ export default {
                 this.prevIndex = this.index;
             }
 
-            this.unbindMove = on(document, pointerMove, this.move, {capture: true, passive: false});
+            // See above workaround notice
+            const off = on(document, pointerMove.replace(' touchmove', ''), this.move, {passive: false});
+            this.unbindMove = () => {
+                off();
+                this.unbindMove = null;
+            }
             on(window, 'scroll', this.unbindMove);
             on(document, pointerUp, this.end, true);
 
         },
 
         move(e) {
+
+            // See above workaround notice
+            if (!this.unbindMove) {
+                return;
+            }
 
             const distance = this.pos - this.drag;
 
@@ -171,7 +194,7 @@ export default {
         end() {
 
             off(window, 'scroll', this.unbindMove);
-            this.unbindMove();
+            this.unbindMove && this.unbindMove();
             off(document, pointerUp, this.end, true);
 
             if (this.dragging) {

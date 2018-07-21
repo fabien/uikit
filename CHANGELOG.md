@@ -1,5 +1,56 @@
 # Changelog
 
+## WIP
+
+### Changed
+
+- Improve Height Viewport component performance
+
+### Fixed
+
+- Fix performance regression in Grid component
+- Fix Height Viewport jumping in size on mobile devices if BottomOffset was set
+- Fix offsetParent detection
+
+## 3.0.0 rc 9 (July 13, 2018)
+
+### Changed
+
+- Allow thumbnav items to shrink if `flex-wrap: nowrap` is set
+
+### Fixed
+
+- Fix Filter component height during transition
+- Fix Filter/Sortable component in IE 11
+- Fix Overflow Auto component triggering `resize` event indefinitely
+- Fix Slider/Slideshow capture slide during transition in Safari 11
+- Fix Slider/Slideshow drag behavior in iOS 11.3+ (https://bugs.webkit.org/show_bug.cgi?id=184250)
+- Fix `toEventTargets` in IE 11
+
+## 3.0.0 rc 8 (July 5, 2018)
+
+### Fixed
+
+- Fix regression in dev dependencies
+
+## 3.0.0 rc 7 (July 5, 2018)
+
+### Added
+
+- Allow `data-` prefixed attributes as component options
+
+### Changed
+
+- Improve Image component performance
+- Improve Cover component performance
+- Improve resize reactivity on Image/Video load
+
+### Fixed
+
+- Fix Dropbar in Navbar in IE 11
+- Fix single components did not get exported from their modules
+- Fix Lightbox reactivity
+
 ## 3.0.0 rc 6 (June 15, 2018)
 
 ### Added
@@ -14,7 +65,7 @@
 - Fix height of Masonry Grid
 - Fix attribute change listener
 - Cover component updates on image load
-- Fix Lightbox options handling 
+- Fix Lightbox options handling
 
 ## 3.0.0 rc 5 (June 4, 2018)
 
