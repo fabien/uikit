@@ -1,4 +1,4 @@
-import {$$, addClass, css, data, filter, isInView, removeClass, toggleClass, trigger} from 'uikit-util';
+import {$$, addClass, css, data, filter, isInView, Promise, removeClass, toggleClass, trigger} from 'uikit-util';
 
 export default {
 
@@ -49,7 +49,7 @@ export default {
 
             read(els) {
 
-                if (!els.delay) {
+                if (!els.update) {
                     return;
                 }
 
@@ -66,26 +66,26 @@ export default {
                     els[i] = elData;
 
                 });
+
             },
 
             write(els) {
 
                 // Let child components be applied at least once first
-                if (!els.delay) {
+                if (!els.update) {
                     this.$emit();
-                    return els.delay = true;
+                    return els.update = true;
                 }
-
-                let index = this.elements.length === 1 ? 1 : 0;
 
                 this.elements.forEach((el, i) => {
 
                     const elData = els[i];
                     const cls = elData.toggles[i] || elData.toggles[0];
 
-                    if (elData.show && !elData.inview && !elData.timer) {
+                    if (elData.show && !elData.inview && !elData.queued) {
 
                         const show = () => {
+
                             css(el, 'visibility', '');
                             addClass(el, this.inViewClass);
                             toggleClass(el, cls);
@@ -95,22 +95,42 @@ export default {
                             this.$update(el);
 
                             elData.inview = true;
-                            delete elData.timer;
+                            elData.abort && elData.abort();
                         };
 
-                        if (this.delay && index) {
-                            elData.timer = setTimeout(show, this.delay * index);
+                        if (this.delay) {
+
+                            elData.queued = true;
+                            els.promise = (els.promise || Promise.resolve()).then(() => {
+                                return !elData.inview && new Promise(resolve => {
+
+                                    const timer = setTimeout(() => {
+
+                                        show();
+                                        resolve();
+
+                                    }, els.promise || this.elements.length === 1 ? this.delay : 0);
+
+                                    elData.abort = () => {
+                                        clearTimeout(timer);
+                                        resolve();
+                                        elData.queued = false;
+                                    };
+
+                                });
+
+                            });
+
                         } else {
                             show();
                         }
 
-                        index++;
+                    } else if (!elData.show && (elData.inview || elData.queued) && this.repeat) {
 
-                    } else if (!elData.show && elData.inview && this.repeat) {
+                        elData.abort && elData.abort();
 
-                        if (elData.timer) {
-                            clearTimeout(elData.timer);
-                            delete elData.timer;
+                        if (!elData.inview) {
+                            return;
                         }
 
                         css(el, 'visibility', this.hidden ? 'hidden' : '');
@@ -137,3 +157,4 @@ export default {
     ]
 
 };
+

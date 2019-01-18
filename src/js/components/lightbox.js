@@ -1,11 +1,9 @@
 import LightboxPanel from './lightbox-panel';
-import {$$, assign, data, index} from 'uikit-util';
+import {$$, assign, data, index, on} from 'uikit-util';
 
 export default {
 
     install,
-
-    attrs: true,
 
     props: {toggle: String},
 
@@ -20,7 +18,7 @@ export default {
     },
 
     disconnected() {
-        this._destroy();
+        this.hide();
     },
 
     events: [
@@ -35,7 +33,6 @@ export default {
 
             handler(e) {
                 e.preventDefault();
-                e.current.blur();
                 this.show(index(this.toggles, e.current));
             }
 
@@ -52,15 +49,15 @@ export default {
         }
 
         data.toggles = this.toggles;
-        this._destroy();
-        this._init();
+        this.panel.hide();
 
     },
 
     methods: {
 
-        _init() {
-            return this.panel = this.panel || this.$create('lightboxPanel', assign({}, this.$props, {
+        show(index) {
+
+            this.panel = this.panel || this.$create('lightboxPanel', assign({}, this.$props, {
                 items: this.toggles.reduce((items, el) => {
                     items.push(['href', 'caption', 'type', 'poster', 'alt'].reduce((obj, attr) => {
                         obj[attr === 'href' ? 'source' : attr] = data(el, attr);
@@ -69,23 +66,9 @@ export default {
                     return items;
                 }, [])
             }));
-        },
 
-        _destroy() {
-            if (this.panel) {
-                this.panel.$destroy(true);
-                this.panel = null;
-            }
-        },
-
-        show(index) {
-
-            if (!this.panel) {
-                this._init();
-            }
-
+            on(this.panel.$el, 'hidden', () => this.panel = false);
             return this.panel.show(index);
-
         },
 
         hide() {

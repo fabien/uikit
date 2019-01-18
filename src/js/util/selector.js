@@ -1,13 +1,19 @@
 import {removeAttr} from './attr';
-import {isNode, isString, startsWith, toNode, toNodes} from './lang';
+import {isDocument, isNode, isString, startsWith, toNode, toNodes} from './lang';
 
 export function query(selector, context) {
-    return toNode(selector) || find(selector, isContextSelector(selector) ? context : document);
+    return toNode(selector) || find(selector, getContext(selector, context));
 }
 
 export function queryAll(selector, context) {
     const nodes = toNodes(selector);
-    return nodes.length && nodes || findAll(selector, isContextSelector(selector) ? context : document);
+    return nodes.length && nodes || findAll(selector, getContext(selector, context));
+}
+
+function getContext(selector, context = document) {
+    return isContextSelector(selector) || isDocument(context)
+        ? context
+        : context.ownerDocument;
 }
 
 export function find(selector, context) {
@@ -124,7 +130,7 @@ export function closest(element, selector) {
 
     return isNode(element)
         ? element.parentNode && closestFn.call(element, selector)
-        : toNodes(element).map(element => element.parentNode && closestFn.call(element, selector)).filter(Boolean);
+        : toNodes(element).map(element => closest(element, selector)).filter(Boolean);
 }
 
 export function parents(element, selector) {

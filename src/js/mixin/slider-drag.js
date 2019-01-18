@@ -1,4 +1,4 @@
-import {css, getPos, includes, isRtl, isTouch, off, on, pointerDown, pointerMove, pointerUp, preventClick, trigger} from 'uikit-util';
+import {getPos, includes, isRtl, isTouch, noop, off, on, pointerDown, pointerMove, pointerUp, preventClick, trigger} from 'uikit-util';
 
 export default {
 
@@ -12,7 +12,7 @@ export default {
         preventCatch: false
     },
 
-    init() {
+    created() {
 
         ['start', 'move', 'end'].forEach(key => {
 
@@ -38,16 +38,16 @@ export default {
             name: pointerDown,
 
             delegate() {
-                return this.slidesSelector;
+                return this.selSlides;
             },
 
             handler(e) {
                 if (!this.draggable) return;
 
-                if (!isTouch(e) && hasTextNodesOnly(e.target)
+                if (!this.draggable
+                    || !isTouch(e) && hasTextNodesOnly(e.target)
                     || e.button > 0
                     || this.length < 2
-                    || this.preventCatch
                 ) {
                     return;
                 }
@@ -65,7 +65,7 @@ export default {
             passive: false,
             handler: 'move',
             delegate() {
-                return this.slidesSelector;
+                return this.selSlides;
             }
 
         },
@@ -103,11 +103,13 @@ export default {
             }
 
             // See above workaround notice
-            const off = on(document, pointerMove.replace(' touchmove', ''), this.move, {passive: false});
+            const off = pointerMove !== 'touchmove'
+                ? on(document, pointerMove, this.move, {passive: false})
+                : noop;
             this.unbindMove = () => {
                 off();
                 this.unbindMove = null;
-            }
+            };
             on(window, 'scroll', this.unbindMove);
             on(document, pointerUp, this.end, true);
 

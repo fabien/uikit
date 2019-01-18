@@ -1,8 +1,10 @@
-import {$$, addClass, css, hasTouch, on, ready, removeClass, toMs, within} from 'uikit-util';
+import {css, on, ready, toMs} from 'uikit-util';
 
 export default function (UIkit) {
 
     ready(() => {
+
+        UIkit.update();
 
         let scroll = 0;
         let started = 0;
@@ -28,28 +30,6 @@ export default function (UIkit) {
                 }, toMs(css(target, 'animationDuration')) + 100);
             }
         }, true);
-
-        if (!hasTouch) {
-            return;
-        }
-
-        const cls = 'uk-hover';
-
-        on(document, 'tap', ({target}) =>
-            $$(`.${cls}`).forEach(el =>
-                !within(target, el) && removeClass(el, cls)
-            )
-        );
-
-        Object.defineProperty(UIkit, 'hoverSelector', {
-
-            set(selector) {
-                on(document, 'tap', selector, ({current}) => addClass(current, cls));
-            }
-
-        });
-
-        UIkit.hoverSelector = '.uk-animation-toggle, .uk-transition-toggle, [uk-hover]';
 
     });
 

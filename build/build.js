@@ -12,7 +12,7 @@ argv._.forEach(arg => {
 const numArgs = Object.keys(argv).length;
 argv.all = argv.all || numArgs <= 1; // no arguments passed, so compile all
 
-const minify = !(argv.debug || argv.nominify || argv.nominify || argv.d);
+const minify = !(argv.debug || argv.nominify || argv.d);
 
 // TODO, reference camelize function from utils when seperated
 const camelizeRe = /-(\w)/g;
@@ -50,11 +50,11 @@ const steps = {
 
     core: () => util.compile('src/js/uikit-core.js', 'dist/js/uikit-core', {minify}),
     uikit: () => util.compile('src/js/uikit.js', 'dist/js/uikit', {minify, bundled: true}),
-    icons: () => util.compile('src/js/icons.js', 'dist/js/uikit-icons', {
+    icons: () => util.icons('{src/images,custom}/icons/*.svg').then(ICONS => util.compile('src/js/icons.js', 'dist/js/uikit-icons', {
         minify,
         name: 'icons',
-        replaces: {ICONS: util.icons('{src/images,custom}/icons/*.svg')}
-    }),
+        replaces: {ICONS}
+    })),
     tests: () => util.compile('tests/js/index.js', 'tests/js/test', {minify, name: 'test'})
 
 };

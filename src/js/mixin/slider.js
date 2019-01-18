@@ -7,8 +7,6 @@ export default {
 
     mixins: [SliderAutoplay, SliderDrag, SliderNav],
 
-    attrs: true,
-
     props: {
         clsActivated: Boolean,
         easing: String,
@@ -54,7 +52,7 @@ export default {
             return this.length - 1;
         },
 
-        slidesSelector({selList}) {
+        selSlides({selList}) {
             return `${selList} > *`;
         },
 

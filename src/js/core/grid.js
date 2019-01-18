@@ -1,14 +1,12 @@
 import Margin from './margin';
 import Class from '../mixin/class';
-import {addClass, css, hasClass, height as getHeight, scrolledOver, toFloat, toggleClass, toNodes, sortBy} from 'uikit-util';
+import {addClass, css, hasClass, height as getHeight, isRtl, scrolledOver, toFloat, toggleClass, toNodes, Transition, sortBy} from 'uikit-util';
 
 export default {
 
     extends: Margin,
 
     mixins: [Class],
-
-    attrs: true,
 
     name: 'grid',
 
@@ -48,9 +46,14 @@ export default {
 
                 if (this.masonry || this.parallax) {
                     rows = rows.map(elements => sortBy(elements, 'offsetLeft'));
+
+                    if (isRtl) {
+                        rows.map(row => row.reverse());
+                    }
+
                 }
 
-                const hasStaticContent = rows.some(elements => elements.some(element => css(element, 'position') === 'static'));
+                const transitionInProgress = rows.some(elements => elements.some(Transition.inProgress));
                 let translates = false;
                 let elHeight = '';
 
@@ -71,7 +74,7 @@ export default {
 
                 }
 
-                return {rows, translates, height: hasStaticContent ? elHeight : false};
+                return {rows, translates, height: !transitionInProgress ? elHeight : false};
 
             },
 

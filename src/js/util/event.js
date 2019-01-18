@@ -1,4 +1,5 @@
 import {within} from './filter';
+import {pointerCancel} from './env';
 import {closest, findAll} from './selector';
 import {isArray, isFunction, isString, toNode, toNodes} from './lang';
 
@@ -96,9 +97,7 @@ function detail(listener) {
 }
 
 function isEventTarget(target) {
-    return 'EventTarget' in window
-        ? target instanceof EventTarget
-        : target && 'addEventListener' in target;
+    return target && 'addEventListener' in target;
 }
 
 function toEventTarget(target) {
@@ -126,6 +125,6 @@ export function preventClick() {
 
     }, true));
 
-    trigger(document, 'touchcancel');
+    trigger(document, pointerCancel);
 
 }

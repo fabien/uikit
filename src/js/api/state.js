@@ -1,4 +1,4 @@
-import {assign, bind, camelize, data as getData, getCssVar, hasOwn, hyphenate, isArray, isBoolean, isFunction, isPlainObject, isString, isUndefined, mergeOptions, on, parseOptions, startsWith, toBoolean, toFloat, toList, toNumber} from 'uikit-util';
+import {assign, bind, camelize, data as getData, hasOwn, hyphenate, isArray, isBoolean, isFunction, isPlainObject, isString, isUndefined, mergeOptions, on, parseOptions, startsWith, toBoolean, toList, toNumber} from 'uikit-util';
 
 export default function (UIkit) {
 
@@ -114,7 +114,7 @@ export default function (UIkit) {
     UIkit.prototype._initObserver = function () {
 
         let {attrs, props, el} = this.$options;
-        if (this._observer || !props || !attrs) {
+        if (this._observer || !props || attrs === false) {
             return;
         }
 
@@ -156,7 +156,9 @@ export default function (UIkit) {
 
             if (!isUndefined(value)) {
 
-                value = coerce(props[key], value);
+                value = props[key] === Boolean && value === ''
+                    ? true
+                    : coerce(props[key], value);
 
                 if (prop === 'target' && (!value || startsWith(value, '_'))) {
                     continue;
@@ -188,14 +190,21 @@ export default function (UIkit) {
                 const {_computeds, $props, $el} = component;
 
                 if (!hasOwn(_computeds, key)) {
-                    _computeds[key] = cb.call(component, $props, $el);
+                    _computeds[key] = (cb.get || cb).call(component, $props, $el);
                 }
 
                 return _computeds[key];
             },
 
             set(value) {
-                component._computeds[key] = value;
+
+                const {_computeds} = component;
+
+                _computeds[key] = cb.set ? cb.set.call(component, value) : value;
+
+                if (isUndefined(_computeds[key])) {
+                    delete _computeds[key];
+                }
             }
 
         });
@@ -269,25 +278,9 @@ export default function (UIkit) {
             return toNumber(value);
         } else if (type === 'list') {
             return toList(value);
-        } else if (type === 'media') {
-            return toMedia(value);
         }
 
         return type ? type(value) : value;
-    }
-
-    function toMedia(value) {
-
-        if (isString(value)) {
-            if (value[0] === '@') {
-                const name = `media-${value.substr(1)}`;
-                value = toFloat(getCssVar(name));
-            } else if (isNaN(value)) {
-                return value;
-            }
-        }
-
-        return value && !isNaN(value) ? `(min-width: ${value}px)` : false;
     }
 
     function normalizeData({data, el}, {args, props = {}}) {
