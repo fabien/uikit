@@ -3733,7 +3733,7 @@
             observeAttributes: false
         },
 
-        init: function() {
+        created: function() {
             var this$1 = this;
 
             if (!this.$props.observeAttributes) { return; }
@@ -3821,11 +3821,17 @@
             }
 
         },
+        
+        events: {
+        
+            itemshown: function() {
+                this.$update(this.$el);
+            }
+        
+        },
 
-        ready: function() {
-            if (this._pending) {
-                this._pending();
-            } else if (this.views[0]) {
+        connected: function() {
+            if (this.views[0]) {
                 this.show(this.views[0], this.direction);
             }
         },
@@ -3858,16 +3864,7 @@
                 elem = !elem ? $('<div class="uk-empty-placeholder"></div>') : $(elem);
 
                 if (!elem) { return Promise.reject(); }
-
-                if (!this._isReady) {
-                    return new Promise(function (resolve, reject) {
-                        this$1._pending = function() {
-                            delete this._pending;
-                            return this.show(elem, direction, force, defer).then(resolve, reject);
-                        };
-                    });
-                }
-
+                
                 var ref = this;
                 var stack = ref.stack;
                 var queueIndex = force ? 0 : stack.length;
@@ -3893,7 +3890,7 @@
                 var last = null;
 
                 if (prev === next) { return reset(true); }
-
+                
                 return this._preload(next).then(function () {
 
                     this$1.prev = prev;
@@ -4058,7 +4055,7 @@
                 if (this.views.indexOf(target) === -1) { return; }
                 this.$update(target);
             },
-
+            
             beforeitemshow: function(ref) {
                 var target = ref.target;
 

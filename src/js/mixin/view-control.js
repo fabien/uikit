@@ -64,11 +64,17 @@ export default {
         }
 
     },
+    
+    events: {
+    
+        itemshown() {
+            this.$update(this.$el);
+        }
+    
+    },
 
-    ready() {
-        if (this._pending) {
-            this._pending();
-        } else if (this.views[0]) {
+    connected() {
+        if (this.views[0]) {
             this.show(this.views[0], this.direction);
         }
     },
@@ -92,16 +98,7 @@ export default {
             elem = !elem ? $('<div class="uk-empty-placeholder"></div>') : $(elem);
 
             if (!elem) return Promise.reject();
-
-            if (!this._isReady) {
-                return new Promise((resolve, reject) => {
-                    this._pending = function() {
-                        delete this._pending;
-                        return this.show(elem, direction, force, defer).then(resolve, reject);
-                    };
-                });
-            }
-
+            
             const {stack} = this;
             const queueIndex = force ? 0 : stack.length;
             const reset = (resolve) => {
@@ -126,7 +123,7 @@ export default {
             let last = null;
 
             if (prev === next) return reset(true);
-
+            
             return this._preload(next).then(() => {
 
                 this.prev = prev;

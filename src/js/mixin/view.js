@@ -1,6 +1,6 @@
 import Animations from './internal/slideshow-animations';
 import Transitioner from './internal/slideshow-transitioner';
-import {addClass, assign} from 'uikit-util';
+import {addClass, assign, isNumber} from 'uikit-util';
 import ViewControl from '../mixin/view-control';
 
 export default {
@@ -37,7 +37,7 @@ export default {
             if (this.views.indexOf(target) === -1) return;
             this.$update(target);
         },
-
+        
         beforeitemshow({target}) {
             addClass(target, this.clsActive);
         },
