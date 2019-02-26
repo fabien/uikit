@@ -1,5 +1,58 @@
 # Changelog
 
+## WIP
+
+### Added
+
+- Add text secondary to Text component
+- Add `strokeAnimation` option to SVG component
+- Add `stroke` option to Parallax component
+- Add `dataSrc` as primary option to Image component
+- Parallax component supports more units
+
+### Changed
+
+- Improve dimension handling in SVG component
+- Improve Image/Leader/Toggle component performance
+- Autoplay is halted while Slideshow/Slider are active
+
+### Removed
+
+- `cls` option no longer accepts a list of classNames in Scrollspy component
+
+### Fixed
+
+- Fix Filter component's initial active state
+- Fix translating `x` and `y` properties simultaneously in Parallax component
+- Class utils can handle SVGs in IE 11 now
+- Fix drag closes Lightbox
+- Fix Tooltip component (touch device)
+- Fix `hover` mode for Toggle component (touch device)
+- Fix Slideshow not setting `min-height` if ratio is set to `false`
+
+## 3.0.3 (January 29, 2019)
+
+### Added
+
+- Computeds can be watched now
+- Parallax supports `<SVG>` and its child elements now
+
+### Changed
+
+- Image Component uses IntersectionObserver now
+
+## Removed
+
+- Remove `isReady` function
+- Form Custom component no longer sets `uk-hover` and `uk-focus` classes
+
+### Fixed
+
+- Fix touch event detection
+- Fix background images are shown too large on retina displays in Img component
+- Fix correctly calculate offsetLeft in Img component
+- Fix autofocus elements not blurring within Toggable on hide
+
 ## 3.0.2 (January 15, 2019)
 
 ### Fixed

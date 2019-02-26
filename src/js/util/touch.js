@@ -1,52 +1,37 @@
-import {on, trigger} from './event';
-import {pointerCancel, pointerDown, pointerUp} from './env';
+import {on, once, trigger} from './event';
+import {pointerDown, pointerUp} from './env';
 
-let touch = {}, swipeTimeout, touching;
+let off;
 
 on(document, pointerDown, e => {
 
-    if (touch.el) {
-        touch = {};
+    off && off();
+
+    if (!isTouch(e)) {
+        return;
     }
 
-    const {target} = e;
-    const {x, y} = getPos(e);
+    const pos = getPos(e);
+    const target = 'tagName' in e.target ? e.target : e.target.parentNode;
+    off = once(document, pointerUp, e => {
 
-    touch.el = 'tagName' in target ? target : target.parentNode;
-    touch.x = x;
-    touch.y = y;
+        const {x, y} = getPos(e);
 
-    touching = true;
+        // swipe
+        if (target && x && Math.abs(pos.x - x) > 100 || y && Math.abs(pos.y - y) > 100) {
 
+            setTimeout(() => {
+                trigger(target, 'swipe');
+                trigger(target, `swipe${swipeDirection(pos.x, pos.y, x, y)}`);
+            });
+
+        }
+
+    });
 });
-
-on(document, pointerUp, e => {
-
-    const {x, y} = getPos(e);
-
-    // swipe
-    if (touch.el && x && Math.abs(touch.x - x) > 100 || y && Math.abs(touch.y - y) > 100) {
-
-        swipeTimeout = setTimeout(() => {
-            if (touch.el) {
-                trigger(touch.el, 'swipe');
-                trigger(touch.el, `swipe${swipeDirection(touch.x, touch.y, x, y)}`);
-            }
-            touch = {};
-        });
-
-    } else {
-        touch = {};
-    }
-
-    setTimeout(() => touching = false);
-
-});
-
-on(document, pointerCancel, cancelAll);
 
 export function isTouch(e) {
-    return e.pointerType === 'touch' || e.touches || touching;
+    return e.pointerType === 'touch' || e.touches;
 }
 
 export function getPos(e, prop = 'client') {
@@ -64,10 +49,4 @@ function swipeDirection(x1, y1, x2, y2) {
         : y1 - y2 > 0
             ? 'Up'
             : 'Down';
-}
-
-function cancelAll() {
-    swipeTimeout && clearTimeout(swipeTimeout);
-    swipeTimeout = null;
-    touch = {};
 }

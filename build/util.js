@@ -1,10 +1,10 @@
-const fs = require('fs-extra');
+const fs = require('fs');
 const path = require('path');
-const glob = require('glob');
 const less = require('less');
 const SVGO = require('svgo');
 const rollup = require('rollup');
 const uglify = require('uglify-js');
+const {promisify} = require('util');
 const CleanCSS = require('clean-css');
 const html = require('rollup-plugin-html');
 const json = require('rollup-plugin-json');
@@ -17,17 +17,21 @@ const banner = `/*! UIkit ${version} | http://www.getuikit.com | (c) 2014 - 2018
 exports.banner = banner;
 exports.validClassName = /[a-zA-Z_\x7f-\xff][a-zA-Z0-9_\x7f-\xff]*/;
 
+exports.glob = promisify(require('glob'));
+
+const readFile = promisify(fs.readFile);
 exports.read = async function (file, cb) {
 
-    const data = await fs.readFile(file, 'utf8');
+    const data = await readFile(file, 'utf8');
     cb && cb(data);
     return data;
 
 };
 
+const writeFile = promisify(fs.writeFile);
 exports.write = async function (dest, data) {
 
-    const err = await fs.outputFile(dest, data);
+    const err = await writeFile(dest, data);
 
     if (err) {
         console.log(err);
@@ -42,18 +46,11 @@ exports.write = async function (dest, data) {
 
 exports.logFile = async function (file) {
     const data = await exports.read(file);
-    console.log(`${exports.cyan(file)} ${exports.getSize(data)}`);
-};
-
-exports.getSize = function (data) {
-    return `${(data.length / 1024).toFixed(2)}kb`;
-};
-
-exports.cyan = function (str) {
-    return `\x1b[1m\x1b[36m${str}\x1b[39m\x1b[22m`;
+    console.log(`${cyan(file)} ${getSize(data)}`);
 };
 
 exports.minify = async function (file) {
+
     const {styles} = await new CleanCSS({
         advanced: false,
         keepSpecialComments: 0,
@@ -151,7 +148,7 @@ exports.icons = async function (src) {
         ]
 
     });
-    const files = glob.sync(src, {nosort: true});
+    const files = await exports.glob(src, {nosort: true});
     const icons = await Promise.all(files.map(async file => {
         const data = await exports.read(file);
         const {data: svg} = await svgo.optimize(data);
@@ -168,3 +165,11 @@ exports.icons = async function (src) {
 exports.ucfirst = function (str) {
     return str.length ? str.charAt(0).toUpperCase() + str.slice(1) : '';
 };
+
+function cyan(str) {
+    return `\x1b[1m\x1b[36m${str}\x1b[39m\x1b[22m`;
+}
+
+function getSize(data) {
+    return `${(data.length / 1024).toFixed(2)}kb`;
+}

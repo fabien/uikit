@@ -50,7 +50,7 @@ const Icon = {
 
     props: ['icon'],
 
-    data: {exclude: ['id', 'style', 'class', 'src', 'icon', 'ratio']},
+    data: {include: []},
 
     isIcon: true,
 
@@ -160,9 +160,9 @@ function install(UIkit) {
 
         if (UIkit._initialized) {
             apply(document.body, el =>
-                each(UIkit.getComponents(el), cmp =>
-                    cmp.$options.isIcon && cmp.icon in added && cmp.$reset()
-                )
+                each(UIkit.getComponents(el), cmp => {
+                    cmp.$options.isIcon && cmp.icon in added && cmp.$reset();
+                })
             );
         }
     };
@@ -178,7 +178,7 @@ function getIcon(icon) {
         parsed[icon] = $(icons[icon].trim());
     }
 
-    return parsed[icon];
+    return parsed[icon].cloneNode(true);
 }
 
 function applyRtl(icon) {

@@ -1,6 +1,6 @@
 import Media from '../mixin/media';
 import Togglable from '../mixin/togglable';
-import {closest, hasTouch, includes, isTouch, isVisible, matches, pointerEnter, pointerLeave, queryAll, trigger} from 'uikit-util';
+import {closest, hasTouch, includes, isTouch, isVisible, matches, pointerEnter, pointerLeave, pointerUp, queryAll, trigger} from 'uikit-util';
 
 export default {
 
@@ -62,10 +62,6 @@ export default {
 
             handler(e) {
 
-                if (!isTouch(e) && !includes(this.mode, 'click')) {
-                    return;
-                }
-
                 // TODO better isToggled handling
                 let link;
                 if (closest(e.target, 'a[href="#"], a[href=""], button')
@@ -87,20 +83,24 @@ export default {
 
     update: {
 
-        write() {
-
+        read() {
             if (!includes(this.mode, 'media') || !this.media) {
-                return;
+                return false;
             }
 
+            return {match: this.matchMedia};
+        },
+
+        write({match}) {
+
             const toggled = this.isToggled(this.target);
-            if (this.matchMedia ? !toggled : toggled) {
+            if (match ? !toggled : toggled) {
                 this.toggle();
             }
 
         },
 
-        events: ['load', 'resize']
+        events: ['resize']
 
     },
 
