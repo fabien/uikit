@@ -140,7 +140,7 @@ export default {
                 trigger(el, show ? '_shown' : '_hidden', [this]);
                 this.$update(el);
             };
-
+            
             return promise ? promise.then(final) : Promise.resolve(final());
         },
 

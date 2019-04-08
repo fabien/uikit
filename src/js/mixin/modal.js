@@ -265,7 +265,7 @@ function animate({transitionElement, _toggle}) {
                 el._reject = reject;
 
                 _toggle(el, show);
-
+                
                 if (toMs(css(transitionElement, 'transitionDuration'))) {
                     once(transitionElement, 'transitionend', resolve, false, e => e.target === transitionElement);
                 } else {

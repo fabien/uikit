@@ -53,6 +53,25 @@
 
                 </div>
             </div>
+            
+            <h1>Custom width variations</h1>
+
+            <div class="uk-grid-small uk-child-width-auto uk-flex-between" uk-grid>
+                <div uk-margin>
+
+                    <a class="uk-button uk-button-default" href="#offcanvas-width-slide" uk-toggle>Slide</a>
+                    <a class="uk-button uk-button-default" href="#offcanvas-width-push" uk-toggle>Push</a>
+                    <a class="uk-button uk-button-default" href="#offcanvas-width-none" uk-toggle>None</a>
+
+                </div>
+                <div uk-margin>
+
+                    <a class="uk-button uk-button-default" href="#offcanvas-width-flip-slide" uk-toggle>Slide</a>
+                    <a class="uk-button uk-button-default" href="#offcanvas-width-flip-push" uk-toggle>Push</a>
+                    <a class="uk-button uk-button-default" href="#offcanvas-width-flip-none" uk-toggle>None</a>
+
+                </div>
+            </div>
 
             <h2>More</h2>
 
@@ -761,6 +780,288 @@
                     <h3>Title</h3>
 
                     <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</p>
+
+                </div>
+            </div>
+            
+            <div id="offcanvas-width-slide" class="uk-offcanvas-responsive" uk-offcanvas>
+                <div class="uk-offcanvas-bar uk-flex uk-flex-column uk-text-center uk-width-1-1 uk-width-1-2@m uk-width-1-3@l">
+
+                    <button class="uk-offcanvas-close uk-close-large" type="button" uk-close></button>
+
+                    <ul class="uk-nav uk-nav-primary uk-nav-center uk-margin-auto-vertical uk-nav-parent-icon" uk-nav>
+                        <li class="uk-active"><a href="#">Active</a></li>
+                        <li class="uk-parent">
+                            <a href="#">Parent</a>
+                            <ul class="uk-nav-sub">
+                                <li><a href="#">Sub item</a></li>
+                                <li><a href="#">Sub item</a></li>
+                                <li><a href="#">Sub item</a></li>
+                                <li><a href="#">Sub item</a></li>
+                                <li><a href="#">Sub item</a></li>
+                                <li><a href="#">Sub item</a>
+                                    <ul>
+                                        <li><a href="#">Sub item</a></li>
+                                        <li><a href="#">Sub item</a></li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </li>
+                        <li><a href="#js-options">Item</a></li>
+                        <li><a href="#">Item</a></li>
+                    </ul>
+
+                    <div>
+                        <div class="uk-grid-small uk-child-width-auto uk-flex-inline" uk-grid>
+                            <div>
+                                <a class="uk-icon-button" href="#" uk-icon="icon: facebook"></a>
+                            </div>
+                            <div>
+                                <a class="uk-icon-button" href="#" uk-icon="icon: twitter"></a>
+                            </div>
+                            <div>
+                                <a class="uk-icon-button" href="#" uk-icon="icon: mail"></a>
+                            </div>
+                            <div>
+                                <a class="uk-icon-button" href="#" uk-icon="icon: receiver"></a>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div id="offcanvas-width-push" class="uk-offcanvas-responsive" uk-offcanvas="mode: push">
+                <div class="uk-offcanvas-bar uk-flex uk-flex-column uk-text-center uk-width-1-1 uk-width-1-2@m uk-width-1-3@l">
+
+                    <button class="uk-offcanvas-close uk-close-large" type="button" uk-close></button>
+
+                    <ul class="uk-nav uk-nav-primary uk-nav-center uk-margin-auto-vertical uk-nav-parent-icon" uk-nav>
+                        <li class="uk-active"><a href="#">Active</a></li>
+                        <li class="uk-parent">
+                            <a href="#">Parent</a>
+                            <ul class="uk-nav-sub">
+                                <li><a href="#">Sub item</a></li>
+                                <li><a href="#">Sub item</a></li>
+                                <li><a href="#">Sub item</a></li>
+                                <li><a href="#">Sub item</a></li>
+                                <li><a href="#">Sub item</a></li>
+                                <li><a href="#">Sub item</a>
+                                    <ul>
+                                        <li><a href="#">Sub item</a></li>
+                                        <li><a href="#">Sub item</a></li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </li>
+                        <li><a href="#js-options">Item</a></li>
+                        <li><a href="#">Item</a></li>
+                    </ul>
+
+                    <div>
+                        <div class="uk-grid-small uk-child-width-auto uk-flex-inline" uk-grid>
+                            <div>
+                                <a class="uk-icon-button" href="#" uk-icon="icon: facebook"></a>
+                            </div>
+                            <div>
+                                <a class="uk-icon-button" href="#" uk-icon="icon: twitter"></a>
+                            </div>
+                            <div>
+                                <a class="uk-icon-button" href="#" uk-icon="icon: mail"></a>
+                            </div>
+                            <div>
+                                <a class="uk-icon-button" href="#" uk-icon="icon: receiver"></a>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div id="offcanvas-width-none" class="uk-offcanvas-responsive" uk-offcanvas="mode: none">
+                <div class="uk-offcanvas-bar uk-flex uk-flex-column uk-text-center uk-width-1-1 uk-width-1-2@m uk-width-1-3@l">
+
+                    <button class="uk-offcanvas-close uk-close-large" type="button" uk-close></button>
+
+                    <ul class="uk-nav uk-nav-primary uk-nav-center uk-margin-auto-vertical uk-nav-parent-icon" uk-nav>
+                        <li class="uk-active"><a href="#">Active</a></li>
+                        <li class="uk-parent">
+                            <a href="#">Parent</a>
+                            <ul class="uk-nav-sub">
+                                <li><a href="#">Sub item</a></li>
+                                <li><a href="#">Sub item</a></li>
+                                <li><a href="#">Sub item</a></li>
+                                <li><a href="#">Sub item</a></li>
+                                <li><a href="#">Sub item</a></li>
+                                <li><a href="#">Sub item</a>
+                                    <ul>
+                                        <li><a href="#">Sub item</a></li>
+                                        <li><a href="#">Sub item</a></li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </li>
+                        <li><a href="#js-options">Item</a></li>
+                        <li><a href="#">Item</a></li>
+                    </ul>
+
+                    <div>
+                        <div class="uk-grid-small uk-child-width-auto uk-flex-inline" uk-grid>
+                            <div>
+                                <a class="uk-icon-button" href="#" uk-icon="icon: facebook"></a>
+                            </div>
+                            <div>
+                                <a class="uk-icon-button" href="#" uk-icon="icon: twitter"></a>
+                            </div>
+                            <div>
+                                <a class="uk-icon-button" href="#" uk-icon="icon: mail"></a>
+                            </div>
+                            <div>
+                                <a class="uk-icon-button" href="#" uk-icon="icon: receiver"></a>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div id="offcanvas-width-flip-slide" class="uk-offcanvas-responsive" uk-offcanvas="flip: true">
+                <div class="uk-offcanvas-bar uk-flex uk-flex-column uk-text-center uk-width-1-1 uk-width-1-2@m uk-width-1-3@l">
+
+                    <button class="uk-offcanvas-close uk-close-large" type="button" uk-close></button>
+
+                    <ul class="uk-nav uk-nav-primary uk-nav-center uk-margin-auto-vertical uk-nav-parent-icon" uk-nav>
+                        <li class="uk-active"><a href="#">Active</a></li>
+                        <li class="uk-parent">
+                            <a href="#">Parent</a>
+                            <ul class="uk-nav-sub">
+                                <li><a href="#">Sub item</a></li>
+                                <li><a href="#">Sub item</a></li>
+                                <li><a href="#">Sub item</a></li>
+                                <li><a href="#">Sub item</a></li>
+                                <li><a href="#">Sub item</a></li>
+                                <li><a href="#">Sub item</a>
+                                    <ul>
+                                        <li><a href="#">Sub item</a></li>
+                                        <li><a href="#">Sub item</a></li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </li>
+                        <li><a href="#js-options">Item</a></li>
+                        <li><a href="#">Item</a></li>
+                    </ul>
+
+                    <div>
+                        <div class="uk-grid-small uk-child-width-auto uk-flex-inline" uk-grid>
+                            <div>
+                                <a class="uk-icon-button" href="#" uk-icon="icon: facebook"></a>
+                            </div>
+                            <div>
+                                <a class="uk-icon-button" href="#" uk-icon="icon: twitter"></a>
+                            </div>
+                            <div>
+                                <a class="uk-icon-button" href="#" uk-icon="icon: mail"></a>
+                            </div>
+                            <div>
+                                <a class="uk-icon-button" href="#" uk-icon="icon: receiver"></a>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div id="offcanvas-width-flip-push" class="uk-offcanvas-responsive" uk-offcanvas="mode: push; flip: true">
+                <div class="uk-offcanvas-bar uk-flex uk-flex-column uk-text-center uk-width-1-1 uk-width-1-2@m uk-width-1-3@l">
+
+                    <button class="uk-offcanvas-close uk-close-large" type="button" uk-close></button>
+
+                    <ul class="uk-nav uk-nav-primary uk-nav-center uk-margin-auto-vertical uk-nav-parent-icon" uk-nav>
+                        <li class="uk-active"><a href="#">Active</a></li>
+                        <li class="uk-parent">
+                            <a href="#">Parent</a>
+                            <ul class="uk-nav-sub">
+                                <li><a href="#">Sub item</a></li>
+                                <li><a href="#">Sub item</a></li>
+                                <li><a href="#">Sub item</a></li>
+                                <li><a href="#">Sub item</a></li>
+                                <li><a href="#">Sub item</a></li>
+                                <li><a href="#">Sub item</a>
+                                    <ul>
+                                        <li><a href="#">Sub item</a></li>
+                                        <li><a href="#">Sub item</a></li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </li>
+                        <li><a href="#js-options">Item</a></li>
+                        <li><a href="#">Item</a></li>
+                    </ul>
+
+                    <div>
+                        <div class="uk-grid-small uk-child-width-auto uk-flex-inline" uk-grid>
+                            <div>
+                                <a class="uk-icon-button" href="#" uk-icon="icon: facebook"></a>
+                            </div>
+                            <div>
+                                <a class="uk-icon-button" href="#" uk-icon="icon: twitter"></a>
+                            </div>
+                            <div>
+                                <a class="uk-icon-button" href="#" uk-icon="icon: mail"></a>
+                            </div>
+                            <div>
+                                <a class="uk-icon-button" href="#" uk-icon="icon: receiver"></a>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div id="offcanvas-width-flip-none" class="uk-offcanvas-responsive" uk-offcanvas="mode: none; flip: true">
+                <div class="uk-offcanvas-bar uk-flex uk-flex-column uk-text-center uk-width-1-1 uk-width-1-2@m uk-width-1-3@l">
+
+                    <button class="uk-offcanvas-close uk-close-large" type="button" uk-close></button>
+
+                    <ul class="uk-nav uk-nav-primary uk-nav-center uk-margin-auto-vertical uk-nav-parent-icon" uk-nav>
+                        <li class="uk-active"><a href="#">Active</a></li>
+                        <li class="uk-parent">
+                            <a href="#">Parent</a>
+                            <ul class="uk-nav-sub">
+                                <li><a href="#">Sub item</a></li>
+                                <li><a href="#">Sub item</a></li>
+                                <li><a href="#">Sub item</a></li>
+                                <li><a href="#">Sub item</a></li>
+                                <li><a href="#">Sub item</a></li>
+                                <li><a href="#">Sub item</a>
+                                    <ul>
+                                        <li><a href="#">Sub item</a></li>
+                                        <li><a href="#">Sub item</a></li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </li>
+                        <li><a href="#js-options">Item</a></li>
+                        <li><a href="#">Item</a></li>
+                    </ul>
+
+                    <div>
+                        <div class="uk-grid-small uk-child-width-auto uk-flex-inline" uk-grid>
+                            <div>
+                                <a class="uk-icon-button" href="#" uk-icon="icon: facebook"></a>
+                            </div>
+                            <div>
+                                <a class="uk-icon-button" href="#" uk-icon="icon: twitter"></a>
+                            </div>
+                            <div>
+                                <a class="uk-icon-button" href="#" uk-icon="icon: mail"></a>
+                            </div>
+                            <div>
+                                <a class="uk-icon-button" href="#" uk-icon="icon: receiver"></a>
+                            </div>
+                        </div>
+                    </div>
 
                 </div>
             </div>

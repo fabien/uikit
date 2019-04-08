@@ -509,7 +509,61 @@ a.uk-link-reset:hover,
 /* ========================================================================
    Component: Heading
  ========================================================================== */
+.uk-heading-small {
+  font-size: 2.375rem;
+  line-height: 1.2;
+}
+.uk-heading-medium {
+  font-size: 2.5rem;
+  line-height: 1.1;
+}
+.uk-heading-large {
+  font-size: 3.125rem;
+  line-height: 1.1;
+}
+.uk-heading-xlarge {
+  font-size: 4rem;
+  line-height: 1;
+}
+.uk-heading-2xlarge {
+  font-size: 6rem;
+  line-height: 1;
+}
+/* Tablet Landscape and bigger */
+@media (min-width: 960px) {
+  .uk-heading-small {
+    font-size: 3.25rem;
+  }
+  .uk-heading-medium {
+    font-size: 3.5rem;
+  }
+  .uk-heading-large {
+    font-size: 4rem;
+  }
+  .uk-heading-xlarge {
+    font-size: 6rem;
+  }
+  .uk-heading-2xlarge {
+    font-size: 8rem;
+  }
+}
+/* Laptop and bigger */
+@media (min-width: 1200px) {
+  .uk-heading-medium {
+    font-size: 4rem;
+  }
+  .uk-heading-large {
+    font-size: 6rem;
+  }
+  .uk-heading-xlarge {
+    font-size: 8rem;
+  }
+  .uk-heading-2xlarge {
+    font-size: 11rem;
+  }
+}
 /* Primary
+   Deprecated: Use `uk-heading-medium` instead
  ========================================================================== */
 .uk-heading-primary {
   font-size: 3rem;
@@ -529,6 +583,7 @@ a.uk-link-reset:hover,
   }
 }
 /* Hero
+   Deprecated: Use `uk-heading-xlarge` instead
  ========================================================================== */
 .uk-heading-hero {
   font-size: 4rem;
@@ -551,8 +606,8 @@ a.uk-link-reset:hover,
 /* Divider
  ========================================================================== */
 .uk-heading-divider {
-  padding-bottom: 10px;
-  border-bottom: 1px solid #e5e5e5;
+  padding-bottom: calc(10px + 0.1em);
+  border-bottom: calc(0.2px + 0.05em) solid #e5e5e5;
 }
 /* Bullet
  ========================================================================== */
@@ -573,9 +628,9 @@ a.uk-link-reset:hover,
   top: calc(-0.1 * 1em);
   vertical-align: middle;
   /* 3 */
-  height: 0.9em;
-  margin-right: 10px;
-  border-left: 5px solid #e5e5e5;
+  height: calc(4px + 0.7em);
+  margin-right: calc(5px + 0.2em);
+  border-left: calc(5px + 0.1em) solid #e5e5e5;
 }
 /* Line
  ========================================================================== */
@@ -602,19 +657,19 @@ a.uk-link-reset:hover,
   content: "";
   /* 1 */
   position: absolute;
-  top: calc(50% - (1px / 2));
+  top: calc(50% - (calc(0.2px + 0.05em) / 2));
   /* 2 */
   width: 2000px;
   /* 3 */
-  border-bottom: 1px solid #e5e5e5;
+  border-bottom: calc(0.2px + 0.05em) solid #e5e5e5;
 }
 .uk-heading-line > ::before {
   right: 100%;
-  margin-right: 0.6em;
+  margin-right: calc(5px + 0.3em);
 }
 .uk-heading-line > ::after {
   left: 100%;
-  margin-left: 0.6em;
+  margin-left: calc(5px + 0.3em);
 }
 /* ========================================================================
    Component: Divider
@@ -5555,19 +5610,26 @@ ul.uk-nav-sub {
   right: 0;
   left: auto;
 }
+/*
+ * Custom: extend width
+ */
+.uk-offcanvas.uk-offcanvas-responsive {
+  width: 100%;
+}
 /* Bar
  ========================================================================== */
 /*
  * 1. Set position
  * 2. Size and style
  * 3. Allow scrolling
+ * 4. Transform
  */
 .uk-offcanvas-bar {
   /* 1 */
   position: absolute;
   top: 0;
   bottom: 0;
-  left: -270px;
+  left: 0;
   /* 2 */
   box-sizing: border-box;
   width: 270px;
@@ -5576,11 +5638,12 @@ ul.uk-nav-sub {
   /* 3 */
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  /* 4 */
+  transform: translateX(-100%);
 }
 /* Tablet landscape and bigger */
 @media (min-width: 960px) {
   .uk-offcanvas-bar {
-    left: -350px;
     width: 350px;
     padding: 40px 40px;
   }
@@ -5588,39 +5651,27 @@ ul.uk-nav-sub {
 /* Flip modifier */
 .uk-offcanvas-flip .uk-offcanvas-bar {
   left: auto;
-  right: -270px;
-}
-/* Tablet landscape and bigger */
-@media (min-width: 960px) {
-  .uk-offcanvas-flip .uk-offcanvas-bar {
-    right: -350px;
-  }
+  right: 0;
+  transform: translateX(100%);
 }
 /*
  * Open
  */
 .uk-open > .uk-offcanvas-bar {
-  left: 0;
-}
-.uk-offcanvas-flip .uk-open > .uk-offcanvas-bar {
-  left: auto;
-  right: 0;
+  transform: translateX(0);
 }
 /*
  * Slide Animation (Used in slide and push mode)
  */
 .uk-offcanvas-bar-animation {
-  transition: left 0.3s ease-out;
-}
-.uk-offcanvas-flip .uk-offcanvas-bar-animation {
-  transition-property: right;
+  transition: transform 0.3s ease-out;
 }
 /*
  * Reveal Animation
  * 1. Set position
  * 2. Clip the bar
  * 3. Animation
- * 4. Reset position
+ * 4. Reset transform
  */
 .uk-offcanvas-reveal {
   /* 1 */
@@ -5636,12 +5687,7 @@ ul.uk-nav-sub {
 }
 .uk-offcanvas-reveal .uk-offcanvas-bar {
   /* 4 */
-  left: 0;
-}
-.uk-offcanvas-flip .uk-offcanvas-reveal .uk-offcanvas-bar {
-  /* 4 */
-  left: auto;
-  right: 0;
+  transform: translateX(0);
 }
 .uk-open > .uk-offcanvas-reveal {
   width: 270px;
@@ -8746,7 +8792,6 @@ iframe.uk-cover {
   left: 50%;
   transform: translate(-50%, -50%);
   /* 1 */
-  width: -moz-max-content;
   width: max-content;
   max-width: 100%;
   box-sizing: border-box;
@@ -8765,12 +8810,10 @@ iframe.uk-cover {
 }
 .uk-position-center-left-out {
   right: 100%;
-  width: -moz-max-content;
   width: max-content;
 }
 .uk-position-center-right-out {
   left: 100%;
-  width: -moz-max-content;
   width: max-content;
 }
 /* Horizontal */
@@ -8779,7 +8822,6 @@ iframe.uk-cover {
   left: 50%;
   transform: translateX(-50%);
   /* 1 */
-  width: -moz-max-content;
   width: max-content;
   max-width: 100%;
   box-sizing: border-box;
@@ -8933,26 +8975,25 @@ iframe.uk-cover {
 }
 /*
  * Scale
- * Note: Using `scale3d` for better image rendering
  */
 .uk-transition-scale-up {
-  transform: scale3d(1, 1, 1);
+  transform: scale(1, 1);
 }
 .uk-transition-scale-down {
-  transform: scale3d(1.1, 1.1, 1);
+  transform: scale(1.1, 1.1);
 }
 /* Show */
 .uk-transition-toggle:hover .uk-transition-scale-up,
 .uk-transition-toggle:focus .uk-transition-scale-up,
 .uk-transition-active.uk-active .uk-transition-scale-up {
   opacity: 1;
-  transform: scale3d(1.1, 1.1, 1);
+  transform: scale(1.1, 1.1);
 }
 .uk-transition-toggle:hover .uk-transition-scale-down,
 .uk-transition-toggle:focus .uk-transition-scale-down,
 .uk-transition-active.uk-active .uk-transition-scale-down {
   opacity: 1;
-  transform: scale3d(1, 1, 1);
+  transform: scale(1, 1);
 }
 /*
  * Slide

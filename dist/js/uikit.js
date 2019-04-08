@@ -61,7 +61,7 @@
         return endsWithFn.call(str, search);
     }
 
-    var includesFn = function (search) { return ~this.indexOf(search); };
+    var includesFn = function (search, i) { return ~this.indexOf(search, i); };
     var includesStr = strPrototype.includes || includesFn;
     var includesArray = Array.prototype.includes || includesFn;
 
@@ -225,8 +225,8 @@
         return true;
     }
 
-    function sortBy(collection, prop) {
-        return collection.sort(function (ref, ref$1) {
+    function sortBy(array, prop) {
+        return array.sort(function (ref, ref$1) {
                 var propA = ref[prop]; if ( propA === void 0 ) propA = 0;
                 var propB = ref$1[prop]; if ( propB === void 0 ) propB = 0;
 
@@ -236,6 +236,18 @@
                     ? -1
                     : 0;
         }
+        );
+    }
+
+    function uniqueBy(array, prop) {
+        var seen = new Set();
+        return array.filter(function (ref) {
+            var check = ref[prop];
+
+            return seen.has(check)
+            ? false
+            : seen.add(check) || true;
+        } // IE 11 does not return the Set object
         );
     }
 
@@ -336,7 +348,7 @@
 
     function removeAttr(element, name) {
         element = toNodes(element);
-        name.split(' ').forEach(function (name) { return element.forEach(function (element) { return element.removeAttribute(name); }
+        name.split(' ').forEach(function (name) { return element.forEach(function (element) { return element.hasAttribute(name) && element.removeAttribute(name); }
             ); }
         );
     }
@@ -549,24 +561,6 @@
             : matches(element, selector) || closest(element, selector);
     }
 
-    /* global DocumentTouch */
-
-    var isIE = /msie|trident/i.test(window.navigator.userAgent);
-    var isRtl = attr(document.documentElement, 'dir') === 'rtl';
-
-    var hasTouchEvents = 'ontouchstart' in window;
-    var hasPointerEvents = window.PointerEvent;
-    var hasTouch = hasTouchEvents
-        || window.DocumentTouch && document instanceof DocumentTouch
-        || navigator.maxTouchPoints; // IE >=11
-
-    var pointerDown = hasPointerEvents ? 'pointerdown' : hasTouchEvents ? 'touchstart' : 'mousedown';
-    var pointerMove = hasPointerEvents ? 'pointermove' : hasTouchEvents ? 'touchmove' : 'mousemove';
-    var pointerUp = hasPointerEvents ? 'pointerup' : hasTouchEvents ? 'touchend' : 'mouseup';
-    var pointerEnter = hasPointerEvents ? 'pointerenter' : hasTouchEvents ? '' : 'mouseenter';
-    var pointerLeave = hasPointerEvents ? 'pointerleave' : hasTouchEvents ? '' : 'mouseleave';
-    var pointerCancel = hasPointerEvents ? 'pointercancel' : 'touchcancel';
-
     function on() {
         var args = [], len = arguments.length;
         while ( len-- ) args[ len ] = arguments[ len ];
@@ -695,21 +689,6 @@
                     : isEventTarget(target)
                         ? [target]
                         : toNodes(target);
-    }
-
-    function preventClick() {
-
-        var timer = setTimeout(once(document, 'click', function (e) {
-
-            e.preventDefault();
-            e.stopImmediatePropagation();
-
-            clearTimeout(timer);
-
-        }, true));
-
-        trigger(document, pointerCancel);
-
     }
 
     /* global setImmediate */
@@ -977,6 +956,24 @@
 
     }
 
+    /* global DocumentTouch */
+
+    var isIE = /msie|trident/i.test(window.navigator.userAgent);
+    var isRtl = attr(document.documentElement, 'dir') === 'rtl';
+
+    var hasTouchEvents = 'ontouchstart' in window;
+    var hasPointerEvents = window.PointerEvent;
+    var hasTouch = hasTouchEvents
+        || window.DocumentTouch && document instanceof DocumentTouch
+        || navigator.maxTouchPoints; // IE >=11
+
+    var pointerDown = hasPointerEvents ? 'pointerdown' : hasTouchEvents ? 'touchstart' : 'mousedown';
+    var pointerMove = hasPointerEvents ? 'pointermove' : hasTouchEvents ? 'touchmove' : 'mousemove';
+    var pointerUp = hasPointerEvents ? 'pointerup' : hasTouchEvents ? 'touchend' : 'mouseup';
+    var pointerEnter = hasPointerEvents ? 'pointerenter' : hasTouchEvents ? '' : 'mouseenter';
+    var pointerLeave = hasPointerEvents ? 'pointerleave' : hasTouchEvents ? '' : 'mouseleave';
+    var pointerCancel = hasPointerEvents ? 'pointercancel' : 'touchcancel';
+
     function ready(fn) {
 
         if (document.readyState !== 'loading') {
@@ -1205,13 +1202,13 @@
 
         args = args.filter(Boolean);
 
-        toNodes(element).forEach(function (element) {
-            var ref;
+        toNodes(element).forEach(function (ref) {
+            var classList = ref.classList;
 
             for (var i = 0; i < args.length; i++) {
-                !isIE
-                    ? (ref = element.classList).toggle.apply(ref, [args[i]].concat(force))
-                    : classList.toggle(element, args[i], force);
+                supports.Force
+                    ? classList.toggle.apply(classList, [args[i]].concat(force))
+                    : (classList[(!isUndefined(force) ? force : !classList.contains(args[i])) ? 'add' : 'remove'](args[i]));
             }
         });
 
@@ -1220,12 +1217,12 @@
     function apply$1(element, args, fn) {
         args = getArgs$1(args).filter(Boolean);
 
-        args.length && toNodes(element).forEach(function (element) {
-            var ref;
+        args.length && toNodes(element).forEach(function (ref) {
+            var classList = ref.classList;
 
-            !isIE
-                ? (ref = element.classList)[fn].apply(ref, args)
-                : classList[fn](element, args);
+            supports.Multiple
+                ? classList[fn].apply(classList, args)
+                : args.forEach(function (cls) { return classList[fn](cls); });
         });
     }
 
@@ -1234,33 +1231,21 @@
             , []);
     }
 
-    // IE 11 shim (SVG elements do not support `classList` in IE 11)
-    var classList = {
+    var supports = {};
 
-        add: function(element, classNames) {
-            var this$1 = this;
+    // IE 11
+    (function () {
 
-            classNames.forEach(function (name) { return !this$1.contains(element, name) && attr(element, 'class', ((attr(element, 'class')) + " " + name)); });
-        },
-
-        remove: function(element, classNames) {
-            classNames.forEach(function (name) { return attr(element, 'class', (attr(element, 'class') || '').replace(new RegExp(name, 'g'), ' ').trim()); });
-        },
-
-        toggle: function(element, className, force) {
-            this[
-                (!isArray(force)
-                    ? force
-                    : !this.contains(element, className)
-                ) ? 'add' : 'remove'
-            ](element, [className]);
-        },
-
-        contains: function(element, name) {
-            return (attr(element, 'class') || '').match(new RegExp(name));
+        var list = document.createElement('_').classList;
+        if (list) {
+            list.add('a', 'b');
+            list.toggle('c', false);
+            supports.Multiple = list.contains('b');
+            supports.Force = !list.contains('c');
         }
+        list = null;
 
-    };
+    })();
 
     var cssNumber = {
         'animation-iteration-count': true,
@@ -2624,7 +2609,6 @@
         trigger: trigger,
         createEvent: createEvent,
         toEventTargets: toEventTargets,
-        preventClick: preventClick,
         fastdom: fastdom,
         isVoidElement: isVoidElement,
         isVisible: isVisible,
@@ -2666,6 +2650,7 @@
         assign: assign,
         each: each,
         sortBy: sortBy,
+        uniqueBy: uniqueBy,
         clamp: clamp,
         noop: noop,
         intersectRect: intersectRect,
@@ -3359,7 +3344,7 @@
                     trigger(el, show ? '_shown' : '_hidden', [this$1]);
                     this$1.$update(el);
                 };
-
+                
                 return promise ? promise.then(final) : Promise.resolve(final());
             },
 
@@ -3722,7 +3707,7 @@
                     el._reject = reject;
 
                     _toggle(el, show);
-
+                    
                     if (toMs(css(transitionElement, 'transitionDuration'))) {
                         once(transitionElement, 'transitionend', resolve, false, function (e) { return e.target === transitionElement; });
                     } else {
@@ -6358,7 +6343,7 @@
         args: 'src',
 
         props: {
-            id: String,
+            id: Boolean,
             icon: String,
             src: String,
             style: String,
@@ -6372,8 +6357,7 @@
 
         data: {
             ratio: 1,
-            id: false,
-            include: ['id', 'style', 'class'],
+            include: ['style', 'class'],
             'class': '',
             strokeAnimation: false
         },
@@ -6406,7 +6390,7 @@
 
 
             if (isVoidElement(this.$el)) {
-                attr(this.$el, {hidden: null, id: this.id || null});
+                attr(this.$el, 'hidden', null);
             }
 
             if (this.svg) {
@@ -6568,7 +6552,7 @@
     function insertSVG(el, root) {
         if (isVoidElement(root) || root.tagName === 'CANVAS') {
 
-            attr(root, {hidden: true, id: null});
+            attr(root, 'hidden', true);
 
             var next = root.nextElementSibling;
             return equals(el, next)
@@ -6644,8 +6628,6 @@
     var Icon = {
 
         install: install,
-
-        attrs: ['icon', 'ratio'],
 
         mixins: [Class, SVG],
 
@@ -8887,11 +8869,9 @@
         update: {
 
             read: function() {
-                if (!includes(this.mode, 'media') || !this.media) {
-                    return false;
-                }
-
-                return {match: this.matchMedia};
+                return includes(this.mode, 'media') && this.media
+                    ? {match: this.matchMedia}
+                    : false;
             },
 
             write: function(ref) {
@@ -9592,7 +9572,7 @@
         },
 
         update: function() {
-            attr(this.slide, 'tabindex', '-1');
+            attr(this.slides, 'tabindex', '-1');
         },
 
         events: [
@@ -9807,6 +9787,8 @@
                     return;
                 }
 
+                css(this.list, 'pointer-events', 'none');
+
                 e.cancelable && e.preventDefault();
 
                 this.dragging = true;
@@ -9874,7 +9856,7 @@
 
             },
 
-            end: function(e) {
+            end: function() {
 
                 off(window, 'scroll', this.unbindMove);
                 this.unbindMove && this.unbindMove();
@@ -9901,9 +9883,9 @@
                         this.show(this.dir > 0 && !dirChange || this.dir < 0 && dirChange ? 'next' : 'previous', true);
                     }
 
-                    e.preventDefault();
-
                 }
+
+                css(this.list, 'pointer-events', '');
 
                 this.drag
                     = this.percent
@@ -10395,7 +10377,6 @@
                 self: true,
 
                 handler: function() {
-                    this.startAutoplay();
                     this.showControls();
                 }
 
@@ -10409,7 +10390,6 @@
 
                 handler: function() {
 
-                    this.stopAutoplay();
                     this.hideControls();
 
                     removeClass(this.slides, this.clsActive);
@@ -10532,7 +10512,7 @@
                     var matches;
 
                     // Image
-                    if (type === 'image' || source.match(/\.(jp(e)?g|png|gif|svg)($|\?)/i)) {
+                    if (type === 'image' || source.match(/\.(jp(e)?g|png|gif|svg|webp)($|\?)/i)) {
 
                         getImage(source).then(
                             function (img) { return this$1.setItem(item, ("<img width=\"" + (img.width) + "\" height=\"" + (img.height) + "\" src=\"" + source + "\" alt=\"" + (alt ? alt : '') + "\">")); },
@@ -10725,13 +10705,13 @@
 
 
                 this.panel = this.panel || this.$create('lightboxPanel', assign({}, this.$props, {
-                    items: this.toggles.reduce(function (items, el) {
+                    items: uniqueBy(this.toggles.reduce(function (items, el) {
                         items.push(['href', 'caption', 'type', 'poster', 'alt'].reduce(function (obj, attr) {
                             obj[attr === 'href' ? 'source' : attr] = data(el, attr);
                             return obj;
                         }, {}));
                         return items;
-                    }, [])
+                    }, []), 'source')
                 }));
 
                 on(this.panel.$el, 'hidden', function () { return this$1.panel = false; });
@@ -12165,8 +12145,6 @@
 
                     return;
                 }
-
-                preventClick();
 
                 var sortable = this.getSortable(this.placeholder);
 

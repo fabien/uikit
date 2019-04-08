@@ -70,6 +70,13 @@ $offcanvas-overlay-background:                   rgba(0,0,0,0.1) !default;
     left: auto;
 }
 
+/*
+ * Custom: extend width
+ */
+
+.uk-offcanvas.uk-offcanvas-responsive {
+    width: 100%;
+}
 
 /* Bar
  ========================================================================== */
