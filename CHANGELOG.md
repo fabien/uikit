@@ -4,17 +4,29 @@
 
 ### Added
 
+- Add deprecated flag to Less variables
+- Add style modifier to Heading component
+- Add SVG stroke animation to Animation component
+- Add option to animate SVG strokes to SVG component
+- Add option to animate SVG strokes to Parallax component
+- Add support for more units to Parallax component
+- Add lazy loading support if Image component is used with SVG component
 - Add text secondary to Text component
-- Add `strokeAnimation` option to SVG component
-- Add `stroke` option to Parallax component
 - Add `dataSrc` as primary option to Image component
-- Parallax component supports more units
+- Add `webp` as image type to Lightbox Panel component
 
 ### Changed
 
+- Refactor divider, bullet and line modifiers in Heading component
 - Improve dimension handling in SVG component
 - Improve Image/Leader/Toggle component performance
 - Autoplay is halted while Slideshow/Slider are active
+- Lightbox filters duplicate items by `source`
+
+### Deprecated
+
+- Primary Heading: Use `uk-heading-medium` instead of `uk-heading-primary`
+- Hero Heading: Use `uk-heading-xlarge` instead of `uk-heading-hero`
 
 ### Removed
 
@@ -22,13 +34,14 @@
 
 ### Fixed
 
+- Fix rendering issue for scale in Transition component
 - Fix Filter component's initial active state
 - Fix translating `x` and `y` properties simultaneously in Parallax component
-- Class utils can handle SVGs in IE 11 now
 - Fix drag closes Lightbox
 - Fix Tooltip component (touch device)
 - Fix `hover` mode for Toggle component (touch device)
 - Fix Slideshow not setting `min-height` if ratio is set to `false`
+- Default prevent `click` event in Slider/Slideshow component after drag
 
 ## 3.0.3 (January 29, 2019)
 
@@ -82,6 +95,7 @@
 - `css` function: Setting a CSS property to `NaN` no longer removes the property
 - Slide/Slideshow navs and Drops no longer blur after hiding
 - Changed the default `toggle` option for Switcher component to `> * > :first-child`
+- SVG component no longer moves `id` from element to svg
 
 ### Removed
 

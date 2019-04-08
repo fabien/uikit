@@ -91,7 +91,6 @@ export default {
             self: true,
 
             handler() {
-                this.startAutoplay();
                 this.showControls();
             }
 
@@ -105,7 +104,6 @@ export default {
 
             handler() {
 
-                this.stopAutoplay();
                 this.hideControls();
 
                 removeClass(this.slides, this.clsActive);
@@ -221,7 +219,7 @@ export default {
                 let matches;
 
                 // Image
-                if (type === 'image' || source.match(/\.(jp(e)?g|png|gif|svg)($|\?)/i)) {
+                if (type === 'image' || source.match(/\.(jp(e)?g|png|gif|svg|webp)($|\?)/i)) {
 
                     getImage(source).then(
                         img => this.setItem(item, `<img width="${img.width}" height="${img.height}" src="${source}" alt="${alt ? alt : ''}">`),
