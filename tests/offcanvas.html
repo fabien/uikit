@@ -72,14 +72,24 @@
 
                 </div>
             </div>
-
+            
             <h2>More</h2>
 
-            <p uk-margin>
-                <button class="uk-button uk-button-default" type="button" uk-toggle="target: #scrollbar">Toggle scrollbar</button>
-                <button class="uk-button uk-button-primary" type="button" uk-toggle="target: #offcanvas-slide">Button Test</button>
-                <a id="js-toggle" class="uk-button uk-button-secondary">Via Code</a>
-            </p>
+            <div class="uk-grid-small uk-child-width-auto uk-flex-between uk-margin-large-bottom" uk-grid>
+                <div uk-margin>
+                    
+                    <button class="uk-button uk-button-default" type="button" uk-toggle="target: #scrollbar">Toggle scrollbar</button>
+                    <button class="uk-button uk-button-primary" type="button" uk-toggle="target: #offcanvas-slide">Button Test</button>
+                    <a id="js-toggle" class="uk-button uk-button-secondary">Via Code</a>
+                    
+                </div>
+                <div uk-margin>
+                    
+                    <a class="uk-button uk-button-default" href="#offcanvas-bottom-slide" uk-toggle>Slide Top</a>
+                    <a class="uk-button uk-button-default" href="#offcanvas-bottom-slide-flip" uk-toggle>Slide Bottom</a>
+                    
+                </div>
+            </div>
 
             <div id="scrollbar">
 
@@ -1063,6 +1073,20 @@
                         </div>
                     </div>
 
+                </div>
+            </div>
+            
+            <div id="offcanvas-bottom-slide" class="uk-offcanvas-horizontal" uk-offcanvas>
+                <div class="uk-offcanvas-bar uk-flex uk-flex-column uk-text-center">
+                    <button class="uk-offcanvas-close uk-close-large" type="button" uk-close></button>
+                    <h1>Top</h1>
+                </div>
+            </div>
+            
+            <div id="offcanvas-bottom-slide-flip" class="uk-offcanvas-horizontal" uk-offcanvas="flip: true; overlay: true">
+                <div class="uk-offcanvas-bar uk-flex uk-flex-column uk-text-center">
+                    <button class="uk-offcanvas-close uk-close-large" type="button" uk-close></button>
+                    <h1>Bottom</h1>
                 </div>
             </div>
 
