@@ -10,7 +10,7 @@ export default {
         observeAttributes: false
     },
 
-    created() {
+    connected() {
         if (!this.$props.observeAttributes) return;
         const observedAttrs = [].concat(this.$options.observedAttrs || []);
         on(this.$el, 'attributechanged', (event, attributeName) => {

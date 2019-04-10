@@ -3808,7 +3808,7 @@
             observeAttributes: false
         },
 
-        created: function() {
+        connected: function() {
             var this$1 = this;
 
             if (!this.$props.observeAttributes) { return; }

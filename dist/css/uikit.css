@@ -7167,7 +7167,9 @@ ul.uk-nav-sub {
 /*
  * Useful to create image teasers
  */
-.uk-height-viewport {
+.uk-height-viewport,
+[uk-height-viewport] {
+  height: auto;
   min-height: 100vh;
 }
 /*
