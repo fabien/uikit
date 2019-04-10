@@ -8650,7 +8650,7 @@
                 },
 
                 handler: function(e) {
-                    e.preventDefault();
+                    if (!within(e.target, this.$el)) { e.preventDefault(); }
                     this.show(toNodes(this.$el.children).filter(function (el) { return within(e.current, el); })[0]);
                 }
 

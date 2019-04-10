@@ -48,7 +48,7 @@ export default {
             },
 
             handler(e) {
-                e.preventDefault();
+                if (!within(e.target, this.$el)) e.preventDefault();
                 this.show(toNodes(this.$el.children).filter(el => within(e.current, el))[0]);
             }
 
