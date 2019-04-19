@@ -13,22 +13,22 @@
 // Variables
 // ========================================================================
 
-$heading-small-font-size:                        2.375rem !default;     // 38px
-$heading-medium-font-size:                       2.5rem !default;       // 40px
-$heading-large-font-size:                        3.125rem !default;     // 50px
-$heading-xlarge-font-size:                       4rem !default;         // 64px
-$heading-2xlarge-font-size:                      6rem !default;         // 96px
+$heading-small-font-size:                        $heading-small-font-size-m * 0.8 !default;      // 38px 0.73
+$heading-medium-font-size:                       $heading-medium-font-size-m * 0.825 !default;     // 40px 0.714
+$heading-large-font-size:                        $heading-large-font-size-m * 0.85 !default;      // 50px 0.78
+$heading-xlarge-font-size:                       $heading-large-font-size-m !default;             // 4rem / 64px
+$heading-2xlarge-font-size:                      $heading-xlarge-font-size-m !default;            // 6rem / 96px
 
-$heading-small-font-size-m:                      3.25rem !default;      // 52px
-$heading-medium-font-size-m:                     3.5rem !default;       // 56px
-$heading-large-font-size-m:                      4rem !default;         // 64px
-$heading-xlarge-font-size-m:                     6rem !default;         // 96px
-$heading-2xlarge-font-size-m:                    8rem !default;         // 128px
+$heading-small-font-size-m:                      $heading-medium-font-size-l * 0.8125 !default;   // 3.25rem / 52px
+$heading-medium-font-size-m:                     $heading-medium-font-size-l * 0.875 !default;    // 3.5rem / 56px 
+$heading-large-font-size-m:                      $heading-medium-font-size-l !default;            // 4rem / 64px
+$heading-xlarge-font-size-m:                     $heading-large-font-size-l !default;             // 6rem / 96px
+$heading-2xlarge-font-size-m:                    $heading-xlarge-font-size-l !default;            // 8rem / 128px
 
-$heading-medium-font-size-l:                     4rem !default;         // 64px
-$heading-large-font-size-l:                      6rem !default;         // 96px
-$heading-xlarge-font-size-l:                     8rem !default;         // 128px
-$heading-2xlarge-font-size-l:                    11rem !default;        // 176px
+$heading-medium-font-size-l:                     4rem !default;                                   // 64px
+$heading-large-font-size-l:                      6rem !default;                                   // 96px
+$heading-xlarge-font-size-l:                     8rem !default;                                   // 128px
+$heading-2xlarge-font-size-l:                    11rem !default;                                  // 176px
 
 $heading-small-line-height:                      1.2 !default;
 $heading-medium-line-height:                     1.1 !default;
@@ -122,26 +122,32 @@ $heading-primary-font-size-m:                    $heading-primary-font-size-l * 
 $heading-primary-font-size:                      $heading-primary-font-size-l * 0.8 !default; // 48px
 $heading-primary-line-height:                    1.2 !default;
 
-.uk-heading-primary when ($deprecated = true) {
+@if ($deprecated == true) {
+.uk-heading-primary {
     font-size: $heading-primary-font-size;
     line-height: $heading-primary-line-height;
     @if(mixin-exists(hook-heading-primary)) {@include hook-heading-primary();}
+}
 }
 
 /* Tablet landscape and bigger */
 @media (min-width: $breakpoint-medium) {
 
-    .uk-heading-primary when ($deprecated = true) { font-size: $heading-primary-font-size-m; }
+    @if ($deprecated == true) {
+.uk-heading-primary { font-size: $heading-primary-font-size-m; }
+}
 
 }
 
 /* Desktop and bigger */
 @media (min-width: $breakpoint-large) {
 
-    .uk-heading-primary when ($deprecated = true) {
+    @if ($deprecated == true) {
+.uk-heading-primary {
         font-size: $heading-primary-font-size-l;
         line-height: $heading-primary-line-height-l;
     }
+}
 
 }
 
@@ -159,29 +165,35 @@ $heading-hero-line-height-m:                     1 !default;
 $heading-hero-font-size:                         $heading-hero-font-size-l * 0.5 !default; // 64px
 $heading-hero-line-height:                       1.1 !default;
 
-.uk-heading-hero when ($deprecated = true) {
+@if ($deprecated == true) {
+.uk-heading-hero {
     font-size: $heading-hero-font-size;
     line-height: $heading-hero-line-height;
     @if(mixin-exists(hook-heading-hero)) {@include hook-heading-hero();}
+}
 }
 
 /* Tablet landscape and bigger */
 @media (min-width: $breakpoint-medium) {
 
-    .uk-heading-hero when ($deprecated = true) {
+    @if ($deprecated == true) {
+.uk-heading-hero {
         font-size: $heading-hero-font-size-m;
         line-height: $heading-hero-line-height-m;
     }
+}
 
 }
 
 /* Desktop and bigger */
 @media (min-width: $breakpoint-large) {
 
-    .uk-heading-hero when ($deprecated = true) {
+    @if ($deprecated == true) {
+.uk-heading-hero {
         font-size: $heading-hero-font-size-l;
         line-height: $heading-hero-line-height-l;
     }
+}
 
 }
 

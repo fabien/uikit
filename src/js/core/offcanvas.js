@@ -79,6 +79,8 @@ export default {
         {
             name: 'touchstart',
 
+            passive: true,
+
             el() {
                 return this.panel;
             },

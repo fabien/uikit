@@ -1,11 +1,28 @@
 # Changelog
 
-## WIP
+## 3.1.2 (April 18, 2019)
+
+### Changed
+
+- IMPORTANT: Change `@deprecated` variable to `false`
+
+### Fixed
+
+- Fix filter controls active state in Filter component
+
+## 3.1.1 (April 18, 2019)
+
+### Fixed
+
+- Fix Sass distribution
+- Fix Lightbox opens with wrong index
+
+## 3.1.0 (April 17, 2019)
 
 ### Added
 
 - Add deprecated flag to Less variables
-- Add style modifier to Heading component
+- Add size modifiers to Heading component
 - Add SVG stroke animation to Animation component
 - Add option to animate SVG strokes to SVG component
 - Add option to animate SVG strokes to Parallax component
@@ -19,9 +36,11 @@
 
 - Refactor divider, bullet and line modifiers in Heading component
 - Improve dimension handling in SVG component
-- Improve Image/Leader/Toggle component performance
+- Improve performance of Image, Leader and Toggle component
 - Autoplay is halted while Slideshow/Slider are active
 - Lightbox filters duplicate items by `source`
+- Rename `getPos` to `getEventPos`
+- Move code with side effects to `core.js`
 
 ### Deprecated
 
@@ -42,6 +61,7 @@
 - Fix `hover` mode for Toggle component (touch device)
 - Fix Slideshow not setting `min-height` if ratio is set to `false`
 - Default prevent `click` event in Slider/Slideshow component after drag
+- Fix images being selected while dragging in Slider/Slideshow component
 
 ## 3.0.3 (January 29, 2019)
 
