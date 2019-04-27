@@ -1,5 +1,20 @@
 # Changelog
 
+## 3.1.4 (April 24, 2019)
+
+### Fixed
+
+- Fix selector engine
+- Fix CSS selector in Lightbox component
+- Fix Drop not closing when Toggle component is clicked
+ 
+## 3.1.3 (April 23, 2019)
+
+### Fixed
+
+- Fix Scrollspy Nav component
+- Fix closing Lightbox causes text selection in Firefox
+
 ## 3.1.2 (April 18, 2019)
 
 ### Changed

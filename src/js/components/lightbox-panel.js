@@ -3,7 +3,7 @@ import Container from '../mixin/container';
 import Modal from '../mixin/modal';
 import Slideshow from '../mixin/slideshow';
 import Togglable from '../mixin/togglable';
-import {$, addClass, ajax, append, assign, attr, css, getImage, html, index, once, pointerDown, pointerMove, pointerUp, removeClass, Transition, trigger} from 'uikit-util';
+import {$, addClass, ajax, append, assign, attr, css, getImage, html, index, once, pointerDown, pointerMove, removeClass, Transition, trigger} from 'uikit-util';
 
 export default {
 
@@ -64,7 +64,7 @@ export default {
 
         {
 
-            name: pointerUp,
+            name: 'click',
 
             self: true,
 
@@ -78,7 +78,6 @@ export default {
                     return;
                 }
 
-                e.preventDefault();
                 this.hide();
             }
 
