@@ -2947,6 +2947,28 @@
                 ];
             }
 
+        },
+        
+        vertical: {
+            
+            show: function(dir) {
+                return [
+                    {transform: translateY(dir * -100)},
+                    {transform: translateY()}
+                ];
+            },
+
+            percent: function(current) {
+                return translatedY(current);
+            },
+
+            translate: function(percent, dir) {
+                return [
+                    {transform: translateY(dir * -100 * percent)},
+                    {transform: translateY(dir * 100 * (1 - percent))}
+                ];
+            }
+            
         }
 
     };
@@ -2965,6 +2987,18 @@
 
     function scale3d(value) {
         return ("scale3d(" + value + ", " + value + ", 1)");
+    }
+
+    function translatedY(el) {
+        return Math.abs(css(el, 'transform').split(',')[5] / el.offsetHeight) || 0;
+    }
+
+    function translateY(value, unit) {
+        if ( value === void 0 ) value = 0;
+        if ( unit === void 0 ) unit = '%';
+
+        value += value ? unit : '';
+        return isIE ? ("translateY(" + value + ")") : ("translate3d(0, " + value + ", 0)"); // currently not translate3d in IE, translate3d within translate3d does not work while transitioning
     }
 
     var Animations$1 = assign({}, Animations, {
@@ -9731,11 +9765,12 @@
 
 
             ['start', 'move', 'end'].forEach(function (key) {
-
+                
                 var fn = this$1[key];
                 this$1[key] = function (e) {
-
-                    var pos = getEventPos(e).x * (isRtl ? -1 : 1);
+                    var prop = this$1.$props.animation === 'vertical' ? 'y' : 'x';
+                    
+                    var pos = getEventPos(e)[prop] * (isRtl ? -1 : 1);
 
                     this$1.prevPos = pos !== this$1.pos ? this$1.pos : this$1.prevPos;
                     this$1.pos = pos;

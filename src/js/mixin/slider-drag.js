@@ -15,11 +15,12 @@ export default {
     created() {
 
         ['start', 'move', 'end'].forEach(key => {
-
+            
             const fn = this[key];
             this[key] = e => {
-
-                const pos = getEventPos(e).x * (isRtl ? -1 : 1);
+                const prop = this.$props.animation === 'vertical' ? 'y' : 'x';
+                
+                const pos = getEventPos(e)[prop] * (isRtl ? -1 : 1);
 
                 this.prevPos = pos !== this.pos ? this.pos : this.prevPos;
                 this.pos = pos;
