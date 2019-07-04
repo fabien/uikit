@@ -5404,6 +5404,8 @@ ul.uk-nav-sub {
   overflow: hidden;
   /* 4 */
   -webkit-touch-callout: none;
+  /* 5 */
+  perspective: 1200px;
 }
 /* Item
  ========================================================================== */
@@ -5429,6 +5431,8 @@ ul.uk-nav-sub {
   will-change: transform, opacity;
   /* 5 */
   touch-action: pan-y;
+  /* 6 */
+  backface-visibility: hidden;
 }
 /* 6 */
 .uk-slideshow-items > :focus {
@@ -5459,6 +5463,8 @@ ul.uk-nav-sub {
   overflow: hidden;
   /* 4 */
   -webkit-touch-callout: none;
+  /* 5 */
+  perspective: 800px;
 }
 /* Item
  ========================================================================== */
@@ -5483,6 +5489,8 @@ ul.uk-nav-sub {
   will-change: transform, opacity;
   /* 5 */
   touch-action: pan-y;
+  /* 6 */
+  backface-visibility: hidden;
 }
 /*
  * Hide not active items

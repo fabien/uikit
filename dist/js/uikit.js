@@ -2969,6 +2969,28 @@
                 ];
             }
             
+        },
+        
+        flip: {
+            
+            show: function(dir) {
+                return [
+                    {transform: rotateY(dir * -1)},
+                    {transform: rotateY()}
+                ];
+            },
+            
+            percent: function(current) {
+                return rotatedY(current);
+            },
+
+            translate: function(percent, dir) {
+                return [
+                    {transform: rotateY(dir * -1 * percent)},
+                    {transform: rotateY(dir * 1 * (1 - percent))}
+                ];
+            }
+            
         }
 
     };
@@ -2999,6 +3021,17 @@
 
         value += value ? unit : '';
         return isIE ? ("translateY(" + value + ")") : ("translate3d(0, " + value + ", 0)"); // currently not translate3d in IE, translate3d within translate3d does not work while transitioning
+    }
+
+    function rotatedY(el) {
+        return Math.abs(css(el, 'transform').split(',')[0] / el.offsetWidth) || 0;
+    }
+
+    function rotateY(value) {
+        if ( value === void 0 ) value = 0;
+
+        value = value * 180;
+        return ("rotateY(" + value + "deg)");
     }
 
     var Animations$1 = assign({}, Animations, {
