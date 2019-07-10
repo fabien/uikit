@@ -24,6 +24,28 @@ export default assign({}, Animations, {
         }
 
     },
+    
+    crossfade: {
+
+        show() {
+            return [
+                {opacity: 0, zIndex: 0},
+                {opacity: 1, zIndex: -1}
+            ];
+        },
+
+        percent(current) {
+            return 1 - css(current, 'opacity');
+        },
+
+        translate(percent) {
+            return [
+                {opacity: 1 - percent, zIndex: 0},
+                {opacity: percent, zIndex: -1}
+            ];
+        }
+
+    },
 
     scale: {
 

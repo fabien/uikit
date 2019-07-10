@@ -42,6 +42,62 @@ export default {
 
     },
     
+    reveal: {
+
+        show(dir) {
+            return [
+                {transform: translate(dir * -100), zIndex: 0},
+                {transform: translate(), zIndex: -1}
+            ];
+        },
+
+        percent(current) {
+            return translated(current);
+        },
+
+        translate(percent, dir) {
+            return [
+                {transform: translate(dir * -100 * percent), zIndex: 0},
+                {transform: translate(), zIndex: -1}
+            ];
+        }
+
+    },
+    
+    swipe: {
+
+        show(dir) {
+            return dir < 0
+                ? [
+                    {transform: translate(100), opacity: 0, zIndex: 0},
+                    {transform: translate(), zIndex: -1}
+                ]
+                : [
+                    {transform: translate(), zIndex: -1},
+                    {transform: translate(), opacity: 1, zIndex: 0}
+                ];
+        },
+
+        percent(current, next, dir) {
+            return dir > 0
+                ? 1 - translated(next)
+                : translated(current);
+        },
+
+        translate(percent, dir) {
+            return dir < 0
+                ? [
+                    {transform: translate(percent * 100), opacity: (1 - percent), zIndex: 0},
+                    {transform: translate(), zIndex: -1}
+                ]
+                : [
+                    {transform: translate(), zIndex: -1},
+                    {transform: translate(100 * (1 - percent)), opacity: percent, zIndex: 0}
+                ];
+        }
+
+    },
+    
     vertical: {
         
         show(dir) {

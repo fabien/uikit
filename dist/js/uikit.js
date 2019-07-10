@@ -2949,6 +2949,62 @@
 
         },
         
+        reveal: {
+
+            show: function(dir) {
+                return [
+                    {transform: translate(dir * -100), zIndex: 0},
+                    {transform: translate(), zIndex: -1}
+                ];
+            },
+
+            percent: function(current) {
+                return translated(current);
+            },
+
+            translate: function(percent, dir) {
+                return [
+                    {transform: translate(dir * -100 * percent), zIndex: 0},
+                    {transform: translate(), zIndex: -1}
+                ];
+            }
+
+        },
+        
+        swipe: {
+
+            show: function(dir) {
+                return dir < 0
+                    ? [
+                        {transform: translate(100), opacity: 0, zIndex: 0},
+                        {transform: translate(), zIndex: -1}
+                    ]
+                    : [
+                        {transform: translate(), zIndex: -1},
+                        {transform: translate(), opacity: 1, zIndex: 0}
+                    ];
+            },
+
+            percent: function(current, next, dir) {
+                return dir > 0
+                    ? 1 - translated(next)
+                    : translated(current);
+            },
+
+            translate: function(percent, dir) {
+                return dir < 0
+                    ? [
+                        {transform: translate(percent * 100), opacity: (1 - percent), zIndex: 0},
+                        {transform: translate(), zIndex: -1}
+                    ]
+                    : [
+                        {transform: translate(), zIndex: -1},
+                        {transform: translate(100 * (1 - percent)), opacity: percent, zIndex: 0}
+                    ];
+            }
+
+        },
+        
         vertical: {
             
             show: function(dir) {
@@ -3053,6 +3109,28 @@
                 return [
                     {opacity: 1 - percent, zIndex: 0},
                     {zIndex: -1}
+                ];
+            }
+
+        },
+        
+        crossfade: {
+
+            show: function() {
+                return [
+                    {opacity: 0, zIndex: 0},
+                    {opacity: 1, zIndex: -1}
+                ];
+            },
+
+            percent: function(current) {
+                return 1 - css(current, 'opacity');
+            },
+
+            translate: function(percent) {
+                return [
+                    {opacity: 1 - percent, zIndex: 0},
+                    {opacity: percent, zIndex: -1}
                 ];
             }
 
