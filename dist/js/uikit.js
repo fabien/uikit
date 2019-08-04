@@ -4254,7 +4254,7 @@
 
         data: {
             animation: 'fade',
-            clsActivated: 'uk-transition-active',
+            clsActivated: 'uk-view-active',
             Animations: Animations,
             Transitioner: Transitioner
         },
@@ -4288,8 +4288,9 @@
                 var target = ref.target;
 
                 addClass(target, this.clsActive);
+                fastdom.flush();
             },
-
+            
             itemshown: function(ref) {
                 var target = ref.target;
 
@@ -6212,16 +6213,19 @@
 
         props: {
             target: String,
+            offsetTarget: String,
             property: String,
             minHeight: Number,
-            maxHeight: Number
+            maxHeight: Number,
+            extraHeight: Number
         },
 
         data: {
             target: '> *',
             property: 'height',
             minHeight: 0,
-            maxHeight: 0
+            maxHeight: 0,
+            extraHeight: 0
         },
 
         computed: {
@@ -6230,6 +6234,13 @@
                 var target = ref.target;
 
                 return $$(target, $el);
+            },
+            
+            offsetElements: function(ref, $el) {
+                var offsetTarget = ref.offsetTarget;
+
+                if (!offsetTarget) { return []; }
+                return $$(offsetTarget);
             }
 
         },
@@ -6237,7 +6248,7 @@
         update: {
 
             read: function() {
-                return this.match(this.elements);
+                return this.match(this.elements, this.offsetElements);
             },
 
             write: function(ref) {
@@ -6252,14 +6263,18 @@
 
         methods: {
 
-            match: function(elements) {
+            match: function(elements, offsetElements) {
                 if (elements.length === 0) {
                     return {};
                 }
 
-                var heights = [];
+                var heights = [this.extraHeight || 0];
                 var maxHeight = this.maxHeight;
                 var minHeight = Math.min(this.minHeight, maxHeight || this.minHeight);
+                
+                if (offsetElements.length > 0) {
+                    elements = offsetElements.concat(elements);
+                }
 
                 elements
                     .forEach(function (el) {
@@ -11453,13 +11468,15 @@
         props: {
             target: String,
             viewport: Number,
-            easing: Number
+            easing: Number,
+            clsActivated: String
         },
 
         data: {
             target: false,
             viewport: 1,
-            easing: 1
+            easing: 1,
+            clsActivated: 'uk-parallax-complete'
         },
 
         computed: {
@@ -11489,7 +11506,7 @@
 
                 var prev = percent;
                 percent = ease$1(scrolledOver(this.target) / (this.viewport || 1), this.easing);
-
+                
                 return {
                     percent: percent,
                     style: prev !== percent ? this.getCss(percent) : false
@@ -11499,11 +11516,18 @@
             write: function(ref) {
                 var style = ref.style;
                 var active = ref.active;
+                var percent = ref.percent;
 
 
                 if (!active) {
                     this.reset();
                     return;
+                }
+
+                if (percent === 1) {
+                    addClass(this.$el, this.clsActivated);
+                } else {
+                    removeClass(this.$el, this.clsActivated);
                 }
 
                 style && css(this.$el, style);
@@ -12805,6 +12829,8 @@
     var Ratio = {
 
         mixins: [mixin.class],
+        
+        args: 'ratio',
 
         props: {
             ratio: String,
@@ -12813,7 +12839,7 @@
         },
 
         data: {
-            ratio: '1:1',
+            ratio: '1/1',
             minHeight: false,
             maxHeight: false
         },
@@ -12821,25 +12847,25 @@
         update: [{
 
             read: function() {
-                if (this.ratio === 'auto' || !this.ratio.indexOf(':')) {
+                if (this.ratio === 'auto' || !this.ratio.indexOf('/')) {
                     return {height: false};
                 }
 
-                var ref = this.ratio.split(':').map(Number);
-                var width = ref[0];
-                var height = ref[1];
+                var ref = this.ratio.split('/').map(Number);
+                var w = ref[0];
+                var h = ref[1];
 
-                height = height * this.$el.offsetWidth / width;
+                h = h * width(this.$el) / w;
 
                 if (this.minHeight) {
-                    height = Math.max(this.minHeight, height);
+                    h = Math.max(this.minHeight, h);
                 }
 
                 if (this.maxHeight) {
-                    height = Math.min(this.maxHeight, height);
+                    h = Math.min(this.maxHeight, h);
                 }
 
-                return {height: height};
+                return {height:h};
             },
 
             write: function(ref) {

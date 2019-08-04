@@ -1,5 +1,5 @@
 import Parallax from '../mixin/parallax';
-import {clamp, css, scrolledOver, query} from 'uikit-util';
+import {clamp, css, scrolledOver, query, addClass, removeClass} from 'uikit-util';
 
 export default {
 
@@ -8,13 +8,15 @@ export default {
     props: {
         target: String,
         viewport: Number,
-        easing: Number
+        easing: Number,
+        clsActivated: String
     },
 
     data: {
         target: false,
         viewport: 1,
-        easing: 1
+        easing: 1,
+        clsActivated: 'uk-parallax-complete'
     },
 
     computed: {
@@ -39,18 +41,24 @@ export default {
 
             const prev = percent;
             percent = ease(scrolledOver(this.target) / (this.viewport || 1), this.easing);
-
+            
             return {
                 percent,
                 style: prev !== percent ? this.getCss(percent) : false
             };
         },
 
-        write({style, active}) {
+        write({style, active, percent}) {
 
             if (!active) {
                 this.reset();
                 return;
+            }
+
+            if (percent === 1) {
+                addClass(this.$el, this.clsActivated);
+            } else {
+                removeClass(this.$el, this.clsActivated);
             }
 
             style && css(this.$el, style);

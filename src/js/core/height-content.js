@@ -6,22 +6,30 @@ export default {
 
     props: {
         target: String,
+        offsetTarget: String,
         property: String,
         minHeight: Number,
-        maxHeight: Number
+        maxHeight: Number,
+        extraHeight: Number
     },
 
     data: {
         target: '> *',
         property: 'height',
         minHeight: 0,
-        maxHeight: 0
+        maxHeight: 0,
+        extraHeight: 0
     },
 
     computed: {
 
         elements({target}, $el) {
             return $$(target, $el);
+        },
+        
+        offsetElements({offsetTarget}, $el) {
+            if (!offsetTarget) return [];
+            return $$(offsetTarget);
         }
 
     },
@@ -29,7 +37,7 @@ export default {
     update: {
 
         read() {
-            return this.match(this.elements);
+            return this.match(this.elements, this.offsetElements);
         },
 
         write({height}) {
@@ -42,14 +50,18 @@ export default {
 
     methods: {
 
-        match(elements) {
+        match(elements, offsetElements) {
             if (elements.length === 0) {
                 return {};
             }
 
-            const heights = [];
+            const heights = [this.extraHeight || 0];
             const maxHeight = this.maxHeight;
             const minHeight = Math.min(this.minHeight, maxHeight || this.minHeight);
+            
+            if (offsetElements.length > 0) {
+                elements = offsetElements.concat(elements);
+            }
 
             elements
                 .forEach(el => {

@@ -1,6 +1,6 @@
 import Animations from './internal/slideshow-animations';
 import Transitioner from './internal/slideshow-transitioner';
-import {addClass, assign, isNumber} from 'uikit-util';
+import {addClass, assign, isNumber, fastdom} from 'uikit-util';
 import ViewControl from '../mixin/view-control';
 
 export default {
@@ -13,7 +13,7 @@ export default {
 
     data: {
         animation: 'fade',
-        clsActivated: 'uk-transition-active',
+        clsActivated: 'uk-view-active',
         Animations,
         Transitioner
     },
@@ -40,8 +40,9 @@ export default {
         
         beforeitemshow({target}) {
             addClass(target, this.clsActive);
+            fastdom.flush();
         },
-
+        
         itemshown({target}) {
             if (this.views.indexOf(target) === -1) return;
             addClass(target, this.clsActivated);
