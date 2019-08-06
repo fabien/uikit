@@ -3043,7 +3043,7 @@
             translate: function(percent, dir) {
                 return [
                     {transform: rotateY(dir * -1 * percent)},
-                    {transform: rotateY(dir * 1 * (1 - percent))}
+                    {transform: rotateY(dir * (1 - percent))}
                 ];
             }
             
@@ -10434,7 +10434,7 @@
             },
 
             _getDistance: function(prev, next) {
-                return new this._getTransitioner(prev, prev !== next && next).getDistance();
+                return this._getTransitioner(prev, prev !== next && next).getDistance();
             },
 
             _translate: function(percent, prev, next) {

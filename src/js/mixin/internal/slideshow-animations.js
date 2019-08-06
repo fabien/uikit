@@ -124,8 +124,8 @@ export default {
         
         show(dir) {
             return [
-                {transform: rotateY(dir * -1)},
-                {transform: rotateY()}
+                {transform: rotateY(dir * -1), zIndex: -1},
+                {transform: rotateY(), zIndex: 0}
             ];
         },
         
@@ -136,7 +136,7 @@ export default {
         translate(percent, dir) {
             return [
                 {transform: rotateY(dir * -1 * percent)},
-                {transform: rotateY(dir * 1 * (1 - percent))}
+                {transform: rotateY(dir * (1 - percent))}
             ];
         }
         
