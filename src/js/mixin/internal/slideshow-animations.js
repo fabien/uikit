@@ -118,30 +118,8 @@ export default {
             ];
         }
         
-    },
-    
-    flip: {
-        
-        show(dir) {
-            return [
-                {transform: rotateY(dir * -1), zIndex: -1},
-                {transform: rotateY(), zIndex: 0}
-            ];
-        },
-        
-        percent(current) {
-            return rotatedY(current);
-        },
-
-        translate(percent, dir) {
-            return [
-                {transform: rotateY(dir * -1 * percent)},
-                {transform: rotateY(dir * (1 - percent))}
-            ];
-        }
-        
     }
-
+    
 };
 
 export function translated(el) {
@@ -164,13 +142,4 @@ export function translatedY(el) {
 export function translateY(value = 0, unit = '%') {
     value += value ? unit : '';
     return isIE ? `translateY(${value})` : `translate3d(0, ${value}, 0)`; // currently not translate3d in IE, translate3d within translate3d does not work while transitioning
-}
-
-export function rotatedY(el) {
-    return Math.abs(css(el, 'transform').split(',')[0] / el.offsetWidth) || 0;
-}
-
-export function rotateY(value = 0) {
-    value = value * 180;
-    return `rotateY(${value}deg)`;
 }
