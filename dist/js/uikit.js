@@ -7783,8 +7783,7 @@
             clsSidebarAnimation: 'uk-offcanvas-bar-animation',
             clsMode: 'uk-offcanvas',
             clsOverlay: 'uk-offcanvas-overlay',
-            selClose: '.uk-offcanvas-close',
-            container: false
+            selClose: '.uk-offcanvas-close'
         },
 
         computed: {
