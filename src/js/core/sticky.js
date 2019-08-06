@@ -1,6 +1,6 @@
 import Class from '../mixin/class';
 import Media from '../mixin/media';
-import {$, addClass, after, Animation, assign, attr, css, fastdom, hasClass, height, isNumeric, isString, isVisible, noop, offset, offsetPosition, query, remove, removeClass, replaceClass, scrollTop, toFloat, toggleClass, trigger, within} from 'uikit-util';
+import {$, addClass, after, Animation, assign, attr, css, fastdom, hasClass, isNumeric, isString, isVisible, noop, offset, offsetPosition, query, remove, removeClass, replaceClass, scrollTop, toFloat, toggleClass, toPx, trigger, within} from 'uikit-util';
 
 export default {
 
@@ -9,7 +9,7 @@ export default {
     props: {
         top: null,
         bottom: Boolean,
-        offset: Number,
+        offset: String,
         animation: String,
         clsActive: String,
         clsInactive: String,
@@ -37,6 +37,10 @@ export default {
     },
 
     computed: {
+
+        offset({offset}) {
+            return toPx(offset);
+        },
 
         selTarget({selTarget}, $el) {
             return selTarget && $(selTarget, $el) || $el;
@@ -308,21 +312,13 @@ function parseProp(prop, {$props, $el, [`${prop}Offset`]: propOffset}) {
         return;
     }
 
-    if (isNumeric(value)) {
+    if (isNumeric(value) && isString(value) && value.match(/^-?\d/)) {
 
-        return propOffset + toFloat(value);
-
-    } else if (isString(value) && value.match(/^-?\d+vh$/)) {
-
-        return height(window) * toFloat(value) / 100;
+        return propOffset + toPx(value);
 
     } else {
 
-        const el = value === true ? $el.parentNode : query(value, $el);
-
-        if (el) {
-            return offset(el).top + el.offsetHeight;
-        }
+        return offset(value === true ? $el.parentNode : query(value, $el)).bottom;
 
     }
 }

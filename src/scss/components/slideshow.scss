@@ -47,6 +47,8 @@
     overflow: hidden;
     /* 4 */
     -webkit-touch-callout: none;
+    /* 5 */
+    perspective: 1200px;
 }
 
 
@@ -76,6 +78,8 @@
     will-change: transform, opacity;
     /* 5 */
     touch-action: pan-y;
+    /* 6 */
+    backface-visibility: hidden;
 }
 
 /* 6 */

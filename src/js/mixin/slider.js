@@ -1,7 +1,7 @@
 import SliderAutoplay from './slider-autoplay';
 import SliderDrag from './slider-drag';
 import SliderNav from './slider-nav';
-import {$, assign, clamp, fastdom, getIndex, hasClass, isNumber, isRtl, Promise, toNodes, trigger} from 'uikit-util';
+import {$, assign, clamp, fastdom, getIndex, hasClass, isNumber, isRtl, Promise, removeClass, toNodes, trigger} from 'uikit-util';
 
 export default {
 
@@ -21,6 +21,7 @@ export default {
         finite: false,
         velocity: 1,
         index: 0,
+        prevIndex: -1,
         stack: [],
         percent: 0,
         clsActive: 'uk-active',
@@ -28,6 +29,16 @@ export default {
         Transitioner: false,
         transitionOptions: {}
     }),
+
+    connected() {
+        this.prevIndex = -1;
+        this.index = this.getValidIndex(this.index);
+        this.stack = [];
+    },
+
+    disconnected() {
+        removeClass(this.slides, this.clsActive);
+    },
 
     computed: {
 
@@ -38,10 +49,6 @@ export default {
                 return this.animation.duration;
             }
             return speedUp($el.offsetWidth / velocity);
-        },
-
-        length() {
-            return this.slides.length;
         },
 
         list({selList}, $el) {
@@ -56,8 +63,20 @@ export default {
             return `${selList} > *`;
         },
 
-        slides() {
-            return this.list ? toNodes(this.list.children) : [];
+        slides: {
+
+            get() {
+                return this.list ? toNodes(this.list.children) : [];
+            },
+
+            watch() {
+                this.$reset();
+            }
+
+        },
+
+        length() {
+            return this.slides.length;
         }
 
     },
