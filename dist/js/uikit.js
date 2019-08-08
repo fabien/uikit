@@ -12894,12 +12894,14 @@
 
         props: {
             ratio: String,
+            adjust: Number,
             minHeight: Boolean,
-            maxHeight: Boolean,
+            maxHeight: Boolean
         },
 
         data: {
             ratio: '1/1',
+            adjust: 0,
             minHeight: false,
             maxHeight: false
         },
@@ -12914,8 +12916,9 @@
                 var ref = this.ratio.split('/').map(Number);
                 var w = ref[0];
                 var h = ref[1];
-
-                h = h * width(this.$el) / w;
+                var _width = width(this.$el) + this.adjust;
+                
+                h = h * _width / w;
 
                 if (this.minHeight) {
                     h = Math.max(this.minHeight, h);
