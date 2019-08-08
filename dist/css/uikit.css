@@ -5413,8 +5413,6 @@ ul.uk-nav-sub {
   overflow: hidden;
   /* 4 */
   -webkit-touch-callout: none;
-  /* 5 */
-  perspective: 1200px;
 }
 /* Item
  ========================================================================== */
@@ -5472,8 +5470,6 @@ ul.uk-nav-sub {
   overflow: hidden;
   /* 4 */
   -webkit-touch-callout: none;
-  /* 5 */
-  perspective: 1200px;
 }
 /* Item
  ========================================================================== */
