@@ -7830,6 +7830,12 @@
             }
 
         },
+        
+        beforeDisconnect: function() {
+            if (this.isToggled()) {
+                this.toggleNow(this.$el, false);
+            }
+        },
 
         events: [
 
