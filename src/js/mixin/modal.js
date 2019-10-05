@@ -1,9 +1,10 @@
-import {$, addClass, append, css, hasClass, on, once, pointerUp, Promise, removeClass, toMs, width, within} from 'uikit-util';
+import {$, addClass, append, css, includes, last, on, once, Promise, removeClass, toMs, width, within} from 'uikit-util';
 import Class from './class';
 import Container from './container';
 import Togglable from './togglable';
+import {delayOn} from '../core/drop';
 
-let active;
+const active = [];
 
 export default {
 
@@ -89,26 +90,16 @@ export default {
 
             handler(e) {
 
-                const prev = active && active !== this && active;
-
-                active = this;
-
-                if (prev) {
-                    if (this.stack) {
-                        this.prev = prev;
-                    } else {
-
-                        active = prev;
-                        prev.hide().then(this.show);
-                        e.preventDefault();
-
-                    }
-
-                    return;
+                if (includes(active, this)) {
+                    return false;
                 }
 
-                registerEvents();
-
+                if (!this.stack && active.length) {
+                    Promise.all(active.map(modal => modal.hide())).then(this.show);
+                    e.preventDefault();
+                } else {
+                    active.push(this);
+                }
             }
 
         },
@@ -121,26 +112,33 @@ export default {
 
             handler() {
 
-                if (!hasClass(document.documentElement, this.clsPage)) {
-                    this.scrollbarWidth = width(window) - width(document);
-                    css(document.body, 'overflowY', this.scrollbarWidth && this.overlay ? 'scroll' : '');
+                if (width(window) - width(document) && this.overlay) {
+                    css(document.body, 'overflowY', 'scroll');
                 }
 
                 addClass(document.documentElement, this.clsPage);
 
-            }
+                if (this.bgClose) {
+                    once(this.$el, 'hide', delayOn(document, 'click', ({defaultPrevented, target}) => {
+                        const current = last(active);
+                        if (!defaultPrevented
+                            && current === this
+                            && (!current.overlay || within(target, current.$el))
+                            && !within(target, current.panel)
+                        ) {
+                            current.hide();
+                        }
+                    }), {self: true});
+                }
 
-        },
-
-        {
-
-            name: 'hide',
-
-            self: true,
-
-            handler() {
-                if (!active || active === this && !this.prev) {
-                    deregisterEvents();
+                if (this.escClose) {
+                    once(this.$el, 'hide', on(document, 'keydown', e => {
+                        const current = last(active);
+                        if (e.keyCode === 27 && current === this) {
+                            e.preventDefault();
+                            current.hide();
+                        }
+                    }), {self: true});
                 }
             }
 
@@ -154,30 +152,13 @@ export default {
 
             handler() {
 
-                let found, {prev} = this;
+                active.splice(active.indexOf(this), 1);
 
-                active = active && active !== this && active || prev;
-
-                if (!active) {
-
+                if (!active.length) {
                     css(document.body, 'overflowY', '');
-
-                } else {
-                    while (prev) {
-
-                        if (prev.clsPage === this.clsPage) {
-                            found = true;
-                            break;
-                        }
-
-                        // eslint-disable-next-line prefer-destructuring
-                        prev = prev.prev;
-
-                    }
-
                 }
 
-                if (!found) {
+                if (!active.some(modal => modal.clsPage === this.clsPage)) {
                     removeClass(document.documentElement, this.clsPage);
                 }
 
@@ -209,43 +190,11 @@ export default {
 
         hide() {
             return this.toggleElement(this.$el, false, animate(this));
-        },
-
-        getActive() {
-            return active;
         }
 
     }
 
 };
-
-let events;
-
-function registerEvents() {
-
-    if (events) {
-        return;
-    }
-
-    events = [
-        on(document, pointerUp, ({target, defaultPrevented}) => {
-            if (active && active.bgClose && !defaultPrevented && (!active.overlay || within(target, active.$el)) && !within(target, active.panel)) {
-                active.hide();
-            }
-        }),
-        on(document, 'keydown', e => {
-            if (e.keyCode === 27 && active && active.escClose) {
-                e.preventDefault();
-                active.hide();
-            }
-        })
-    ];
-}
-
-function deregisterEvents() {
-    events && events.forEach(unbind => unbind());
-    events = null;
-}
 
 function animate({transitionElement, _toggle}) {
     return (el, show) =>
@@ -257,9 +206,9 @@ function animate({transitionElement, _toggle}) {
                 _toggle(el, show);
 
                 const off = once(transitionElement, 'transitionstart', () => {
-                    once(transitionElement, 'transitionend transitioncancel', resolve, false, e => e.target === transitionElement);
+                    once(transitionElement, 'transitionend transitioncancel', resolve, {self: true});
                     clearTimeout(timer);
-                }, false, e => e.target === transitionElement);
+                }, {self: true});
 
                 const timer = setTimeout(() => {
                     off();

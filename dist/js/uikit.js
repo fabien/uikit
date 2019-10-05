@@ -1,4 +1,4 @@
-/*! UIkit 3.1.7 | http://www.getuikit.com | (c) 2014 - 2019 YOOtheme | MIT License */
+/*! UIkit 3.2.1 | http://www.getuikit.com | (c) 2014 - 2019 YOOtheme | MIT License */
 
 (function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -89,8 +89,9 @@
         return obj !== null && typeof obj === 'object';
     }
 
+    var toString = objPrototype.toString;
     function isPlainObject(obj) {
-        return isObject(obj) && Object.getPrototypeOf(obj) === objPrototype;
+        return toString.call(obj) === '[object Object]';
     }
 
     function isWindow(obj) {
@@ -109,7 +110,6 @@
         return obj instanceof Node || isObject(obj) && obj.nodeType >= 1;
     }
 
-    var toString = objPrototype.toString;
     function isNodeCollection(obj) {
         return toString.call(obj).match(/^\[object (NodeList|HTMLCollection)\]$/);
     }
@@ -233,6 +233,10 @@
         }
         return target;
     };
+
+    function last(array) {
+        return array[array.length - 1];
+    }
 
     function each(obj, cb) {
         for (var key in obj) {
@@ -379,6 +383,24 @@
         }
     }
 
+    /* global DocumentTouch */
+
+    var isIE = /msie|trident/i.test(window.navigator.userAgent);
+    var isRtl = attr(document.documentElement, 'dir') === 'rtl';
+
+    var hasTouchEvents = 'ontouchstart' in window;
+    var hasPointerEvents = window.PointerEvent;
+    var hasTouch = hasTouchEvents
+        || window.DocumentTouch && document instanceof DocumentTouch
+        || navigator.maxTouchPoints; // IE >=11
+
+    var pointerDown = hasPointerEvents ? 'pointerdown' : hasTouchEvents ? 'touchstart' : 'mousedown';
+    var pointerMove = hasPointerEvents ? 'pointermove' : hasTouchEvents ? 'touchmove' : 'mousemove';
+    var pointerUp = hasPointerEvents ? 'pointerup' : hasTouchEvents ? 'touchend' : 'mouseup';
+    var pointerEnter = hasPointerEvents ? 'pointerenter' : hasTouchEvents ? '' : 'mouseenter';
+    var pointerLeave = hasPointerEvents ? 'pointerleave' : hasTouchEvents ? '' : 'mouseleave';
+    var pointerCancel = hasPointerEvents ? 'pointercancel' : 'touchcancel';
+
     function query(selector, context) {
         return toNode(selector) || find(selector, getContext(selector, context));
     }
@@ -503,9 +525,9 @@
                 return ancestor;
             }
 
-            ancestor = ancestor.parentElement;
+            ancestor = ancestor.parentNode;
 
-        } while (ancestor);
+        } while (ancestor && ancestor.nodeType === 1);
     };
 
     function closest(element, selector) {
@@ -523,7 +545,7 @@
         var elements = [];
         element = toNode(element);
 
-        while ((element = element.parentElement)) {
+        while ((element = element.parentNode) && element.nodeType === 1) {
             if (matches(element, selector)) {
                 elements.push(element);
             }
@@ -602,6 +624,12 @@
             listener = delegate(targets, selector, listener);
         }
 
+        if (useCapture && useCapture.self) {
+            listener = selfFilter(listener);
+        }
+
+        useCapture = useCaptureFilter(useCapture);
+
         type.split(' ').forEach(function (type) { return targets.forEach(function (target) { return target.addEventListener(type, listener, useCapture); }
             ); }
         );
@@ -611,6 +639,7 @@
     function off(targets, type, listener, useCapture) {
         if ( useCapture === void 0 ) useCapture = false;
 
+        useCapture = useCaptureFilter(useCapture);
         targets = toEventTargets(targets);
         type.split(' ').forEach(function (type) { return targets.forEach(function (target) { return target.removeEventListener(type, listener, useCapture); }
             ); }
@@ -692,6 +721,20 @@
         return function (e) { return isArray(e.detail) ? listener.apply(void 0, [e].concat(e.detail)) : listener(e); };
     }
 
+    function selfFilter(listener) {
+        return function (e) {
+            if (e.target === e.currentTarget || e.target === e.current) {
+                return listener.call(null, e);
+            }
+        };
+    }
+
+    function useCaptureFilter(options) {
+        return options && isIE && !isBoolean(options)
+            ? !!options.capture
+            : options;
+    }
+
     function isEventTarget(target) {
         return target && 'addEventListener' in target;
     }
@@ -711,7 +754,7 @@
     }
 
     function isTouch(e) {
-        return e.pointerType === 'touch' || e.touches;
+        return e.pointerType === 'touch' || !!e.touches;
     }
 
     function getEventPos(e, prop) {
@@ -991,24 +1034,6 @@
 
     }
 
-    /* global DocumentTouch */
-
-    var isIE = /msie|trident/i.test(window.navigator.userAgent);
-    var isRtl = attr(document.documentElement, 'dir') === 'rtl';
-
-    var hasTouchEvents = 'ontouchstart' in window;
-    var hasPointerEvents = window.PointerEvent;
-    var hasTouch = hasTouchEvents
-        || window.DocumentTouch && document instanceof DocumentTouch
-        || navigator.maxTouchPoints; // IE >=11
-
-    var pointerDown = hasPointerEvents ? 'pointerdown' : hasTouchEvents ? 'touchstart' : 'mousedown';
-    var pointerMove = hasPointerEvents ? 'pointermove' : hasTouchEvents ? 'touchmove' : 'mousemove';
-    var pointerUp = hasPointerEvents ? 'pointerup' : hasTouchEvents ? 'touchend' : 'mouseup';
-    var pointerEnter = hasPointerEvents ? 'pointerenter' : hasTouchEvents ? '' : 'mouseenter';
-    var pointerLeave = hasPointerEvents ? 'pointerleave' : hasTouchEvents ? '' : 'mouseleave';
-    var pointerCancel = hasPointerEvents ? 'pointercancel' : 'touchcancel';
-
     function ready(fn) {
 
         if (document.readyState !== 'loading') {
@@ -1233,7 +1258,7 @@
 
         args = getArgs$1(args);
 
-        var force = !isString(args[args.length - 1]) ? args.pop() : []; // in iOS 9.3 force === undefined evaluates to false
+        var force = !isString(last(args)) ? args.pop() : []; // in iOS 9.3 force === undefined evaluates to false
 
         args = args.filter(Boolean);
 
@@ -1444,11 +1469,7 @@
                         'transition-timing-function': ''
                     });
                     type === 'transitioncanceled' ? reject() : resolve();
-                }, false, function (ref) {
-                    var target = ref.target;
-
-                    return element === target;
-                });
+                }, {self: true});
 
                 addClass(element, 'uk-transition');
                 css(element, assign({
@@ -1539,11 +1560,7 @@
                         }
                     });
 
-                }, false, function (ref) {
-                    var target = ref.target;
-
-                    return element === target;
-                });
+                }, {self: true});
 
                 css(element, 'animationDuration', (duration + "ms"));
                 addClass(element, cls);
@@ -2130,7 +2147,7 @@
             }
 
             var p = offset(target);
-            var position = this.positions[this.positions.length - 1];
+            var position = last(this.positions);
             var ref = this.positions;
             var prevPos = ref[0];
 
@@ -2652,6 +2669,7 @@
         isEqual: isEqual,
         swap: swap,
         assign: assign,
+        last: last,
         each: each,
         sortBy: sortBy,
         uniqueBy: uniqueBy,
@@ -3550,7 +3568,529 @@
         };
     }
 
+    var Position = {
+
+        props: {
+            pos: String,
+            offset: null,
+            flip: Boolean,
+            clsPos: String
+        },
+
+        data: {
+            pos: ("bottom-" + (!isRtl ? 'left' : 'right')),
+            flip: true,
+            offset: false,
+            clsPos: ''
+        },
+
+        computed: {
+
+            pos: function(ref) {
+                var pos = ref.pos;
+
+                return (pos + (!includes(pos, '-') ? '-center' : '')).split('-');
+            },
+
+            dir: function() {
+                return this.pos[0];
+            },
+
+            align: function() {
+                return this.pos[1];
+            }
+
+        },
+
+        methods: {
+
+            positionAt: function(element, target, boundary) {
+
+                removeClasses(element, ((this.clsPos) + "-(top|bottom|left|right)(-[a-z]+)?"));
+                css(element, {top: '', left: ''});
+
+                var node;
+                var ref = this;
+                var offset$1 = ref.offset;
+                var axis = this.getAxis();
+
+                if (!isNumeric(offset$1)) {
+                    node = $(offset$1);
+                    offset$1 = node
+                        ? offset(node)[axis === 'x' ? 'left' : 'top'] - offset(target)[axis === 'x' ? 'right' : 'bottom']
+                        : 0;
+                }
+
+                var ref$1 = positionAt(
+                    element,
+                    target,
+                    axis === 'x' ? ((flipPosition(this.dir)) + " " + (this.align)) : ((this.align) + " " + (flipPosition(this.dir))),
+                    axis === 'x' ? ((this.dir) + " " + (this.align)) : ((this.align) + " " + (this.dir)),
+                    axis === 'x' ? ("" + (this.dir === 'left' ? -offset$1 : offset$1)) : (" " + (this.dir === 'top' ? -offset$1 : offset$1)),
+                    null,
+                    this.flip,
+                    boundary
+                ).target;
+                var x = ref$1.x;
+                var y = ref$1.y;
+
+                this.dir = axis === 'x' ? x : y;
+                this.align = axis === 'x' ? y : x;
+
+                toggleClass(element, ((this.clsPos) + "-" + (this.dir) + "-" + (this.align)), this.offset === false);
+
+            },
+
+            getAxis: function() {
+                return this.dir === 'top' || this.dir === 'bottom' ? 'y' : 'x';
+            }
+
+        }
+
+    };
+
     var active;
+
+    var Drop = {
+
+        mixins: [Position, Togglable],
+
+        args: 'pos',
+
+        props: {
+            mode: 'list',
+            toggle: Boolean,
+            boundary: Boolean,
+            boundaryAlign: Boolean,
+            delayShow: Number,
+            delayHide: Number,
+            clsDrop: String
+        },
+
+        data: {
+            mode: ['click', 'hover'],
+            toggle: '- *',
+            boundary: window,
+            boundaryAlign: false,
+            delayShow: 0,
+            delayHide: 800,
+            clsDrop: false,
+            hoverIdle: 200,
+            animation: ['uk-animation-fade'],
+            cls: 'uk-open'
+        },
+
+        computed: {
+
+            boundary: function(ref, $el) {
+                var boundary = ref.boundary;
+
+                return query(boundary, $el);
+            },
+
+            clsDrop: function(ref) {
+                var clsDrop = ref.clsDrop;
+
+                return clsDrop || ("uk-" + (this.$options.name));
+            },
+
+            clsPos: function() {
+                return this.clsDrop;
+            }
+
+        },
+
+        created: function() {
+            this.tracker = new MouseTracker();
+        },
+
+        connected: function() {
+
+            addClass(this.$el, this.clsDrop);
+
+            var ref = this.$props;
+            var toggle = ref.toggle;
+            this.toggle = toggle && this.$create('toggle', query(toggle, this.$el), {
+                target: this.$el,
+                mode: this.mode
+            });
+
+            !this.toggle && trigger(this.$el, 'updatearia');
+
+        },
+
+        events: [
+
+
+            {
+
+                name: 'click',
+
+                delegate: function() {
+                    return ("." + (this.clsDrop) + "-close");
+                },
+
+                handler: function(e) {
+                    e.preventDefault();
+                    this.hide(false);
+                }
+
+            },
+
+            {
+
+                name: 'click',
+
+                delegate: function() {
+                    return 'a[href^="#"]';
+                },
+
+                handler: function(ref) {
+                    var defaultPrevented = ref.defaultPrevented;
+                    var hash = ref.current.hash;
+
+                    if (!defaultPrevented && hash && !within(hash, this.$el)) {
+                        this.hide(false);
+                    }
+                }
+
+            },
+
+            {
+
+                name: 'beforescroll',
+
+                handler: function() {
+                    this.hide(false);
+                }
+
+            },
+
+            {
+
+                name: 'toggle',
+
+                self: true,
+
+                handler: function(e, toggle) {
+
+                    e.preventDefault();
+
+                    if (this.isToggled()) {
+                        this.hide(false);
+                    } else {
+                        this.show(toggle, false);
+                    }
+                }
+
+            },
+
+            {
+
+                name: pointerEnter,
+
+                filter: function() {
+                    return includes(this.mode, 'hover');
+                },
+
+                handler: function(e) {
+
+                    if (isTouch(e)) {
+                        return;
+                    }
+
+                    if (active
+                        && active !== this
+                        && active.toggle
+                        && includes(active.toggle.mode, 'hover')
+                        && !within(e.target, active.toggle.$el)
+                        && !pointInRect({x: e.pageX, y: e.pageY}, offset(active.$el))
+                    ) {
+                        active.hide(false);
+                    }
+
+                    e.preventDefault();
+                    this.show(this.toggle);
+                }
+
+            },
+
+            {
+
+                name: 'toggleshow',
+
+                handler: function(e, toggle) {
+
+                    if (toggle && !includes(toggle.target, this.$el)) {
+                        return;
+                    }
+
+                    e.preventDefault();
+                    this.show(toggle || this.toggle);
+                }
+
+            },
+
+            {
+
+                name: ("togglehide " + pointerLeave),
+
+                handler: function(e, toggle) {
+
+                    if (isTouch(e) || toggle && !includes(toggle.target, this.$el)) {
+                        return;
+                    }
+
+                    e.preventDefault();
+
+                    if (this.toggle && includes(this.toggle.mode, 'hover')) {
+                        this.hide();
+                    }
+                }
+
+            },
+
+            {
+
+                name: 'beforeshow',
+
+                self: true,
+
+                handler: function() {
+                    this.clearTimers();
+                    Animation.cancel(this.$el);
+                    this.position();
+                }
+
+            },
+
+            {
+
+                name: 'show',
+
+                self: true,
+
+                handler: function() {
+                    var this$1 = this;
+
+                    this.tracker.init();
+                    trigger(this.$el, 'updatearia');
+
+                    // If triggered from an click event handler, delay adding the click handler
+                    var off = delayOn(document, 'click', function (ref) {
+                        var defaultPrevented = ref.defaultPrevented;
+                        var target = ref.target;
+
+                        if (!defaultPrevented && !within(target, this$1.$el) && !(this$1.toggle && within(target, this$1.toggle.$el))) {
+                            this$1.hide(false);
+                        }
+                    });
+
+                    once(this.$el, 'hide', off, {self: true});
+                }
+
+            },
+
+            {
+
+                name: 'beforehide',
+
+                self: true,
+
+                handler: function() {
+                    this.clearTimers();
+                }
+
+            },
+
+            {
+
+                name: 'hide',
+
+                handler: function(ref) {
+                    var target = ref.target;
+
+
+                    if (this.$el !== target) {
+                        active = active === null && within(target, this.$el) && this.isToggled() ? this : active;
+                        return;
+                    }
+
+                    active = this.isActive() ? null : active;
+                    trigger(this.$el, 'updatearia');
+                    this.tracker.cancel();
+                }
+
+            },
+
+            {
+
+                name: 'updatearia',
+
+                self: true,
+
+                handler: function(e, toggle) {
+
+                    e.preventDefault();
+
+                    this.updateAria(this.$el);
+
+                    if (toggle || this.toggle) {
+                        attr((toggle || this.toggle).$el, 'aria-expanded', this.isToggled());
+                        toggleClass(this.toggle.$el, this.cls, this.isToggled());
+                    }
+                }
+            }
+
+        ],
+
+        update: {
+
+            write: function() {
+
+                if (this.isToggled() && !Animation.inProgress(this.$el)) {
+                    this.position();
+                }
+
+            },
+
+            events: ['resize']
+
+        },
+
+        methods: {
+
+            show: function(toggle, delay) {
+                var this$1 = this;
+                if ( delay === void 0 ) delay = true;
+
+
+                var show = function () { return !this$1.isToggled() && this$1.toggleElement(this$1.$el, true); };
+                var tryShow = function () {
+
+                    this$1.toggle = toggle || this$1.toggle;
+
+                    this$1.clearTimers();
+
+                    if (this$1.isActive()) {
+                        return;
+                    } else if (delay && active && active !== this$1 && active.isDelaying) {
+                        this$1.showTimer = setTimeout(this$1.show, 10);
+                        return;
+                    } else if (this$1.isParentOf(active)) {
+
+                        if (active.hideTimer) {
+                            active.hide(false);
+                        } else {
+                            return;
+                        }
+
+                    } else if (this$1.isChildOf(active)) {
+
+                        active.clearTimers();
+
+                    } else if (active && !this$1.isChildOf(active) && !this$1.isParentOf(active)) {
+
+                        var prev;
+                        while (active && active !== prev && !this$1.isChildOf(active)) {
+                            prev = active;
+                            active.hide(false);
+                        }
+
+                    }
+
+                    if (delay && this$1.delayShow) {
+                        this$1.showTimer = setTimeout(show, this$1.delayShow);
+                    } else {
+                        show();
+                    }
+
+                    active = this$1;
+                };
+
+                if (toggle && this.toggle && toggle.$el !== this.toggle.$el) {
+
+                    once(this.$el, 'hide', tryShow);
+                    this.hide(false);
+
+                } else {
+                    tryShow();
+                }
+            },
+
+            hide: function(delay) {
+                var this$1 = this;
+                if ( delay === void 0 ) delay = true;
+
+
+                var hide = function () { return this$1.toggleNow(this$1.$el, false); };
+
+                this.clearTimers();
+
+                this.isDelaying = this.tracker.movesTo(this.$el);
+
+                if (delay && this.isDelaying) {
+                    this.hideTimer = setTimeout(this.hide, this.hoverIdle);
+                } else if (delay && this.delayHide) {
+                    this.hideTimer = setTimeout(hide, this.delayHide);
+                } else {
+                    hide();
+                }
+            },
+
+            clearTimers: function() {
+                clearTimeout(this.showTimer);
+                clearTimeout(this.hideTimer);
+                this.showTimer = null;
+                this.hideTimer = null;
+                this.isDelaying = false;
+            },
+
+            isActive: function() {
+                return active === this;
+            },
+
+            isChildOf: function(drop) {
+                return drop && drop !== this && within(this.$el, drop.$el);
+            },
+
+            isParentOf: function(drop) {
+                return drop && drop !== this && within(drop.$el, this.$el);
+            },
+
+            position: function() {
+
+                removeClasses(this.$el, ((this.clsDrop) + "-(stack|boundary)"));
+                css(this.$el, {top: '', left: '', display: 'block'});
+                toggleClass(this.$el, ((this.clsDrop) + "-boundary"), this.boundaryAlign);
+
+                var boundary = offset(this.boundary);
+                var alignTo = this.boundaryAlign ? boundary : offset(this.toggle.$el);
+
+                if (this.align === 'justify') {
+                    var prop = this.getAxis() === 'y' ? 'width' : 'height';
+                    css(this.$el, prop, alignTo[prop]);
+                } else if (this.$el.offsetWidth > Math.max(boundary.right - alignTo.left, alignTo.right - boundary.left)) {
+                    addClass(this.$el, ((this.clsDrop) + "-stack"));
+                }
+
+                this.positionAt(this.$el, this.boundaryAlign ? this.boundary : this.toggle.$el, this.boundary);
+
+                css(this.$el, 'display', '');
+
+            }
+
+        }
+
+    };
+
+    function delayOn(el, type, fn) {
+        var off = once(el, type, function () { return off = on(el, type, fn); }
+        , true);
+        return function () { return off(); };
+    }
+
+    var active$1 = [];
 
     var Modal = {
 
@@ -3640,26 +4180,16 @@
 
                 handler: function(e) {
 
-                    var prev = active && active !== this && active;
-
-                    active = this;
-
-                    if (prev) {
-                        if (this.stack) {
-                            this.prev = prev;
-                        } else {
-
-                            active = prev;
-                            prev.hide().then(this.show);
-                            e.preventDefault();
-
-                        }
-
-                        return;
+                    if (includes(active$1, this)) {
+                        return false;
                     }
 
-                    registerEvents();
-
+                    if (!this.stack && active$1.length) {
+                        Promise.all(active$1.map(function (modal) { return modal.hide(); })).then(this.show);
+                        e.preventDefault();
+                    } else {
+                        active$1.push(this);
+                    }
                 }
 
             },
@@ -3671,27 +4201,39 @@
                 self: true,
 
                 handler: function() {
+                    var this$1 = this;
 
-                    if (!hasClass(document.documentElement, this.clsPage)) {
-                        this.scrollbarWidth = width(window) - width(document);
-                        css(document.body, 'overflowY', this.scrollbarWidth && this.overlay ? 'scroll' : '');
+
+                    if (width(window) - width(document) && this.overlay) {
+                        css(document.body, 'overflowY', 'scroll');
                     }
 
                     addClass(document.documentElement, this.clsPage);
 
-                }
+                    if (this.bgClose) {
+                        once(this.$el, 'hide', delayOn(document, 'click', function (ref) {
+                            var defaultPrevented = ref.defaultPrevented;
+                            var target = ref.target;
 
-            },
+                            var current = last(active$1);
+                            if (!defaultPrevented
+                                && current === this$1
+                                && (!current.overlay || within(target, current.$el))
+                                && !within(target, current.panel)
+                            ) {
+                                current.hide();
+                            }
+                        }), {self: true});
+                    }
 
-            {
-
-                name: 'hide',
-
-                self: true,
-
-                handler: function() {
-                    if (!active || active === this && !this.prev) {
-                        deregisterEvents();
+                    if (this.escClose) {
+                        once(this.$el, 'hide', on(document, 'keydown', function (e) {
+                            var current = last(active$1);
+                            if (e.keyCode === 27 && current === this$1) {
+                                e.preventDefault();
+                                current.hide();
+                            }
+                        }), {self: true});
                     }
                 }
 
@@ -3704,33 +4246,16 @@
                 self: true,
 
                 handler: function() {
+                    var this$1 = this;
 
-                    var found;
-                    var ref = this;
-                    var prev = ref.prev;
 
-                    active = active && active !== this && active || prev;
+                    active$1.splice(active$1.indexOf(this), 1);
 
-                    if (!active) {
-
+                    if (!active$1.length) {
                         css(document.body, 'overflowY', '');
-
-                    } else {
-                        while (prev) {
-
-                            if (prev.clsPage === this.clsPage) {
-                                found = true;
-                                break;
-                            }
-
-                            // eslint-disable-next-line prefer-destructuring
-                            prev = prev.prev;
-
-                        }
-
                     }
 
-                    if (!found) {
+                    if (!active$1.some(function (modal) { return modal.clsPage === this$1.clsPage; })) {
                         removeClass(document.documentElement, this.clsPage);
                     }
 
@@ -3762,46 +4287,11 @@
 
             hide: function() {
                 return this.toggleElement(this.$el, false, animate$1(this));
-            },
-
-            getActive: function() {
-                return active;
             }
 
         }
 
     };
-
-    var events;
-
-    function registerEvents() {
-
-        if (events) {
-            return;
-        }
-
-        events = [
-            on(document, pointerUp, function (ref) {
-                var target = ref.target;
-                var defaultPrevented = ref.defaultPrevented;
-
-                if (active && active.bgClose && !defaultPrevented && (!active.overlay || within(target, active.$el)) && !within(target, active.panel)) {
-                    active.hide();
-                }
-            }),
-            on(document, 'keydown', function (e) {
-                if (e.keyCode === 27 && active && active.escClose) {
-                    e.preventDefault();
-                    active.hide();
-                }
-            })
-        ];
-    }
-
-    function deregisterEvents() {
-        events && events.forEach(function (unbind) { return unbind(); });
-        events = null;
-    }
 
     function animate$1(ref) {
         var transitionElement = ref.transitionElement;
@@ -3814,9 +4304,9 @@
                     _toggle(el, show);
 
                     var off = once(transitionElement, 'transitionstart', function () {
-                        once(transitionElement, 'transitionend transitioncancel', resolve, false, function (e) { return e.target === transitionElement; });
+                        once(transitionElement, 'transitionend transitioncancel', resolve, {self: true});
                         clearTimeout(timer);
-                    }, false, function (e) { return e.target === transitionElement; });
+                    }, {self: true});
 
                     var timer = setTimeout(function () {
                         off();
@@ -3826,87 +4316,6 @@
                 }); }
             ); };
     }
-
-    var Position = {
-
-        props: {
-            pos: String,
-            offset: null,
-            flip: Boolean,
-            clsPos: String
-        },
-
-        data: {
-            pos: ("bottom-" + (!isRtl ? 'left' : 'right')),
-            flip: true,
-            offset: false,
-            clsPos: ''
-        },
-
-        computed: {
-
-            pos: function(ref) {
-                var pos = ref.pos;
-
-                return (pos + (!includes(pos, '-') ? '-center' : '')).split('-');
-            },
-
-            dir: function() {
-                return this.pos[0];
-            },
-
-            align: function() {
-                return this.pos[1];
-            }
-
-        },
-
-        methods: {
-
-            positionAt: function(element, target, boundary) {
-
-                removeClasses(element, ((this.clsPos) + "-(top|bottom|left|right)(-[a-z]+)?"));
-                css(element, {top: '', left: ''});
-
-                var node;
-                var ref = this;
-                var offset$1 = ref.offset;
-                var axis = this.getAxis();
-
-                if (!isNumeric(offset$1)) {
-                    node = $(offset$1);
-                    offset$1 = node
-                        ? offset(node)[axis === 'x' ? 'left' : 'top'] - offset(target)[axis === 'x' ? 'right' : 'bottom']
-                        : 0;
-                }
-
-                var ref$1 = positionAt(
-                    element,
-                    target,
-                    axis === 'x' ? ((flipPosition(this.dir)) + " " + (this.align)) : ((this.align) + " " + (flipPosition(this.dir))),
-                    axis === 'x' ? ((this.dir) + " " + (this.align)) : ((this.align) + " " + (this.dir)),
-                    axis === 'x' ? ("" + (this.dir === 'left' ? -offset$1 : offset$1)) : (" " + (this.dir === 'top' ? -offset$1 : offset$1)),
-                    null,
-                    this.flip,
-                    boundary
-                ).target;
-                var x = ref$1.x;
-                var y = ref$1.y;
-
-                this.dir = axis === 'x' ? x : y;
-                this.align = axis === 'x' ? y : x;
-
-                toggleClass(element, ((this.clsPos) + "-" + (this.dir) + "-" + (this.align)), this.offset === false);
-
-            },
-
-            getAxis: function() {
-                return this.dir === 'top' || this.dir === 'bottom' ? 'y' : 'x';
-            }
-
-        }
-
-    };
 
     var AttributesObserver = {
 
@@ -4740,12 +5149,6 @@
                 return;
             }
 
-            handler = detail(isString(handler) ? component[handler] : handler.bind(component));
-
-            if (self) {
-                handler = selfFilter(handler);
-            }
-
             component._events.push(
                 on(
                     el,
@@ -4755,25 +5158,11 @@
                         : isString(delegate)
                             ? delegate
                             : delegate.call(component),
-                    handler,
-                    isBoolean(passive)
-                        ? {passive: passive, capture: capture}
-                        : capture
+                    isString(handler) ? component[handler] : handler.bind(component),
+                    {passive: passive, capture: capture, self: self}
                 )
             );
 
-        }
-
-        function detail(listener) {
-            return function (e) { return isArray(e.detail) ? listener.apply(void 0, [e].concat(e.detail)) : listener(e); };
-        }
-
-        function selfFilter(handler) {
-            return function selfHandler(e) {
-                if (e.target === e.currentTarget || e.target === e.current) {
-                    return handler.call(null, e);
-                }
-            };
         }
 
         function notIn(options, key) {
@@ -5169,6 +5558,7 @@
                     return;
                 }
 
+                // Handle Swipe Gesture
                 var pos = getEventPos(e);
                 var target = 'tagName' in e.target ? e.target : e.target.parentNode;
                 off = once(document, (pointerUp + " " + pointerCancel), function (e) {
@@ -5188,6 +5578,15 @@
                     }
 
                 });
+
+                // Force click event anywhere on iOS < 13
+                if (pointerDown === 'touchstart') {
+                    css(document.body, 'cursor', 'pointer');
+                    once(document, (pointerUp + " " + pointerCancel), function () { return setTimeout(function () { return css(document.body, 'cursor', ''); }
+                        , 50); }
+                    );
+                }
+
             }, {passive: true});
 
         });
@@ -5291,42 +5690,32 @@
             read: function() {
 
                 var el = this.$el;
-
-                if (!isVisible(el)) {
-                    return false;
-                }
-
                 var ref = el.parentNode;
                 var height = ref.offsetHeight;
                 var width = ref.offsetWidth;
+                var dim = Dimensions.cover(
+                    {
+                        width: this.width || el.naturalWidth || el.videoWidth || el.clientWidth,
+                        height: this.height || el.naturalHeight || el.videoHeight || el.clientHeight
+                    },
+                    {
+                        width: width + (width % 2 ? 1 : 0),
+                        height: height + (height % 2 ? 1 : 0)
+                    }
+                );
 
-                return {height: height, width: width};
+                if (!dim.width || !dim.height) {
+                    return false;
+                }
+
+                return dim;
             },
 
             write: function(ref) {
                 var height = ref.height;
                 var width = ref.width;
 
-
-                var el = this.$el;
-                var elWidth = this.width || el.naturalWidth || el.videoWidth || el.clientWidth;
-                var elHeight = this.height || el.naturalHeight || el.videoHeight || el.clientHeight;
-
-                if (!elWidth || !elHeight) {
-                    return;
-                }
-
-                css(el, Dimensions.cover(
-                    {
-                        width: elWidth,
-                        height: elHeight
-                    },
-                    {
-                        width: width + (width % 2 ? 1 : 0),
-                        height: height + (height % 2 ? 1 : 0)
-                    }
-                ));
-
+                css(this.$el, {height: height, width: width});
             },
 
             events: ['resize']
@@ -5334,458 +5723,6 @@
         }
 
     };
-
-    var active$1;
-
-    var Drop = {
-
-        mixins: [Position, Togglable],
-
-        args: 'pos',
-
-        props: {
-            mode: 'list',
-            toggle: Boolean,
-            boundary: Boolean,
-            boundaryAlign: Boolean,
-            delayShow: Number,
-            delayHide: Number,
-            clsDrop: String
-        },
-
-        data: {
-            mode: ['click', 'hover'],
-            toggle: '- *',
-            boundary: window,
-            boundaryAlign: false,
-            delayShow: 0,
-            delayHide: 800,
-            clsDrop: false,
-            hoverIdle: 200,
-            animation: ['uk-animation-fade'],
-            cls: 'uk-open'
-        },
-
-        computed: {
-
-            boundary: function(ref, $el) {
-                var boundary = ref.boundary;
-
-                return query(boundary, $el);
-            },
-
-            clsDrop: function(ref) {
-                var clsDrop = ref.clsDrop;
-
-                return clsDrop || ("uk-" + (this.$options.name));
-            },
-
-            clsPos: function() {
-                return this.clsDrop;
-            }
-
-        },
-
-        created: function() {
-            this.tracker = new MouseTracker();
-        },
-
-        connected: function() {
-
-            addClass(this.$el, this.clsDrop);
-
-            var ref = this.$props;
-            var toggle = ref.toggle;
-            this.toggle = toggle && this.$create('toggle', query(toggle, this.$el), {
-                target: this.$el,
-                mode: this.mode
-            });
-
-            !this.toggle && trigger(this.$el, 'updatearia');
-
-        },
-
-        events: [
-
-
-            {
-
-                name: 'click',
-
-                delegate: function() {
-                    return ("." + (this.clsDrop) + "-close");
-                },
-
-                handler: function(e) {
-                    e.preventDefault();
-                    this.hide(false);
-                }
-
-            },
-
-            {
-
-                name: 'click',
-
-                delegate: function() {
-                    return 'a[href^="#"]';
-                },
-
-                handler: function(e) {
-
-                    var id = e.target.hash;
-
-                    if (!id) {
-                        e.preventDefault();
-                    }
-
-                    if (!id || !within(id, this.$el)) {
-                        this.hide(false);
-                    }
-                }
-
-            },
-
-            {
-
-                name: 'beforescroll',
-
-                handler: function() {
-                    this.hide(false);
-                }
-
-            },
-
-            {
-
-                name: 'toggle',
-
-                self: true,
-
-                handler: function(e, toggle) {
-
-                    e.preventDefault();
-
-                    if (this.isToggled()) {
-                        this.hide(false);
-                    } else {
-                        this.show(toggle, false);
-                    }
-                }
-
-            },
-
-            {
-
-                name: pointerEnter,
-
-                filter: function() {
-                    return includes(this.mode, 'hover');
-                },
-
-                handler: function(e) {
-
-                    if (isTouch(e)) {
-                        return;
-                    }
-
-                    if (active$1
-                        && active$1 !== this
-                        && active$1.toggle
-                        && includes(active$1.toggle.mode, 'hover')
-                        && !within(e.target, active$1.toggle.$el)
-                        && !pointInRect({x: e.pageX, y: e.pageY}, offset(active$1.$el))
-                    ) {
-                        active$1.hide(false);
-                    }
-
-                    e.preventDefault();
-                    this.show(this.toggle);
-                }
-
-            },
-
-            {
-
-                name: 'toggleshow',
-
-                handler: function(e, toggle) {
-
-                    if (toggle && !includes(toggle.target, this.$el)) {
-                        return;
-                    }
-
-                    e.preventDefault();
-                    this.show(toggle || this.toggle);
-                }
-
-            },
-
-            {
-
-                name: ("togglehide " + pointerLeave),
-
-                handler: function(e, toggle) {
-
-                    if (isTouch(e) || toggle && !includes(toggle.target, this.$el)) {
-                        return;
-                    }
-
-                    e.preventDefault();
-
-                    if (this.toggle && includes(this.toggle.mode, 'hover')) {
-                        this.hide();
-                    }
-                }
-
-            },
-
-            {
-
-                name: 'beforeshow',
-
-                self: true,
-
-                handler: function() {
-                    this.clearTimers();
-                    Animation.cancel(this.$el);
-                    this.position();
-                }
-
-            },
-
-            {
-
-                name: 'show',
-
-                self: true,
-
-                handler: function() {
-                    this.tracker.init();
-                    trigger(this.$el, 'updatearia');
-                    registerEvent();
-                }
-
-            },
-
-            {
-
-                name: 'beforehide',
-
-                self: true,
-
-                handler: function() {
-                    this.clearTimers();
-                }
-
-            },
-
-            {
-
-                name: 'hide',
-
-                handler: function(ref) {
-                    var target = ref.target;
-
-
-                    if (this.$el !== target) {
-                        active$1 = active$1 === null && within(target, this.$el) && this.isToggled() ? this : active$1;
-                        return;
-                    }
-
-                    active$1 = this.isActive() ? null : active$1;
-                    trigger(this.$el, 'updatearia');
-                    this.tracker.cancel();
-                }
-
-            },
-
-            {
-
-                name: 'updatearia',
-
-                self: true,
-
-                handler: function(e, toggle) {
-
-                    e.preventDefault();
-
-                    this.updateAria(this.$el);
-
-                    if (toggle || this.toggle) {
-                        attr((toggle || this.toggle).$el, 'aria-expanded', this.isToggled() ? 'true' : 'false');
-                        toggleClass(this.toggle.$el, this.cls, this.isToggled());
-                    }
-                }
-            }
-
-        ],
-
-        update: {
-
-            write: function() {
-
-                if (this.isToggled() && !Animation.inProgress(this.$el)) {
-                    this.position();
-                }
-
-            },
-
-            events: ['resize']
-
-        },
-
-        methods: {
-
-            show: function(toggle, delay) {
-                var this$1 = this;
-                if ( delay === void 0 ) delay = true;
-
-
-                var show = function () { return !this$1.isToggled() && this$1.toggleElement(this$1.$el, true); };
-                var tryShow = function () {
-
-                    this$1.toggle = toggle || this$1.toggle;
-
-                    this$1.clearTimers();
-
-                    if (this$1.isActive()) {
-                        return;
-                    } else if (delay && active$1 && active$1 !== this$1 && active$1.isDelaying) {
-                        this$1.showTimer = setTimeout(this$1.show, 10);
-                        return;
-                    } else if (this$1.isParentOf(active$1)) {
-
-                        if (active$1.hideTimer) {
-                            active$1.hide(false);
-                        } else {
-                            return;
-                        }
-
-                    } else if (active$1 && this$1.isChildOf(active$1)) {
-
-                        active$1.clearTimers();
-
-                    } else if (active$1 && !this$1.isChildOf(active$1) && !this$1.isParentOf(active$1)) {
-
-                        var prev;
-                        while (active$1 && active$1 !== prev && !this$1.isChildOf(active$1)) {
-                            prev = active$1;
-                            active$1.hide(false);
-                        }
-
-                    }
-
-                    if (delay && this$1.delayShow) {
-                        this$1.showTimer = setTimeout(show, this$1.delayShow);
-                    } else {
-                        show();
-                    }
-
-                    active$1 = this$1;
-                };
-
-                if (toggle && this.toggle && toggle.$el !== this.toggle.$el) {
-
-                    once(this.$el, 'hide', tryShow);
-                    this.hide(false);
-
-                } else {
-                    tryShow();
-                }
-            },
-
-            hide: function(delay) {
-                var this$1 = this;
-                if ( delay === void 0 ) delay = true;
-
-
-                var hide = function () { return this$1.toggleNow(this$1.$el, false); };
-
-                this.clearTimers();
-
-                this.isDelaying = this.tracker.movesTo(this.$el);
-
-                if (delay && this.isDelaying) {
-                    this.hideTimer = setTimeout(this.hide, this.hoverIdle);
-                } else if (delay && this.delayHide) {
-                    this.hideTimer = setTimeout(hide, this.delayHide);
-                } else {
-                    hide();
-                }
-            },
-
-            clearTimers: function() {
-                clearTimeout(this.showTimer);
-                clearTimeout(this.hideTimer);
-                this.showTimer = null;
-                this.hideTimer = null;
-                this.isDelaying = false;
-            },
-
-            isActive: function() {
-                return active$1 === this;
-            },
-
-            isChildOf: function(drop) {
-                return drop && drop !== this && within(this.$el, drop.$el);
-            },
-
-            isParentOf: function(drop) {
-                return drop && drop !== this && within(drop.$el, this.$el);
-            },
-
-            position: function() {
-
-                removeClasses(this.$el, ((this.clsDrop) + "-(stack|boundary)"));
-                css(this.$el, {top: '', left: '', display: 'block'});
-                toggleClass(this.$el, ((this.clsDrop) + "-boundary"), this.boundaryAlign);
-
-                var boundary = offset(this.boundary);
-                var alignTo = this.boundaryAlign ? boundary : offset(this.toggle.$el);
-
-                if (this.align === 'justify') {
-                    var prop = this.getAxis() === 'y' ? 'width' : 'height';
-                    css(this.$el, prop, alignTo[prop]);
-                } else if (this.$el.offsetWidth > Math.max(boundary.right - alignTo.left, alignTo.right - boundary.left)) {
-                    addClass(this.$el, ((this.clsDrop) + "-stack"));
-                }
-
-                this.positionAt(this.$el, this.boundaryAlign ? this.boundary : this.toggle.$el, this.boundary);
-
-                css(this.$el, 'display', '');
-
-            }
-
-        }
-
-    };
-
-    var registered;
-
-    function registerEvent() {
-
-        if (registered) {
-            return;
-        }
-
-        registered = true;
-        on(document, pointerUp, function (ref) {
-            var target = ref.target;
-            var defaultPrevented = ref.defaultPrevented;
-
-            var prev;
-
-            if (defaultPrevented) {
-                return;
-            }
-
-            while (active$1 && active$1 !== prev && !within(target, active$1.$el) && !(active$1.toggle && within(target, active$1.toggle.$el))) {
-                prev = active$1;
-                active$1.hide(false);
-            }
-        });
-    }
 
     var Dropdown = {
 
@@ -6106,18 +6043,21 @@
 
                     }
 
-                    return {rows: rows, translates: translates, height: !transitionInProgress ? elHeight : false};
+                    var padding = this.parallax && getPaddingBottom(this.parallax, rows, translates);
+
+                    return {padding: padding, rows: rows, translates: translates, height: !transitionInProgress ? elHeight : false};
 
                 },
 
                 write: function(ref) {
                     var stacks = ref.stacks;
                     var height = ref.height;
+                    var padding = ref.padding;
 
 
                     toggleClass(this.$el, this.clsStack, stacks);
 
-                    css(this.$el, 'paddingBottom', this.parallax);
+                    css(this.$el, 'paddingBottom', padding);
                     height !== false && css(this.$el, 'height', height);
 
                 },
@@ -6161,6 +6101,22 @@
         ]
 
     };
+
+    function getPaddingBottom(distance, rows, translates) {
+        var column = 0;
+        var max = 0;
+        var maxScrolled = 0;
+        for (var i = rows.length - 1; i >= 0; i--) {
+            for (var j = column; j < rows[i].length; j++) {
+                var el = rows[i][j];
+                var bottom = el.offsetTop + height(el) + (translates && -translates[i][j]);
+                max = Math.max(max, bottom);
+                maxScrolled = Math.max(maxScrolled, bottom + (j % 2 ? distance : distance / 8));
+                column++;
+            }
+        }
+        return maxScrolled - max;
+    }
 
     function getMarginTop(root, cls) {
 
@@ -6287,6 +6243,10 @@
 
     // IE 11 fix (min-height on a flex container won't apply to its flex items)
     var FlexBug = isIE ? {
+
+        props: {
+            selMinHeight: String
+        },
 
         data: {
             selMinHeight: false,
@@ -7128,7 +7088,8 @@
                 var this$1 = this;
 
 
-                if (!entries.some(function (entry) { return entry.isIntersecting; })) {
+                // Old chromium based browsers (UC Browser) did not implement `isIntersecting`
+                if (!entries.some(function (entry) { return isUndefined(entry.isIntersecting) || entry.isIntersecting; })) {
                     return;
                 }
 
@@ -7403,14 +7364,7 @@
 
             dialog.show();
 
-            on(dialog.$el, 'hidden', function (ref) {
-                var target = ref.target;
-                var currentTarget = ref.currentTarget;
-
-                if (target === currentTarget) {
-                    Promise.resolve(function () { return dialog.$destroy(true); });
-                }
-            });
+            on(dialog.$el, 'hidden', function () { return Promise.resolve(function () { return dialog.$destroy(true); }); }, {self: true});
 
             return dialog;
         };
@@ -7848,9 +7802,10 @@
                 },
 
                 handler: function(ref) {
-                    var current = ref.current;
+                    var hash = ref.current.hash;
+                    var defaultPrevented = ref.defaultPrevented;
 
-                    if (current.hash && $(current.hash, document.body)) {
+                    if (!defaultPrevented && hash && $(hash, document.body)) {
                         this.hide();
                     }
                 }
@@ -7962,11 +7917,6 @@
                 handler: function() {
                     removeClass(document.body, this.clsContainerAnimation);
                     css(document.body, 'touch-action', '');
-
-                    var active = this.getActive();
-                    if (this.mode === 'none' || active && active !== this && active !== this.prev) {
-                        trigger(this.panel, 'transitionend');
-                    }
                 }
             },
 
@@ -8276,71 +8226,37 @@
                     this.elements.forEach(function (el) {
 
                         var state = el._ukScrollspyState;
-                        var cls = state.cls;
+                        var toggle = function (inview) {
 
-                        if (state.show && !state.inview && !state.queued) {
+                            css(el, 'visibility', !inview && this$1.hidden ? 'hidden' : '');
 
-                            var show = function () {
+                            toggleClass(el, this$1.inViewClass, inview);
+                            toggleClass(el, state.cls);
 
-                                css(el, 'visibility', '');
-                                addClass(el, this$1.inViewClass);
-                                toggleClass(el, cls);
+                            trigger(el, inview ? 'inview' : 'outview');
 
-                                trigger(el, 'inview');
-
-                                this$1.$update(el);
-
-                                state.inview = true;
-                                state.abort && state.abort();
-                            };
-
-                            if (this$1.delay) {
-
-                                state.queued = true;
-                                data.promise = (data.promise || Promise.resolve()).then(function () {
-                                    return !state.inview && new Promise(function (resolve) {
-
-                                        var timer = setTimeout(function () {
-
-                                            show();
-                                            resolve();
-
-                                        }, data.promise || this$1.elements.length === 1 ? this$1.delay : 0);
-
-                                        state.abort = function () {
-                                            clearTimeout(timer);
-                                            resolve();
-                                            state.queued = false;
-                                        };
-
-                                    });
-
-                                });
-
-                            } else {
-                                show();
-                            }
-
-                        } else if (!state.show && (state.inview || state.queued) && this$1.repeat) {
-
-                            state.abort && state.abort();
-
-                            if (!state.inview) {
-                                return;
-                            }
-
-                            css(el, 'visibility', this$1.hidden ? 'hidden' : '');
-                            removeClass(el, this$1.inViewClass);
-                            toggleClass(el, cls);
-
-                            trigger(el, 'outview');
+                            state.inview = inview;
 
                             this$1.$update(el);
 
-                            state.inview = false;
+                        };
+
+                        if (state.show && !state.inview && !state.queued) {
+
+                            state.queued = true;
+
+                            data.promise = (data.promise || Promise.resolve()).then(function () { return new Promise(function (resolve) { return setTimeout(resolve, this$1.delay); }
+                                ); }
+                            ).then(function () {
+                                toggle(true);
+                                setTimeout(function () { return state.queued = false; }, 300);
+                            });
+
+                        } else if (!state.show && state.inview && !state.queued && this$1.repeat) {
+
+                            toggle(false);
 
                         }
-
 
                     });
 
@@ -8923,7 +8839,7 @@
         methods: {
 
             index: function() {
-                return !isEmpty(this.connects) && index(filter(this.connects[0].children, ("." + (this.cls)))[0]);
+                return !isEmpty(this.connects) ? index(filter(this.connects[0].children, ("." + (this.cls)))[0]) : -1;
             },
 
             show: function(item) {
@@ -8947,7 +8863,7 @@
                     }
                 }
 
-                if (!active || prev >= 0 && hasClass(active, this.cls) || prev === next) {
+                if (!active || prev === next) {
                     return;
                 }
 
@@ -9169,7 +9085,7 @@
 
     }
 
-    UIkit.version = '3.1.7';
+    UIkit.version = '3.2.1';
 
     core(UIkit);
 
@@ -9897,6 +9813,7 @@
 
                     if (!this.draggable
                         || !isTouch(e) && hasTextNodesOnly(e.target)
+                        || closest(e.target, selInput)
                         || e.button > 0
                         || this.length < 2
                     ) {
@@ -10202,7 +10119,8 @@
             index: Number,
             finite: Boolean,
             velocity: Number,
-            duration: Number
+            duration: Number,
+            selSlides: String
         },
 
         data: function () { return ({
@@ -10255,14 +10173,15 @@
 
             selSlides: function(ref) {
                 var selList = ref.selList;
+                var selSlides = ref.selSlides;
 
-                return (selList + " > *");
+                return (selList + " " + (selSlides || '> *'));
             },
 
             slides: {
 
                 get: function() {
-                    return this.list ? toNodes(this.list.children) : [];
+                    return $$(this.selSlides, this.$el);
                 },
 
                 watch: function() {
@@ -11773,7 +11692,7 @@
             finite: function(ref) {
                 var finite = ref.finite;
 
-                return finite || getWidth(this.list) < bounds(this.list).width + getMaxWidth(this.list) + this.center;
+                return finite || Math.ceil(getWidth(this.list)) < bounds(this.list).width + getMaxWidth(this.list) + this.center;
             },
 
             maxIndex: function() {
@@ -11783,7 +11702,7 @@
                 }
 
                 if (this.center) {
-                    return this.sets[this.sets.length - 1];
+                    return last(this.sets);
                 }
 
                 css(this.slides, 'order', '');
@@ -11871,7 +11790,7 @@
                     this$1.maxIndex && toggleClass(el, 'uk-hidden', isNumeric(index) && (this$1.sets && !includes(this$1.sets, toFloat(index)) || index > this$1.maxIndex));
                 });
 
-                if (!this.dragging && !this.stack.length) {
+                if (this.length && !this.dragging && !this.stack.length) {
                     this._getTransitioner().translate(1);
                 }
 
@@ -12001,7 +11920,7 @@
 
     };
 
-    var SliderParallax = {
+    var SlideshowParallax = {
 
         mixins: [Parallax],
 
@@ -12173,7 +12092,7 @@
 
                 if (height === false) {
                     css(this.list, 'minHeight', '100%');
-                } else {
+                } else if (height > 0) {
                     css(this.list, 'minHeight', height);
                 }
             },
@@ -12523,7 +12442,7 @@
         clearTimeout(trackTimer);
     }
 
-    var overflowRe = /(auto|scroll)/;
+    var overflowRe = /auto|scroll/;
 
     function scrollParents(element) {
         var scrollEl = getScrollingElement();
@@ -12585,7 +12504,7 @@
                 var this$1 = this;
 
 
-                if (this.isActive()) {
+                if (this.isActive() || !this.title) {
                     return;
                 }
 
@@ -12960,9 +12879,9 @@
     UIkit.component('notification', Notification);
     UIkit.component('parallax', Parallax$1);
     UIkit.component('slider', Slider$1);
-    UIkit.component('sliderParallax', SliderParallax);
+    UIkit.component('sliderParallax', SlideshowParallax);
     UIkit.component('slideshow', Slideshow$1);
-    UIkit.component('slideshowParallax', SliderParallax);
+    UIkit.component('slideshowParallax', SlideshowParallax);
     UIkit.component('sortable', Sortable);
     UIkit.component('tooltip', Tooltip);
     UIkit.component('upload', Upload);

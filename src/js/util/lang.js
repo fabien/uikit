@@ -79,8 +79,9 @@ export function isObject(obj) {
     return obj !== null && typeof obj === 'object';
 }
 
+const {toString} = objPrototype;
 export function isPlainObject(obj) {
-    return isObject(obj) && Object.getPrototypeOf(obj) === objPrototype;
+    return toString.call(obj) === '[object Object]';
 }
 
 export function isWindow(obj) {
@@ -99,7 +100,6 @@ export function isNode(obj) {
     return obj instanceof Node || isObject(obj) && obj.nodeType >= 1;
 }
 
-const {toString} = objPrototype;
 export function isNodeCollection(obj) {
     return toString.call(obj).match(/^\[object (NodeList|HTMLCollection)\]$/);
 }
@@ -220,6 +220,10 @@ export const assign = Object.assign || function (target, ...args) {
     }
     return target;
 };
+
+export function last(array) {
+    return array[array.length - 1];
+}
 
 export function each(obj, cb) {
     for (const key in obj) {

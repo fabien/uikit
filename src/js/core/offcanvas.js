@@ -1,5 +1,5 @@
 import Modal from '../mixin/modal';
-import {$, addClass, append, css, endsWith, hasClass, height, removeClass, trigger, unwrap, wrapAll} from 'uikit-util';
+import {$, addClass, append, css, endsWith, hasClass, height, removeClass, unwrap, wrapAll} from 'uikit-util';
 
 export default {
 
@@ -74,8 +74,8 @@ export default {
                 return 'a[href^="#"]';
             },
 
-            handler({current}) {
-                if (current.hash && $(current.hash, document.body)) {
+            handler({current: {hash}, defaultPrevented}) {
+                if (!defaultPrevented && hash && $(hash, document.body)) {
                     this.hide();
                 }
             }
@@ -182,11 +182,6 @@ export default {
             handler() {
                 removeClass(document.body, this.clsContainerAnimation);
                 css(document.body, 'touch-action', '');
-
-                const active = this.getActive();
-                if (this.mode === 'none' || active && active !== this && active !== this.prev) {
-                    trigger(this.panel, 'transitionend');
-                }
             }
         },
 

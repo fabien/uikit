@@ -1,8 +1,65 @@
 # Changelog
 
+## 3.2.1 (October 1, 2019)
+
+### Added
+
+- Add support for `input type="submit"` to Button component
+- Add `selSlides` option to Slider/Slideshow component
+
 ### Fixed
 
-- Fix spreading event args on delegated event listeners 
+- Fix Slider throws error if initialized with no slides
+- Fix Slider/Slideshow crash in IE
+- Fix Slider/Slideshow drag no longer starts on input elements
+- Fix `isPlainObject` to work across iframes
+- Fix Scrollspy causes endless update loop
+
+## 3.2.0 (September 5, 2019)
+
+### Added
+
+- Add column and row gutter to Grid component
+
+### Removed
+
+- Remove `@text-bold-font-weight` variable
+
+### Fixed
+
+- Fix countdown line-height on small devices
+
+## 3.1.9 (September 2, 2019)
+
+### Added
+
+- Add `last` utility function
+
+### Fixed
+
+- Fix Slideshow invisible after switching tabs in Switcher
+- Fix lazy loading images in Img component in UC Browser
+- Fix opening Offcanvas/Modal through buttons
+
+## 3.1.8 (August 29, 2019)
+
+### Added
+
+- Add font weight and style modifier
+- Add `self` option to `on` function
+
+### Changed
+
+- Improve `padding-bottom` calculation for Grid with `parallax: true`
+- Make `selMinHeight` in the Flex Bug mixin a prop
+
+### Fixed
+
+- Fix Modal close on bgClick behaviour
+- Fix spreading event args on delegated event listeners
+- Fix clicking an empty link within itself no longer closes the Drop
+- Fix IE 11 compatibility
+- Fix empty tooltips will no longer show
 
 ## 3.1.7 (July 31, 2019)
 

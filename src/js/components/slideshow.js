@@ -49,7 +49,7 @@ export default {
         write({height}) {
             if (height === false) {
                 css(this.list, 'minHeight', '100%');
-            } else {
+            } else if (height > 0) {
                 css(this.list, 'minHeight', height);
             }
         },

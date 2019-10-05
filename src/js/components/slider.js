@@ -2,7 +2,7 @@ import Class from '../mixin/class';
 import Slider, {speedUp} from '../mixin/slider';
 import SliderReactive from '../mixin/slider-reactive';
 import Transitioner, {bounds, getElLeft, getWidth, getMax, getMaxWidth} from './internal/slider-transitioner';
-import {$, $$, addClass, css, data, includes, isEmpty, isNumeric, isUndefined, toggleClass, toFloat} from 'uikit-util';
+import {$, $$, addClass, css, data, includes, isEmpty, isNumeric, isUndefined, last, toggleClass, toFloat} from 'uikit-util';
 
 export default {
 
@@ -30,7 +30,7 @@ export default {
         },
 
         finite({finite}) {
-            return finite || getWidth(this.list) < bounds(this.list).width + getMaxWidth(this.list) + this.center;
+            return finite || Math.ceil(getWidth(this.list)) < bounds(this.list).width + getMaxWidth(this.list) + this.center;
         },
 
         maxIndex() {
@@ -40,7 +40,7 @@ export default {
             }
 
             if (this.center) {
-                return this.sets[this.sets.length - 1];
+                return last(this.sets);
             }
 
             css(this.slides, 'order', '');
@@ -122,7 +122,7 @@ export default {
                 this.maxIndex && toggleClass(el, 'uk-hidden', isNumeric(index) && (this.sets && !includes(this.sets, toFloat(index)) || index > this.maxIndex));
             });
 
-            if (!this.dragging && !this.stack.length) {
+            if (this.length && !this.dragging && !this.stack.length) {
                 this._getTransitioner().translate(1);
             }
 
