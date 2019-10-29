@@ -170,26 +170,26 @@ export default {
 
     methods: {
 
-        toggle() {
-            return this.isToggled() ? this.hide() : this.show();
+        toggle(immediate) {
+            return this.isToggled() ? this.hide(immediate) : this.show(immediate);
         },
 
-        show() {
+        show(immediate) {
 
             if (this.container && this.$el.parentNode !== this.container) {
                 append(this.container, this.$el);
                 return new Promise(resolve =>
                     requestAnimationFrame(() =>
-                        this.show().then(resolve)
+                        this.show(immediate).then(resolve)
                     )
                 );
             }
 
-            return this.toggleElement(this.$el, true, animate(this));
+            return this.toggleElement(this.$el, true, immediate ? false : animate(this));
         },
 
-        hide() {
-            return this.toggleElement(this.$el, false, animate(this));
+        hide(immediate) {
+            return this.toggleElement(this.$el, false, immediate ? false : animate(this));
         }
 
     }

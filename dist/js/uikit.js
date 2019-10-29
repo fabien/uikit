@@ -4248,26 +4248,26 @@
 
         methods: {
 
-            toggle: function() {
-                return this.isToggled() ? this.hide() : this.show();
+            toggle: function(immediate) {
+                return this.isToggled() ? this.hide(immediate) : this.show(immediate);
             },
 
-            show: function() {
+            show: function(immediate) {
                 var this$1 = this;
 
 
                 if (this.container && this.$el.parentNode !== this.container) {
                     append(this.container, this.$el);
-                    return new Promise(function (resolve) { return requestAnimationFrame(function () { return this$1.show().then(resolve); }
+                    return new Promise(function (resolve) { return requestAnimationFrame(function () { return this$1.show(immediate).then(resolve); }
                         ); }
                     );
                 }
 
-                return this.toggleElement(this.$el, true, animate$1(this));
+                return this.toggleElement(this.$el, true, immediate ? false : animate$1(this));
             },
 
-            hide: function() {
-                return this.toggleElement(this.$el, false, animate$1(this));
+            hide: function(immediate) {
+                return this.toggleElement(this.$el, false, immediate ? false : animate$1(this));
             }
 
         }
