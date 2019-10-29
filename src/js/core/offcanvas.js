@@ -38,6 +38,10 @@ export default {
 
     computed: {
         
+        overlay({overlay, mode}) {
+            return overlay && mode !== 'sidebar';
+        },
+        
         bgClose({bgClose, mode}) {
             return bgClose && this.panel && mode !== 'sidebar';
         },
@@ -46,8 +50,8 @@ export default {
             return flip ? clsFlip : '';
         },
 
-        clsOverlay({overlay, clsOverlay}) {
-            return overlay ? clsOverlay : '';
+        clsOverlay({overlay, mode, clsOverlay}) {
+            return overlay && mode !== 'sidebar' ? clsOverlay : '';
         },
         
         clsResponsive({responsive, mode, clsResponsive}) {
@@ -236,6 +240,8 @@ export default {
             handler() {
                 removeClass(document.body, this.clsContainerAnimation);
                 css(document.body, 'touch-action', '');
+                
+                trigger(this.$el, 'relayout');
             }
         },
 

@@ -7729,6 +7729,13 @@
 
         computed: {
             
+            overlay: function(ref) {
+                var overlay = ref.overlay;
+                var mode = ref.mode;
+
+                return overlay && mode !== 'sidebar';
+            },
+            
             bgClose: function(ref) {
                 var bgClose = ref.bgClose;
                 var mode = ref.mode;
@@ -7745,9 +7752,10 @@
 
             clsOverlay: function(ref) {
                 var overlay = ref.overlay;
+                var mode = ref.mode;
                 var clsOverlay = ref.clsOverlay;
 
-                return overlay ? clsOverlay : '';
+                return overlay && mode !== 'sidebar' ? clsOverlay : '';
             },
             
             clsResponsive: function(ref) {
@@ -7964,6 +7972,8 @@
                 handler: function() {
                     removeClass(document.body, this.clsContainerAnimation);
                     css(document.body, 'touch-action', '');
+                    
+                    trigger(this.$el, 'relayout');
                 }
             },
 
