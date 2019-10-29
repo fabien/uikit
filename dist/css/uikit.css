@@ -5687,6 +5687,12 @@ ul.uk-nav-sub {
 .uk-offcanvas.uk-offcanvas-responsive {
   width: 100%;
 }
+.uk-offcanvas.uk-sidebar {
+  pointer-events: none;
+}
+.uk-offcanvas.uk-sidebar .uk-offcanvas-bar {
+  pointer-events: all;
+}
 /* Bar
  ========================================================================== */
 /*
@@ -5844,6 +5850,16 @@ ul.uk-nav-sub {
   /* 1 */
   box-sizing: border-box;
   width: 100%;
+}
+.uk-offcanvas-container.uk-sidebar-container {
+  position: absolute;
+  left: auto;
+  right: 0;
+  transition: width 0.3s ease-out;
+}
+.uk-offcanvas-container.uk-sidebar-container.uk-offcanvas-flip {
+  right: auto;
+  left: 0;
 }
 /*
  * Activate slide-out animation

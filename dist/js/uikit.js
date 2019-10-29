@@ -7700,8 +7700,10 @@
 
         props: {
             mode: String,
+            sidebar: Boolean,
             flip: Boolean,
             overlay: Boolean,
+            responsive: Boolean,
             swipeClose: Boolean
         },
 
@@ -7710,19 +7712,30 @@
             flip: false,
             overlay: false,
             swipeClose: true,
+            responsive: false,
             clsPage: 'uk-offcanvas-page',
             clsContainer: 'uk-offcanvas-container',
             selPanel: '.uk-offcanvas-bar',
             clsFlip: 'uk-offcanvas-flip',
             clsContainerAnimation: 'uk-offcanvas-container-animation',
             clsSidebarAnimation: 'uk-offcanvas-bar-animation',
+            clsSidebar: 'uk-sidebar',
+            clsSidebarContainer: 'uk-sidebar-container',
             clsMode: 'uk-offcanvas',
             clsOverlay: 'uk-offcanvas-overlay',
+            clsResponsive: 'uk-offcanvas-responsive',
             selClose: '.uk-offcanvas-close'
         },
 
         computed: {
+            
+            bgClose: function(ref) {
+                var bgClose = ref.bgClose;
+                var mode = ref.mode;
 
+                return bgClose && this.panel && mode !== 'sidebar';
+            },
+            
             clsFlip: function(ref) {
                 var flip = ref.flip;
                 var clsFlip = ref.clsFlip;
@@ -7736,7 +7749,15 @@
 
                 return overlay ? clsOverlay : '';
             },
+            
+            clsResponsive: function(ref) {
+                var responsive = ref.responsive;
+                var mode = ref.mode;
+                var clsResponsive = ref.clsResponsive;
 
+                return responsive && mode !== 'reveal' ? clsResponsive : '';
+            },
+            
             clsMode: function(ref) {
                 var mode = ref.mode;
                 var clsMode = ref.clsMode;
@@ -7754,6 +7775,7 @@
             clsContainerAnimation: function(ref) {
                 var mode = ref.mode;
                 var clsContainerAnimation = ref.clsContainerAnimation;
+                var sidebar = ref.sidebar;
 
                 return mode !== 'push' && mode !== 'reveal' ? '' : clsContainerAnimation;
             },
@@ -7770,6 +7792,35 @@
             if (this.isToggled()) {
                 this.toggleNow(this.$el, false);
             }
+        },
+
+        update: {
+
+            read: function() {
+                if (this.mode !== 'sidebar') { return {}; }
+                return {
+                    panel: this.panel.offsetWidth,
+                    container: width(window),
+                    toggled: this.isToggled()
+                };
+            },
+
+            write: function(ref) {
+                var panel = ref.panel;
+                var container = ref.container;
+                var toggled = ref.toggled;
+
+                if (this.mode !== 'sidebar') { return; }
+                if (toggled) {
+                    width(document.body, panel < container ? container - panel : '');
+                } else if (this._hiding) {
+                    width(document.body, '');
+                    delete this._hiding;
+                }
+            },
+            
+            events: ['show', 'hide', 'resize']
+
         },
 
         events: [
@@ -7873,20 +7924,35 @@
                         wrapAll(this.panel, '<div>');
                         addClass(this.panel.parentNode, this.clsMode);
                     }
-
+                    
                     css(document.documentElement, 'overflowY', this.overlay ? 'hidden' : '');
                     addClass(document.body, this.clsContainer, this.clsFlip);
                     css(document.body, 'touch-action', 'pan-y pinch-zoom');
                     css(this.$el, 'display', 'block');
-                    addClass(this.$el, this.clsOverlay);
+                    addClass(this.$el, this.clsOverlay, this.clsResponsive);
                     addClass(this.panel, this.clsSidebarAnimation, this.mode !== 'reveal' ? this.clsMode : '');
-
+                    
                     height(document.body); // force reflow
                     addClass(document.body, this.clsContainerAnimation);
 
+                    if (this.mode === 'sidebar') {
+                        addClass(this.$el, this.clsSidebar);
+                        addClass(document.body, this.clsSidebarContainer);
+                    }
+
                     this.clsContainerAnimation && suppressUserScale();
+                    
+                    trigger(this.$el, 'relayout');
+                }
+            },
+            
+            {
+                name: 'beforehide',
 
+                self: true,
 
+                handler: function() {
+                    this._hiding = true;
                 }
             },
 
@@ -7907,20 +7973,25 @@
                 self: true,
 
                 handler: function() {
-
                     this.clsContainerAnimation && resumeUserScale();
 
                     if (this.mode === 'reveal') {
                         unwrap(this.panel);
                     }
+                    
+                    if (this.mode === 'sidebar') {
+                        removeClass(this.$el, this.clsSidebar);
+                        removeClass(document.body, this.clsSidebarContainer);
+                    }
 
                     removeClass(this.panel, this.clsSidebarAnimation, this.clsMode);
-                    removeClass(this.$el, this.clsOverlay);
+                    removeClass(this.$el, this.clsOverlay, this.clsResponsive);
                     css(this.$el, 'display', '');
                     removeClass(document.body, this.clsContainer, this.clsFlip);
 
                     css(document.documentElement, 'overflowY', '');
-
+                    
+                    trigger(this.$el, 'relayout');
                 }
             },
 
@@ -7928,7 +7999,7 @@
                 name: 'swipeLeft swipeRight',
 
                 handler: function(e) {
-                    if (!this.swipeClose) { return; }
+                    if (!this.swipeClose || this.mode === 'sidebar') { return; }
                     if (this.isToggled() && endsWith(e.type, 'Left') ^ this.flip) {
                         this.hide();
                     }

@@ -78,6 +78,14 @@
     width: 100%;
 }
 
+.uk-offcanvas.uk-sidebar {
+    pointer-events: none;
+    
+    .uk-offcanvas-bar {
+        pointer-events: all;
+    }
+}
+
 /* Bar
  ========================================================================== */
 
@@ -267,6 +275,18 @@
     /* 1 */
     box-sizing: border-box;
     width: 100%;
+}
+
+.uk-offcanvas-container.uk-sidebar-container {
+    position: absolute;
+    left: auto;
+    right: 0;
+    transition: width 0.3s ease-out;
+    
+    &.uk-offcanvas-flip {
+        right: auto;
+        left: 0;
+    }
 }
 
 /*
