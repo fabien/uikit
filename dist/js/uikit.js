@@ -1,4 +1,4 @@
-/*! UIkit 3.2.2 | http://www.getuikit.com | (c) 2014 - 2019 YOOtheme | MIT License */
+/*! UIkit 3.2.3 | http://www.getuikit.com | (c) 2014 - 2019 YOOtheme | MIT License */
 
 (function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -9147,7 +9147,7 @@
 
     }
 
-    UIkit.version = '3.2.2';
+    UIkit.version = '3.2.3';
 
     core(UIkit);
 
