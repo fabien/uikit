@@ -2097,50 +2097,33 @@
     MouseTracker.prototype = {
 
         positions: [],
-        position: null,
 
         init: function() {
             var this$1 = this;
 
 
             this.positions = [];
-            this.position = null;
 
-            var ticking = false;
-            this.unbind = on(document, 'mousemove', function (e) {
+            var position;
+            this.unbind = on(document, 'mousemove', function (e) { return position = getEventPos(e, 'page'); });
+            this.interval = setInterval(function () {
 
-                if (ticking) {
+                if (!position) {
                     return;
                 }
 
-                setTimeout(function () {
+                this$1.positions.push(position);
 
-                    var time = Date.now();
-                    var ref = this$1.positions;
-                    var length = ref.length;
-
-                    if (length && (time - this$1.positions[length - 1].time > 100)) {
-                        this$1.positions.splice(0, length);
-                    }
-
-                    this$1.positions.push({time: time, x: e.pageX, y: e.pageY});
-
-                    if (this$1.positions.length > 5) {
-                        this$1.positions.shift();
-                    }
-
-                    ticking = false;
-                }, 5);
-
-                ticking = true;
-            });
+                if (this$1.positions.length > 5) {
+                    this$1.positions.shift();
+                }
+            }, 50);
 
         },
 
         cancel: function() {
-            if (this.unbind) {
-                this.unbind();
-            }
+            this.unbind && this.unbind();
+            this.interval && clearInterval(this.interval);
         },
 
         movesTo: function(target) {
@@ -2150,37 +2133,61 @@
             }
 
             var p = offset(target);
-            var position = last(this.positions);
-            var ref = this.positions;
-            var prevPos = ref[0];
+            var left = p.left;
+            var right = p.right;
+            var top = p.top;
+            var bottom = p.bottom;
 
-            if (p.left <= position.x && position.x <= p.right && p.top <= position.y && position.y <= p.bottom) {
+            var ref = this.positions;
+            var prevPosition = ref[0];
+            var position = last(this.positions);
+            var path = [prevPosition, position];
+
+            if (pointInRect(position, p)) {
                 return false;
             }
 
-            var points = [
-                [{x: p.left, y: p.top}, {x: p.right, y: p.bottom}],
-                [{x: p.right, y: p.top}, {x: p.left, y: p.bottom}]
-            ];
+            var diagonals = [[{x: left, y: top}, {x: right, y: bottom}], [{x: left, y: bottom}, {x: right, y: top}]];
 
-            if (p.right <= position.x) ; else if (p.left >= position.x) {
-                points[0].reverse();
-                points[1].reverse();
-            } else if (p.bottom <= position.y) {
-                points[0].reverse();
-            } else if (p.top >= position.y) {
-                points[1].reverse();
-            }
-
-            return !!points.reduce(function (result, point) {
-                return result + (slope(prevPos, point[0]) < slope(position, point[0]) && slope(prevPos, point[1]) > slope(position, point[1]));
-            }, 0);
+            return diagonals.some(function (diagonal) {
+                var intersection = intersect(path, diagonal);
+                return intersection && pointInRect(intersection, p);
+            });
         }
 
     };
 
-    function slope(a, b) {
-        return (b.y - a.y) / (b.x - a.x);
+    // Inspired by http://paulbourke.net/geometry/pointlineplane/
+    function intersect(ref, ref$1) {
+        var ref_0 = ref[0];
+        var x1 = ref_0.x;
+        var y1 = ref_0.y;
+        var ref_1 = ref[1];
+        var x2 = ref_1.x;
+        var y2 = ref_1.y;
+        var ref$1_0 = ref$1[0];
+        var x3 = ref$1_0.x;
+        var y3 = ref$1_0.y;
+        var ref$1_1 = ref$1[1];
+        var x4 = ref$1_1.x;
+        var y4 = ref$1_1.y;
+
+
+        var denominator = (y4 - y3) * (x2 - x1) - (x4 - x3) * (y2 - y1);
+
+        // Lines are parallel
+        if (denominator === 0) {
+            return false;
+        }
+
+        var ua = ((x4 - x3) * (y1 - y3) - (y4 - y3) * (x1 - x3)) / denominator;
+
+        if (ua < 0) {
+            return false;
+        }
+
+        // Return a object with the x and y coordinates of the intersection
+        return {x: x1 + ua * (x2 - x1), y: y1 + ua * (y2 - y1)};
     }
 
     var strats = {};
@@ -3656,7 +3663,6 @@
             delayShow: 0,
             delayHide: 800,
             clsDrop: false,
-            hoverIdle: 200,
             animation: ['uk-animation-fade'],
             cls: 'uk-open'
         },
@@ -3768,6 +3774,32 @@
 
             {
 
+                name: 'toggleshow',
+
+                self: true,
+
+                handler: function(e, toggle) {
+                    e.preventDefault();
+                    this.show(toggle);
+                }
+
+            },
+
+            {
+
+                name: 'togglehide',
+
+                self: true,
+
+                handler: function(e) {
+                    e.preventDefault();
+                    this.hide();
+                }
+
+            },
+
+            {
+
                 name: pointerEnter,
 
                 filter: function() {
@@ -3775,56 +3807,23 @@
                 },
 
                 handler: function(e) {
-
-                    if (isTouch(e)) {
-                        return;
+                    if (!isTouch(e)) {
+                        this.clearTimers();
                     }
-
-                    if (active
-                        && active !== this
-                        && active.toggle
-                        && includes(active.toggle.mode, 'hover')
-                        && !within(e.target, active.toggle.$el)
-                        && !pointInRect({x: e.pageX, y: e.pageY}, offset(active.$el))
-                    ) {
-                        active.hide(false);
-                    }
-
-                    e.preventDefault();
-                    this.show(this.toggle);
                 }
 
             },
 
             {
 
-                name: 'toggleshow',
+                name: pointerLeave,
 
-                handler: function(e, toggle) {
+                filter: function() {
+                    return includes(this.mode, 'hover');
+                },
 
-                    if (toggle && !includes(toggle.target, this.$el)) {
-                        return;
-                    }
-
-                    e.preventDefault();
-                    this.show(toggle || this.toggle);
-                }
-
-            },
-
-            {
-
-                name: ("togglehide " + pointerLeave),
-
-                handler: function(e, toggle) {
-
-                    if (isTouch(e) || toggle && !includes(toggle.target, this.$el)) {
-                        return;
-                    }
-
-                    e.preventDefault();
-
-                    if (this.toggle && includes(this.toggle.mode, 'hover')) {
+                handler: function(e) {
+                    if (!isTouch(e) && !matches(this.$el, ':hover')) {
                         this.hide();
                     }
                 }
@@ -3853,6 +3852,9 @@
 
                 handler: function() {
                     var this$1 = this;
+
+
+                    active = this;
 
                     this.tracker.init();
                     trigger(this.$el, 'updatearia');
@@ -3943,60 +3945,36 @@
 
             show: function(toggle, delay) {
                 var this$1 = this;
+                if ( toggle === void 0 ) toggle = this.toggle;
                 if ( delay === void 0 ) delay = true;
 
 
-                var show = function () { return !this$1.isToggled() && this$1.toggleElement(this$1.$el, true); };
-                var tryShow = function () {
-
-                    this$1.toggle = toggle || this$1.toggle;
-
-                    this$1.clearTimers();
-
-                    if (this$1.isActive()) {
-                        return;
-                    } else if (delay && active && active !== this$1 && active.isDelaying) {
-                        this$1.showTimer = setTimeout(this$1.show, 10);
-                        return;
-                    } else if (this$1.isParentOf(active)) {
-
-                        if (active.hideTimer) {
-                            active.hide(false);
-                        } else {
-                            return;
-                        }
-
-                    } else if (this$1.isChildOf(active)) {
-
-                        active.clearTimers();
-
-                    } else if (active && !this$1.isChildOf(active) && !this$1.isParentOf(active)) {
-
-                        var prev;
-                        while (active && active !== prev && !this$1.isChildOf(active)) {
-                            prev = active;
-                            active.hide(false);
-                        }
-
-                    }
-
-                    if (delay && this$1.delayShow) {
-                        this$1.showTimer = setTimeout(show, this$1.delayShow);
-                    } else {
-                        show();
-                    }
-
-                    active = this$1;
-                };
-
-                if (toggle && this.toggle && toggle.$el !== this.toggle.$el) {
-
-                    once(this.$el, 'hide', tryShow);
+                if (this.isToggled() && toggle && this.toggle && toggle.$el !== this.toggle.$el) {
                     this.hide(false);
-
-                } else {
-                    tryShow();
                 }
+
+                this.toggle = toggle;
+
+                this.clearTimers();
+
+                if (this.isActive()) {
+                    return;
+                }
+
+                if (active) {
+
+                    if (delay && active.isDelaying) {
+                        this.showTimer = setTimeout(this.show, 10);
+                        return;
+                    }
+
+                    while (active && !within(this.$el, active.$el)) {
+                        active.hide(false);
+                    }
+                }
+
+                this.showTimer = setTimeout(function () { return !this$1.isToggled() && this$1.toggleElement(this$1.$el, true); }, delay && this.delayShow || 0);
+
             },
 
             hide: function(delay) {
@@ -4008,10 +3986,10 @@
 
                 this.clearTimers();
 
-                this.isDelaying = this.tracker.movesTo(this.$el);
+                this.isDelaying = getPositionedElements(this.$el).some(function (el) { return this$1.tracker.movesTo(el); });
 
                 if (delay && this.isDelaying) {
-                    this.hideTimer = setTimeout(this.hide, this.hoverIdle);
+                    this.hideTimer = setTimeout(this.hide, 50);
                 } else if (delay && this.delayHide) {
                     this.hideTimer = setTimeout(hide, this.delayHide);
                 } else {
@@ -4029,14 +4007,6 @@
 
             isActive: function() {
                 return active === this;
-            },
-
-            isChildOf: function(drop) {
-                return drop && drop !== this && within(this.$el, drop.$el);
-            },
-
-            isParentOf: function(drop) {
-                return drop && drop !== this && within(drop.$el, this.$el);
             },
 
             position: function() {
@@ -4064,6 +4034,11 @@
         }
 
     };
+
+    function getPositionedElements(el) {
+        var result = css(el, 'position') !== 'static' ? [el] : [];
+        return result.concat(result.map.call(el.children, getPositionedElements));
+    }
 
     function delayOn(el, type, fn) {
         var off = once(el, type, function () { return off = on(el, type, fn); }
@@ -12194,7 +12169,8 @@
             clsNoDrag: 'uk-sortable-nodrag',
             clsEmpty: 'uk-sortable-empty',
             clsCustom: '',
-            handle: false
+            handle: false,
+            pos: {}
         },
 
         created: function() {
@@ -12204,10 +12180,7 @@
                 var fn = this$1[key];
                 this$1[key] = function (e) {
                     this$1.scrollY = window.pageYOffset;
-                    var ref = getEventPos(e, 'page');
-                    var x = ref.x;
-                    var y = ref.y;
-                    this$1.pos = {x: x, y: y};
+                    assign(this$1.pos, getEventPos(e, 'page'));
 
                     fn(e);
                 };
@@ -12242,8 +12215,6 @@
                         top: clamp(this.pos.y + this.origin.top, 0, bottom - this.drag.offsetHeight),
                         left: clamp(this.pos.x + this.origin.left, 0, right - this.drag.offsetWidth)
                     });
-
-                    trackScroll(this.pos);
 
                 }
 
@@ -12312,6 +12283,8 @@
                 addClass(document.documentElement, this.clsDragState);
 
                 trigger(this.$el, 'start', [this, this.placeholder]);
+
+                trackScroll(this.pos);
 
                 this.move(e);
             },
@@ -12462,63 +12435,60 @@
     }
 
     var trackTimer;
-    function trackScroll(ref) {
-        var x = ref.x;
-        var y = ref.y;
+    function trackScroll(pos) {
 
+        trackTimer = setInterval(function () {
 
-        clearTimeout(trackTimer);
+            var x = pos.x;
+            var y = pos.y;
+            scrollParents(document.elementFromPoint(x - window.pageXOffset, y - window.pageYOffset)).some(function (scrollEl) {
 
-        scrollParents(document.elementFromPoint(x - window.pageXOffset, y - window.pageYOffset)).some(function (scrollEl) {
+                var scroll = scrollEl.scrollTop;
+                var scrollHeight = scrollEl.scrollHeight;
+                var offsetHeight = scrollEl.offsetHeight;
 
-            var scroll = scrollEl.scrollTop;
-            var scrollHeight = scrollEl.scrollHeight;
+                if (getScrollingElement() === scrollEl) {
+                    scrollEl = window;
+                    scrollHeight -= window.innerHeight;
+                } else {
+                    scrollHeight -= offsetHeight;
+                }
 
-            if (getScrollingElement() === scrollEl) {
-                scrollEl = window;
-                scrollHeight -= window.innerHeight;
-            }
+                var ref = offset(scrollEl);
+                var top = ref.top;
+                var bottom = ref.bottom;
 
-            var ref = offset(scrollEl);
-            var top = ref.top;
-            var bottom = ref.bottom;
+                if (top < y && top + 30 > y) {
+                    scroll -= 5;
+                } else if (bottom > y && bottom - 20 < y) {
+                    scroll += 5;
+                } else {
+                    return;
+                }
 
-            if (top < y && top + 30 > y) {
-                scroll -= 5;
-            } else if (bottom > y && bottom - 20 < y) {
-                scroll += 5;
-            }
-
-            if (scroll > 0 && scroll < scrollHeight) {
-                return trackTimer = setTimeout(function () {
+                if (scroll > 0 && scroll < scrollHeight) {
                     scrollTop(scrollEl, scroll);
-                    trackScroll({x: x, y: y});
-                }, 10);
-            }
+                    return true;
+                }
 
-        });
+            });
+
+        }, 15);
 
     }
 
     function untrackScroll() {
-        clearTimeout(trackTimer);
+        clearInterval(trackTimer);
     }
 
     var overflowRe = /auto|scroll/;
 
     function scrollParents(element) {
         var scrollEl = getScrollingElement();
-        return parents$1(element, function (parent) { return parent === scrollEl || overflowRe.test(css(parent, 'overflow')); });
-    }
-
-    function parents$1(element, fn) {
-        var parents = [];
-        do {
-            if (fn(element)) {
-                parents.unshift(element);
-            }
-        } while (element && (element = element.parentElement));
-        return parents;
+        return element
+            ? [element].concat(parents(element, '*'))
+                .filter(function (parent) { return parent === scrollEl || overflowRe.test(css(parent, 'overflow')); }).reverse()
+            : [];
     }
 
     function getScrollingElement() {
