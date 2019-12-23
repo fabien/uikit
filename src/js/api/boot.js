@@ -1,5 +1,5 @@
 import {getComponentName} from './component';
-import {fastdom, hasAttr, trigger} from 'uikit-util';
+import {apply, fastdom, hasAttr, trigger} from 'uikit-util';
 
 export default function (UIkit) {
 
@@ -77,21 +77,6 @@ export default function (UIkit) {
         }
 
         return true;
-    }
-
-    function apply(node, fn) {
-
-        if (node.nodeType !== 1 || hasAttr(node, 'uk-no-boot')) {
-            return;
-        }
-
-        fn(node);
-        node = node.firstElementChild;
-        while (node) {
-            const next = node.nextElementSibling;
-            apply(node, fn);
-            node = next;
-        }
     }
 
 }

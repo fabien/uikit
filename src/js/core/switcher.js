@@ -1,5 +1,5 @@
 import Togglable from '../mixin/togglable';
-import {$$, addClass, attr, css, data, endsWith, filter, getIndex, index, isEmpty, matches, queryAll, removeClass, toNodes, within} from 'uikit-util';
+import {$$, addClass, attr, children, css, data, endsWith, filter, getIndex, index, isEmpty, matches, queryAll, removeClass, within} from 'uikit-util';
 
 export default {
 
@@ -48,8 +48,8 @@ export default {
             },
 
             handler(e) {
-                if (!within(e.target, this.$el)) e.preventDefault();
-                this.show(toNodes(this.$el.children).filter(el => within(e.current, el))[0]);
+                e.preventDefault();
+                this.show(children(this.$el).filter(el => within(e.current, el))[0]);
             }
 
         },
