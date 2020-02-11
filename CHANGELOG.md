@@ -1,5 +1,43 @@
 # Changelog
 
+## WIP
+
+### Fixed
+
+- Fix accessing computed properties after component has been disconnected
+
+## 3.3.1 (February 4, 2020)
+
+### Changed
+
+- Improve update performance
+
+### Fixed
+
+- Fix countdown separator line-height
+- Fix Cover component covers positioned parent element
+
+## 3.3.0 (January 23, 2020)
+
+### Added
+
+- Add container xlarge modifier
+
+### Changed
+
+- IMPORTANT: Change `uk-container-large` width. Use `uk-container-xlarge`
+
+### Fixed
+
+- Fix `position` takes offsetParent's border width into account
+
+## 3.2.7 (January 13, 2020)
+
+### Fixed
+
+- Fix Drop component has wrong state after disconnect
+- Fix `repeat` option in Scrollspy component in Firefox
+
 ## 3.2.6 (December 17, 2019)
 
 ### Fixed
