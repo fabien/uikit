@@ -1,4 +1,4 @@
-/*! UIkit 3.3.1 | http://www.getuikit.com | (c) 2014 - 2019 YOOtheme | MIT License */
+/*! UIkit 3.3.2 | http://www.getuikit.com | (c) 2014 - 2019 YOOtheme | MIT License */
 
 (function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -3556,7 +3556,7 @@
     UIkit.data = '__uikit__';
     UIkit.prefix = 'uk-';
     UIkit.options = {};
-    UIkit.version = '3.3.1';
+    UIkit.version = '3.3.2';
 
     globalAPI(UIkit);
     hooksAPI(UIkit);
@@ -3677,7 +3677,11 @@
                 apply(document.body, connect);
             }
 
-            (new MutationObserver(function (mutations) { return mutations.forEach(applyMutation); })).observe(document, {
+            (new MutationObserver(function (mutations) {
+                var updates = [];
+                mutations.forEach(function (mutation) { return applyMutation(mutation, updates); });
+                updates.forEach(function (el) { return UIkit.update(el); });
+            })).observe(document, {
                 childList: true,
                 subtree: true,
                 characterData: true,
@@ -3687,7 +3691,7 @@
             UIkit._initialized = true;
         }
 
-        function applyMutation(mutation) {
+        function applyMutation(mutation, updates) {
 
             var target = mutation.target;
             var type = mutation.type;
@@ -3696,7 +3700,9 @@
                 ? applyChildList(mutation)
                 : applyAttribute(mutation);
 
-            update && UIkit.update(target);
+            if (update && !updates.some(function (element) { return element.contains(target); })) {
+                updates.push(target.contains ? target : target.parentNode); // IE 11 text node does not implement contains
+            }
 
         }
 
@@ -6696,85 +6702,88 @@
 
     };
 
-    function install$1(UIkit) {
+    function install$1(ref) {
+        var modal = ref.modal;
 
-        UIkit.modal.dialog = function (content, options) {
 
-            var dialog = UIkit.modal((" <div class=\"uk-modal\"> <div class=\"uk-modal-dialog\">" + content + "</div> </div> "), options);
+        modal.dialog = function (content, options) {
+
+            var dialog = modal(
+                ("<div class=\"uk-modal\"> <div class=\"uk-modal-dialog\">" + content + "</div> </div>"),
+                options
+            );
 
             dialog.show();
 
-            on(dialog.$el, 'hidden', function () { return Promise.resolve(function () { return dialog.$destroy(true); }); }, {self: true});
+            on(dialog.$el, 'hidden', function () { return Promise.resolve().then(function () { return dialog.$destroy(true); }
+                ); }, {self: true}
+            );
 
             return dialog;
         };
 
-        UIkit.modal.alert = function (message, options) {
+        modal.alert = function (message, options) {
+            return openDialog(
+                function (ref) {
+                    var labels = ref.labels;
 
-            options = assign({bgClose: false, escClose: false, labels: UIkit.modal.labels}, options);
-
-            return new Promise(
-                function (resolve) { return on(UIkit.modal.dialog((" <div class=\"uk-modal-body\">" + (isString(message) ? message : html(message)) + "</div> <div class=\"uk-modal-footer uk-text-right\"> <button class=\"uk-button uk-button-primary uk-modal-close\" autofocus>" + (options.labels.ok) + "</button> </div> "), options).$el, 'hide', resolve); }
+                    return ("<div class=\"uk-modal-body\">" + (isString(message) ? message : html(message)) + "</div> <div class=\"uk-modal-footer uk-text-right\"> <button class=\"uk-button uk-button-primary uk-modal-close\" autofocus>" + (labels.ok) + "</button> </div>");
+            },
+                options,
+                function (deferred) { return deferred.resolve(); }
             );
         };
 
-        UIkit.modal.confirm = function (message, options) {
+        modal.confirm = function (message, options) {
+            return openDialog(
+                function (ref) {
+                    var labels = ref.labels;
 
-            options = assign({bgClose: false, escClose: true, labels: UIkit.modal.labels}, options);
-
-            return new Promise(function (resolve, reject) {
-
-                var confirm = UIkit.modal.dialog((" <form> <div class=\"uk-modal-body\">" + (isString(message) ? message : html(message)) + "</div> <div class=\"uk-modal-footer uk-text-right\"> <button class=\"uk-button uk-button-default uk-modal-close\" type=\"button\">" + (options.labels.cancel) + "</button> <button class=\"uk-button uk-button-primary\" autofocus>" + (options.labels.ok) + "</button> </div> </form> "), options);
-
-                var resolved = false;
-
-                on(confirm.$el, 'submit', 'form', function (e) {
-                    e.preventDefault();
-                    resolve();
-                    resolved = true;
-                    confirm.hide();
-                });
-                on(confirm.$el, 'hide', function () {
-                    if (!resolved) {
-                        reject();
-                    }
-                });
-
-            });
+                    return ("<form> <div class=\"uk-modal-body\">" + (isString(message) ? message : html(message)) + "</div> <div class=\"uk-modal-footer uk-text-right\"> <button class=\"uk-button uk-button-default uk-modal-close\" type=\"button\">" + (labels.cancel) + "</button> <button class=\"uk-button uk-button-primary\" autofocus>" + (labels.ok) + "</button> </div> </form>");
+            },
+                options,
+                function (deferred) { return deferred.reject(); }
+            );
         };
 
-        UIkit.modal.prompt = function (message, value, options) {
+        modal.prompt = function (message, value, options) {
+            return openDialog(
+                function (ref) {
+                    var labels = ref.labels;
 
-            options = assign({bgClose: false, escClose: true, labels: UIkit.modal.labels}, options);
-
-            return new Promise(function (resolve) {
-
-                var prompt = UIkit.modal.dialog((" <form class=\"uk-form-stacked\"> <div class=\"uk-modal-body\"> <label>" + (isString(message) ? message : html(message)) + "</label> <input class=\"uk-input\" autofocus> </div> <div class=\"uk-modal-footer uk-text-right\"> <button class=\"uk-button uk-button-default uk-modal-close\" type=\"button\">" + (options.labels.cancel) + "</button> <button class=\"uk-button uk-button-primary\">" + (options.labels.ok) + "</button> </div> </form> "), options),
-                    input = $('input', prompt.$el);
-
-                input.value = value;
-
-                var resolved = false;
-
-                on(prompt.$el, 'submit', 'form', function (e) {
-                    e.preventDefault();
-                    resolve(input.value);
-                    resolved = true;
-                    prompt.hide();
-                });
-                on(prompt.$el, 'hide', function () {
-                    if (!resolved) {
-                        resolve(null);
-                    }
-                });
-
-            });
+                    return ("<form class=\"uk-form-stacked\"> <div class=\"uk-modal-body\"> <label>" + (isString(message) ? message : html(message)) + "</label> <input class=\"uk-input\" value=\"" + (value || '') + "\" autofocus> </div> <div class=\"uk-modal-footer uk-text-right\"> <button class=\"uk-button uk-button-default uk-modal-close\" type=\"button\">" + (labels.cancel) + "</button> <button class=\"uk-button uk-button-primary\">" + (labels.ok) + "</button> </div> </form>");
+            },
+                options,
+                function (deferred) { return deferred.resolve(null); },
+                function (dialog) { return $('input', dialog.$el).value; }
+            );
         };
 
-        UIkit.modal.labels = {
+        modal.labels = {
             ok: 'Ok',
             cancel: 'Cancel'
         };
+
+        function openDialog(tmpl, options, hideFn, submitFn) {
+
+            options = assign({bgClose: false, escClose: true, labels: modal.labels}, options);
+
+            var dialog = modal.dialog(tmpl(options), options);
+            var deferred = new Deferred();
+
+            var resolved = false;
+
+            on(dialog.$el, 'submit', 'form', function (e) {
+                e.preventDefault();
+                deferred.resolve(submitFn && submitFn(dialog));
+                resolved = true;
+                dialog.hide();
+            });
+
+            on(dialog.$el, 'hide', function () { return !resolved && hideFn(deferred); });
+
+            return deferred.promise;
+        }
 
     }
 
@@ -10327,7 +10336,7 @@
                     return;
                 }
 
-                var prevIndex = this.index;
+                var prevIndex = this.getIndex(this.index);
                 var prev = hasClass(this.slides, this.clsActive) && this.slides[prevIndex];
                 var nextIndex = this.getIndex(index, this.index);
                 var next = this.slides[nextIndex];
@@ -10648,7 +10657,7 @@
 
                 handler: function(e) {
 
-                    if (!this.isToggled(this.$el)) {
+                    if (!this.isToggled(this.$el) || !this.draggable) {
                         return;
                     }
 
@@ -10901,10 +10910,6 @@
                     this.hide();
                 }
 
-            },
-
-            items: function() {
-                return uniqueBy(this.toggles.map(toItem), 'source');
             }
 
         },
@@ -10925,12 +10930,7 @@
 
                 handler: function(e) {
                     e.preventDefault();
-                    var src = data(e.current, 'href');
-                    this.show(findIndex(this.items, function (ref) {
-                        var source = ref.source;
-
-                        return source === src;
-                    }));
+                    this.show(e.current);
                 }
 
             }
@@ -10943,7 +10943,19 @@
                 var this$1 = this;
 
 
-                this.panel = this.panel || this.$create('lightboxPanel', assign({}, this.$props, {items: this.items}));
+                var items = uniqueBy(this.toggles.map(toItem), 'source');
+
+                if (isElement(index)) {
+                    var ref = toItem(index);
+                    var source = ref.source;
+                    index = findIndex(items, function (ref) {
+                        var src = ref.source;
+
+                        return source === src;
+                    });
+                }
+
+                this.panel = this.panel || this.$create('lightboxPanel', assign({}, this.$props, {items: items}));
 
                 on(this.panel.$el, 'hidden', function () { return this$1.panel = false; });
 
@@ -10983,8 +10995,6 @@
 
     var obj;
 
-    var containers = {};
-
     var notification = {
 
         functional: true,
@@ -10997,6 +11007,7 @@
             timeout: 5000,
             group: null,
             pos: 'top-center',
+            clsContainer: 'uk-notification',
             clsClose: 'uk-notification-close',
             clsMsg: 'uk-notification-message'
         },
@@ -11021,11 +11032,8 @@
 
         created: function() {
 
-            if (!containers[this.pos]) {
-                containers[this.pos] = append(this.$container, ("<div class=\"uk-notification uk-notification-" + (this.pos) + "\"></div>"));
-            }
-
-            var container = css(containers[this.pos], 'display', 'block');
+            var container = $(("." + (this.clsContainer) + "-" + (this.pos)), this.$container)
+                || append(this.$container, ("<div class=\"" + (this.clsContainer) + " " + (this.clsContainer) + "-" + (this.pos) + "\" style=\"display: block\"></div>"));
 
             this.$mount(append(container,
                 ("<div class=\"" + (this.clsMsg) + (this.status ? (" " + (this.clsMsg) + "-" + (this.status)) : '') + "\"> <a href=\"#\" class=\"" + (this.clsClose) + "\" data-uk-close></a> <div>" + (this.message) + "</div> </div>")
@@ -11077,11 +11085,13 @@
 
                 var removeFn = function () {
 
+                    var container = this$1.$el.parentNode;
+
                     trigger(this$1.$el, 'close', [this$1]);
                     remove(this$1.$el);
 
-                    if (!containers[this$1.pos].children.length) {
-                        css(containers[this$1.pos], 'display', 'none');
+                    if (container && !container.hasChildNodes()) {
+                        remove(container);
                     }
 
                 };
@@ -12717,16 +12727,7 @@
                 this._unbind = on(document, pointerUp, function (e) { return !within(e.target, this$1.$el) && this$1.hide(); });
 
                 clearTimeout(this.showTimer);
-                this.showTimer = setTimeout(function () {
-                    this$1._show();
-                    this$1.hideTimer = setInterval(function () {
-
-                        if (!isVisible(this$1.$el)) {
-                            this$1.hide();
-                        }
-
-                    }, 150);
-                }, this.delay);
+                this.showTimer = setTimeout(this._show, this.delay);
             },
 
             hide: function() {
@@ -12748,9 +12749,11 @@
             },
 
             _show: function() {
+                var this$1 = this;
+
 
                 this.tooltip = append(this.container,
-                    ("<div class=\"" + (this.clsPos) + "\" aria-expanded=\"true\" aria-hidden> <div class=\"" + (this.clsPos) + "-inner\">" + (this.title) + "</div> </div>")
+                    ("<div class=\"" + (this.clsPos) + " " + (this.cls) + "\" aria-expanded=\"true\" aria-hidden> <div class=\"" + (this.clsPos) + "-inner\">" + (this.title) + "</div> </div>")
                 );
 
                 this.positionAt(this.tooltip, this.$el);
@@ -12760,6 +12763,8 @@
                     : ((this.align) + "-" + (flipPosition(this.dir)));
 
                 this.toggleElement(this.tooltip, true);
+
+                this.hideTimer = setInterval(function () { return !isVisible(this$1.$el) && this$1.hide(); }, 150);
 
             },
 
