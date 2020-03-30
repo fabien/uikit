@@ -1,6 +1,6 @@
 import Position from '../mixin/position';
 import Togglable from '../mixin/togglable';
-import {addClass, Animation, apply, attr, css, includes, isTouch, MouseTracker, offset, on, once, pointerEnter, pointerLeave, query, removeClasses, toggleClass, trigger, within} from 'uikit-util';
+import {addClass, Animation, apply, attr, css, includes, isTouch, MouseTracker, offset, on, once, pointerCancel, pointerDown, pointerEnter, pointerLeave, pointerUp, query, removeClasses, toggleClass, trigger, within} from 'uikit-util';
 
 let active;
 
@@ -164,8 +164,6 @@ export default {
 
             name: pointerEnter,
 
-            self: true,
-
             filter() {
                 return includes(this.mode, 'hover');
             },
@@ -182,8 +180,6 @@ export default {
 
             name: pointerLeave,
 
-            self: true,
-
             filter() {
                 return includes(this.mode, 'hover');
             },
@@ -198,11 +194,16 @@ export default {
 
         {
 
-            name: 'beforeshow',
+            name: 'toggled',
 
             self: true,
 
             handler() {
+
+                if (!this.isToggled()) {
+                    return;
+                }
+
                 this.clearTimers();
                 Animation.cancel(this.$el);
                 this.position();
@@ -223,14 +224,14 @@ export default {
                 this.tracker.init();
                 trigger(this.$el, 'updatearia');
 
-                // If triggered from an click event handler, delay adding the click handler
-                const off = delayOn(document, 'click', ({defaultPrevented, target}) => {
-                    if (!defaultPrevented && !within(target, this.$el) && !(this.toggle && within(target, this.toggle.$el))) {
-                        this.hide(false);
-                    }
-                });
+                once(this.$el, 'hide', on(document, pointerDown, ({target}) =>
+                    !within(target, this.$el) && once(document, `${pointerUp} ${pointerCancel} scroll`, ({defaultPrevented, type, target: newTarget}) => {
+                        if (!defaultPrevented && type === pointerUp && target === newTarget && !(this.toggle && within(target, this.toggle.$el))) {
+                            this.hide(false);
+                        }
+                    }, true)
+                ), {self: true});
 
-                once(this.$el, 'hide', off, {self: true});
             }
 
         },
@@ -334,7 +335,7 @@ export default {
 
         hide(delay = true) {
 
-            const hide = () => this.toggleNow(this.$el, false);
+            const hide = () => this.toggleElement(this.$el, false, false);
 
             this.clearTimers();
 
@@ -364,7 +365,6 @@ export default {
         position() {
 
             removeClasses(this.$el, `${this.clsDrop}-(stack|boundary)`);
-            css(this.$el, {top: '', left: '', display: 'block'});
             toggleClass(this.$el, `${this.clsDrop}-boundary`, this.boundaryAlign);
 
             const boundary = offset(this.boundary);
@@ -379,8 +379,6 @@ export default {
 
             this.positionAt(this.$el, this.boundaryAlign ? this.boundary : this.toggle.$el, this.boundary);
 
-            css(this.$el, 'display', '');
-
         }
 
     }
@@ -391,11 +389,4 @@ function getPositionedElements(el) {
     const result = [];
     apply(el, el => css(el, 'position') !== 'static' && result.push(el));
     return result;
-}
-
-export function delayOn(el, type, fn) {
-    let off = once(el, type, () =>
-        off = on(el, type, fn)
-    , true);
-    return () => off();
 }
