@@ -48,7 +48,7 @@ export function endsWith(str, search) {
 
 const arrPrototype = Array.prototype;
 
-const includesFn = function (search, i) { return ~this.indexOf(search, i); };
+const includesFn = function (search, i) { return !!~this.indexOf(search, i); };
 const includesStr = strPrototype.includes || includesFn;
 const includesArray = arrPrototype.includes || includesFn;
 
@@ -220,9 +220,10 @@ export function isEqual(value, other) {
 }
 
 export function swap(value, a, b) {
-    return value.replace(new RegExp(`${a}|${b}`, 'mg'), match => {
-        return match === a ? b : a;
-    });
+    return value.replace(
+        new RegExp(`${a}|${b}`, 'g'),
+        match => match === a ? b : a
+    );
 }
 
 export const assign = Object.assign || function (target, ...args) {
