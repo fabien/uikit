@@ -50,34 +50,30 @@ export default {
 
                 const transitionInProgress = nodes.some(Transition.inProgress);
                 let translates = false;
-                let elHeight = '';
-                let padding = Math.abs(this.parallax);
+
+                const columnHeights = getColumnHeights(columns);
+                const margin = getMarginTop(nodes, this.margin) * (rows.length - 1);
+                const elHeight = Math.max(...columnHeights) + margin;
 
                 if (this.masonry) {
-
                     columns = columns.map(column => sortBy(column, 'offsetTop'));
-
-                    const columnHeights = getColumnHeights(columns);
-                    const margin = getMarginTop(nodes, this.margin) * (rows.length - 1);
-
                     translates = getTranslates(rows, columns);
-                    elHeight = Math.max(...columnHeights) + margin;
-
-                    if (padding) {
-                        padding = columnHeights.reduce((newPadding, hgt, i) =>
-                            Math.max(newPadding, hgt + margin + (i % 2 ? padding : padding / 8) - elHeight)
-                        , 0);
-                    }
-
                 }
 
-                return {padding, columns, translates, height: !transitionInProgress ? elHeight : false};
+                let padding = Math.abs(this.parallax);
+                if (padding) {
+                    padding = columnHeights.reduce((newPadding, hgt, i) =>
+                            Math.max(newPadding, hgt + margin + (i % 2 ? padding : padding / 8) - elHeight)
+                        , 0);
+                }
+
+                return {padding, columns, translates, height: transitionInProgress ? false : this.masonry ? elHeight : ''};
 
             },
 
             write({height, padding}) {
 
-                css(this.$el, 'paddingBottom', padding);
+                css(this.$el, 'paddingBottom', padding || '');
                 height !== false && css(this.$el, 'height', height);
 
             },
@@ -122,24 +118,18 @@ export default {
 
 function getTranslates(rows, columns) {
 
-    const translates = [];
     const rowHeights = rows.map(row =>
         Math.max(...row.map(el => el.offsetHeight))
     );
 
-    columns.forEach((column, i) =>
-        column.forEach((el, j) => {
-            if (j === 0) {
-                translates[i] = [0];
-            } else {
-                translates[i][j] = rowHeights[j - 1]
-                    - columns[i][j - 1].offsetHeight
-                    + translates[i].reduce((sum, op) => sum + op, 0);
-            }
-        })
-    );
-
-    return translates;
+    return columns.map(elements => {
+        let prev = 0;
+        return elements.map((element, row) =>
+            prev += row
+                ? rowHeights[row - 1] - elements[row - 1].offsetHeight
+                : 0
+        );
+    });
 }
 
 function getMarginTop(nodes, cls) {

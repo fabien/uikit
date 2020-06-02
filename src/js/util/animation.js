@@ -62,69 +62,31 @@ export const Transition = {
 };
 
 const animationPrefix = 'uk-animation-';
-const clsCancelAnimation = 'uk-cancel-animation';
 
 export function animate(element, animation, duration = 200, origin, out) {
 
     return Promise.all(toNodes(element).map(element =>
         new Promise((resolve, reject) => {
 
-            if (hasClass(element, clsCancelAnimation)) {
-                requestAnimationFrame(() =>
-                    Promise.resolve().then(() =>
-                        animate(...arguments).then(resolve, reject)
-                    )
-                );
-                return;
-            }
-
-            let cls = `${animation} ${animationPrefix}${out ? 'leave' : 'enter'}`;
-
-            if (startsWith(animation, animationPrefix)) {
-
-                if (origin) {
-                    cls += ` uk-transform-origin-${origin}`;
-                }
-
-                if (out) {
-                    cls += ` ${animationPrefix}reverse`;
-                }
-
-            }
-
-            reset();
+            trigger(element, 'animationcancel');
+            const timer = setTimeout(() => trigger(element, 'animationend'), duration);
 
             once(element, 'animationend animationcancel', ({type}) => {
 
-                let hasReset = false;
+                clearTimeout(timer);
 
-                if (type === 'animationcancel') {
-                    reject();
-                    reset();
-                } else {
-                    resolve();
-                    Promise.resolve().then(() => {
-                        hasReset = true;
-                        reset();
-                    });
-                }
+                type === 'animationcancel' ? reject() : resolve();
 
-                requestAnimationFrame(() => {
-                    if (!hasReset) {
-                        addClass(element, clsCancelAnimation);
-
-                        requestAnimationFrame(() => removeClass(element, clsCancelAnimation));
-                    }
-                });
+                css(element, 'animationDuration', '');
+                removeClasses(element, `${animationPrefix}\\S*`);
 
             }, {self: true});
 
             css(element, 'animationDuration', `${duration}ms`);
-            addClass(element, cls);
+            addClass(element, animation, animationPrefix + (out ? 'leave' : 'enter'));
 
-            function reset() {
-                css(element, 'animationDuration', '');
-                removeClasses(element, `${animationPrefix}\\S*`);
+            if (startsWith(animation, animationPrefix)) {
+                addClass(element, origin && `uk-transform-origin-${origin}`, out && `${animationPrefix}reverse`);
             }
 
         })
@@ -135,9 +97,7 @@ export function animate(element, animation, duration = 200, origin, out) {
 const inProgress = new RegExp(`${animationPrefix}(enter|leave)`);
 export const Animation = {
 
-    in(element, animation, duration, origin) {
-        return animate(element, animation, duration, origin, false);
-    },
+    in: animate,
 
     out(element, animation, duration, origin) {
         return animate(element, animation, duration, origin, true);

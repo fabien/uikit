@@ -1,10 +1,71 @@
 # Changelog
 
-## 3.4.3 (May 5, 2020)
+## 3.5.3 (May 29, 2020)
+
+### Fixed
+
+- Fix regression in Grid component with parallax option
+
+## 3.5.2 (May 29, 2020)
+
+### Fixed
+
+- Fix uglifyjs removes self-assignments
+
+## 3.5.1 (May 29, 2020)
+
+### Fixed
+
+- Fix regression in Animation API
+- Fix regression Drop component
+- Fix regression in Sass source
+
+## 3.5.0 (May 28, 2020)
 
 ### Added
 
-- Add list collapse modifier
+- Add type, color and size modifiers to List component
+
+### Changed
+
+- IMPORTANT: Renamed Less variable parts `xxlarge` to `2xlarge`
+- Replace clearfix by creating a block formatting context with display flow-root
+
+### Deprecated
+
+- Width XXLarge: Use `uk-width-2xlarge` instead of `uk-width-xxlarge`
+
+### Fixed
+
+- Fix positioning issue with Drop components in Firefox
+- Fix Dropbar causing endless loop in Firefox
+
+## 3.4.6 (May 11, 2020)
+
+### Fixed
+
+- Fix regression in Switcher component
+
+## 3.4.5 (May 11, 2020)
+
+### Added
+
+- Add inBrowser check to enable server-side rendering 
+
+### Fixed
+
+- Fix Switcher responsiveness
+- Fix `isInView()` no longer returns true for adjacent rectangles
+- Fix compatibility with browsers that support `Object.prototype.watch()`
+
+## 3.4.4 (May 7, 2020)
+
+### Fixed
+
+- Fix Scrollspy component stuck in wrong state
+- Fix regression in Grid component with masonry
+
+## 3.4.3 (May 5, 2020)
 
 ### Changed
 
