@@ -4,7 +4,39 @@
 
 ### Fixed
 
+- Fix Switcher component no longer toggles an already active item
+- Fix 'positionAt' function not detecting flip state correctly
+
+## 3.5.6 (August 13, 2020)
+
+### Changed
+
+- Sticky component uses window.Date instead of window.performance
+- Sticky component with sticky-on-up no longer hides when Dropdown shows
+
+### Fixed
+
+- Fix slidenav color in Lightbox component
+- Fix inverse colors for link toggle in Link component
+- Sticky component remains inactive if hidden
+- Revert dropbar mode `push` is only applied if Navbar is positioned static
+- Fix animations not resolving if user canceled
+
+## 3.5.5 (July 14, 2020)
+
+### Added
+
+- Add list marker utility support for WebKit
+- Add `uk-text-default` to Text component 
+- Add multiple targets to Filter component
+
+### Fixed
+
+- Updates no longer throw error after too many recursions, but delay into next frame
 - Fix empty slider throws exception
+- Fix pointer events ignored on SVGs in Sortable component
+- Fix Grid component divider rendering
+- Fix `<select>` closes Drop component in hover mode in Firefox 
 
 ## 3.5.4 (June 12, 2020)
 
