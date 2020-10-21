@@ -1,9 +1,9 @@
-/*! UIkit 3.5.6 | https://www.getuikit.com | (c) 2014 - 2020 YOOtheme | MIT License */
+/*! UIkit 3.5.9 | https://www.getuikit.com | (c) 2014 - 2020 YOOtheme | MIT License */
 
 (function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
     typeof define === 'function' && define.amd ? define('uikit', factory) :
-    (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.UIkit = factory());
+    (global = global || self, global.UIkit = factory());
 }(this, (function () { 'use strict';
 
     var objPrototype = Object.prototype;
@@ -1729,57 +1729,21 @@
 
     function getDimensions(element) {
 
-        if (!element) {
-            return {};
-        }
-
         var ref = toWindow(element);
         var top = ref.pageYOffset;
         var left = ref.pageXOffset;
 
-        if (isWindow(element)) {
-
-            var height = element.innerHeight;
-            var width = element.innerWidth;
-
-            return {
-                top: top,
-                left: left,
-                height: height,
-                width: width,
-                bottom: top + height,
-                right: left + width
-            };
-        }
-
-        var style, hidden;
-
-        if (!isVisible(element) && css(element, 'display') === 'none') {
-
-            style = attr(element, 'style');
-            hidden = attr(element, 'hidden');
-
-            attr(element, {
-                style: ((style || '') + ";display:block !important;"),
-                hidden: null
-            });
-        }
-
-        element = toNode(element);
-
-        var rect = element.getBoundingClientRect();
-
-        if (!isUndefined(style)) {
-            attr(element, {style: style, hidden: hidden});
-        }
+        var rect = isWindow(element)
+            ? {height: height(element), width: width(element), top: 0, left: 0}
+            : getRect(toNode(element));
 
         return {
             height: rect.height,
             width: rect.width,
             top: rect.top + top,
             left: rect.left + left,
-            bottom: rect.bottom + top,
-            right: rect.right + left
+            bottom: rect.top + rect.height + top,
+            right: rect.left + rect.width + left
         };
     }
 
@@ -1945,6 +1909,26 @@
 
     function percent(base, value) {
         return base * toFloat(value) / 100;
+    }
+
+    function getRect(element) {
+
+        if (!element) {
+            return {};
+        }
+
+        var style;
+
+        if (!isVisible(element)) {
+            style = attr(element, 'style');
+            element.style.setProperty('display', 'block', 'important');
+        }
+
+        var rect = element.getBoundingClientRect();
+
+        attr(element, 'style', style);
+
+        return rect;
     }
 
     /*
@@ -2276,126 +2260,63 @@
 
     }
 
-    var id = 0;
+    function play(el) {
 
-    var Player = function(el) {
-        this.id = ++id;
-        this.el = toNode(el);
-    };
-
-    Player.prototype.isVideo = function () {
-        return this.isYoutube() || this.isVimeo() || this.isHTML5();
-    };
-
-    Player.prototype.isHTML5 = function () {
-        return this.el.tagName === 'VIDEO';
-    };
-
-    Player.prototype.isIFrame = function () {
-        return this.el.tagName === 'IFRAME';
-    };
-
-    Player.prototype.isYoutube = function () {
-        return this.isIFrame() && !!this.el.src.match(/\/\/.*?youtube(-nocookie)?\.[a-z]+\/(watch\?v=[^&\s]+|embed)|youtu\.be\/.*/);
-    };
-
-    Player.prototype.isVimeo = function () {
-        return this.isIFrame() && !!this.el.src.match(/vimeo\.com\/video\/.*/);
-    };
-
-    Player.prototype.enableApi = function () {
-            var this$1 = this;
-
-
-        if (this.ready) {
-            return this.ready;
+        if (isIFrame(el)) {
+            call(el, {func: 'playVideo', method: 'play'});
         }
 
-        var youtube = this.isYoutube();
-        var vimeo = this.isVimeo();
-
-        var poller;
-
-        if (youtube || vimeo) {
-
-            return this.ready = new Promise(function (resolve) {
-
-                once(this$1.el, 'load', function () {
-                    if (youtube) {
-                        var listener = function () { return post(this$1.el, {event: 'listening', id: this$1.id}); };
-                        poller = setInterval(listener, 100);
-                        listener();
-                    }
-                });
-
-                listen(function (data) { return youtube && data.id === this$1.id && data.event === 'onReady' || vimeo && Number(data.player_id) === this$1.id; })
-                    .then(function () {
-                        resolve();
-                        poller && clearInterval(poller);
-                    });
-
-                attr(this$1.el, 'src', ("" + (this$1.el.src) + (includes(this$1.el.src, '?') ? '&' : '?') + (youtube ? 'enablejsapi=1' : ("api=1&player_id=" + (this$1.id)))));
-
-            });
-
-        }
-
-        return Promise.resolve();
-
-    };
-
-    Player.prototype.play = function () {
-            var this$1 = this;
-
-
-        if (!this.isVideo()) {
-            return;
-        }
-
-        if (this.isIFrame()) {
-            this.enableApi().then(function () { return post(this$1.el, {func: 'playVideo', method: 'play'}); });
-        } else if (this.isHTML5()) {
+        if (isHTML5(el)) {
             try {
-                var promise = this.el.play();
-
-                if (promise) {
-                    promise.catch(noop);
-                }
+                el.play().catch(noop);
             } catch (e) {}
         }
-    };
 
-    Player.prototype.pause = function () {
-            var this$1 = this;
+    }
 
+    function pause(el) {
 
-        if (!this.isVideo()) {
-            return;
+        if (isIFrame(el)) {
+            call(el, {func: 'pauseVideo', method: 'pause'});
         }
 
-        if (this.isIFrame()) {
-            this.enableApi().then(function () { return post(this$1.el, {func: 'pauseVideo', method: 'pause'}); });
-        } else if (this.isHTML5()) {
-            this.el.pause();
-        }
-    };
-
-    Player.prototype.mute = function () {
-            var this$1 = this;
-
-
-        if (!this.isVideo()) {
-            return;
+        if (isHTML5(el)) {
+            el.pause();
         }
 
-        if (this.isIFrame()) {
-            this.enableApi().then(function () { return post(this$1.el, {func: 'mute', method: 'setVolume', value: 0}); });
-        } else if (this.isHTML5()) {
-            this.el.muted = true;
-            attr(this.el, 'muted', '');
+    }
+
+    function mute(el) {
+
+        if (isIFrame(el)) {
+            call(el, {func: 'mute', method: 'setVolume', value: 0});
         }
 
-    };
+        if (isHTML5(el)) {
+            el.muted = true;
+        }
+
+    }
+
+    function isHTML5(el) {
+        return el && el.tagName === 'VIDEO';
+    }
+
+    function isIFrame(el) {
+        return el && el.tagName === 'IFRAME' && (isYoutube(el) || isVimeo(el));
+    }
+
+    function isYoutube(el) {
+        return !!el.src.match(/\/\/.*?youtube(-nocookie)?\.[a-z]+\/(watch\?v=[^&\s]+|embed)|youtu\.be\/.*/);
+    }
+
+    function isVimeo(el) {
+        return !!el.src.match(/vimeo\.com\/video\/.*/);
+    }
+
+    function call(el, cmd) {
+        enableApi(el).then(function () { return post(el, cmd); });
+    }
 
     function post(el, cmd) {
         try {
@@ -2403,21 +2324,42 @@
         } catch (e) {}
     }
 
-    function listen(cb) {
+    var stateKey = '_ukPlayer';
+    var counter = 0;
+    function enableApi(el) {
 
-        return new Promise(function (resolve) { return once(window, 'message', function (_, data) { return resolve(data); }, false, function (ref) {
+        if (el[stateKey]) {
+            return el[stateKey];
+        }
+
+        var youtube = isYoutube(el);
+        var vimeo = isVimeo(el);
+
+        var id = ++counter;
+        var poller;
+
+        return el[stateKey] = new Promise(function (resolve) {
+
+            youtube && once(el, 'load', function () {
+                var listener = function () { return post(el, {event: 'listening', id: id}); };
+                poller = setInterval(listener, 100);
+                listener();
+            });
+
+            once(window, 'message', resolve, false, function (ref) {
                 var data = ref.data;
 
 
                 try {
                     data = JSON.parse(data);
-                    return data && cb(data);
+                    return data && (youtube && data.id === id && data.event === 'onReady' || vimeo && Number(data.player_id) === id);
                 } catch (e) {}
 
-            }); }
+            });
 
-        );
+            el.src = "" + (el.src) + (includes(el.src, '?') ? '&' : '?') + (youtube ? 'enablejsapi=1' : ("api=1&player_id=" + id));
 
+        }).then(function () { return clearInterval(poller); });
     }
 
     function isInView(element, offsetTop, offsetLeft) {
@@ -2469,43 +2411,51 @@
             return;
         }
 
-        var parents = overflowParents(element).concat(element);
+        var parents = overflowParents(element).reverse();
+        var diff = 0;
+        return parents.reduce(function (fn, scrollElement, i) {
 
-        var promise = Promise.resolve();
-        var loop = function ( i ) {
-            promise = promise.then(function () { return new Promise(function (resolve) {
+            var scrollTop = scrollElement.scrollTop;
+            var scrollHeight = scrollElement.scrollHeight;
+            var clientHeight = scrollElement.clientHeight;
+            var maxScroll = scrollHeight - clientHeight;
 
-                    var scrollElement = parents[i];
-                    var element = parents[i + 1];
+            var top = Math.ceil(position(parents[i - 1] || element, getViewport(scrollElement)).top - offsetBy) + diff + scrollTop;
 
-                    var scroll = scrollElement.scrollTop;
-                    var top = Math.ceil(position(element, getViewport(scrollElement)).top - offsetBy);
-                    var duration = getDuration(Math.abs(top));
+            if (top > maxScroll) {
+                diff = top - maxScroll;
+                top = maxScroll;
+            } else {
+                diff = 0;
+            }
 
-                    var start = Date.now();
-                    var step = function () {
+            return function () { return scrollTo(scrollElement, top - scrollTop).then(fn); };
 
-                        var percent = ease(clamp((Date.now() - start) / duration));
+        }, function () { return Promise.resolve(); })();
 
-                        scrollTop(scrollElement, scroll + top * percent);
+        function scrollTo(element, top) {
+            return new Promise(function (resolve) {
 
-                        // scroll more if we have not reached our destination
-                        if (percent !== 1) {
-                            requestAnimationFrame(step);
-                        } else {
-                            resolve();
-                        }
+                var scroll = element.scrollTop;
+                var duration = getDuration(Math.abs(top));
+                var start = Date.now();
 
-                    };
+                (function step() {
 
-                    step();
-                }); }
-            );
-        };
+                    var percent = ease(clamp((Date.now() - start) / duration));
 
-        for (var i = 0; i < parents.length - 1; i++) loop( i );
+                    scrollTop(element, scroll + top * percent);
 
-        return promise;
+                    // scroll more if we have not reached our destination
+                    if (percent !== 1) {
+                        requestAnimationFrame(step);
+                    } else {
+                        resolve();
+                    }
+
+                })();
+            });
+        }
 
         function getDuration(dist) {
             return 40 * Math.pow(dist, .375);
@@ -2639,6 +2589,8 @@
         return IntersectionObserverClass;
     }());
 
+
+
     var util = /*#__PURE__*/Object.freeze({
         __proto__: null,
         ajax: ajax,
@@ -2757,7 +2709,9 @@
         MouseTracker: MouseTracker,
         mergeOptions: mergeOptions,
         parseOptions: parseOptions,
-        Player: Player,
+        play: play,
+        pause: pause,
+        mute: mute,
         Promise: Promise,
         Deferred: Deferred,
         IntersectionObserver: IntersectionObserver,
@@ -3543,7 +3497,7 @@
     UIkit.data = '__uikit__';
     UIkit.prefix = 'uk-';
     UIkit.options = {};
-    UIkit.version = '3.5.6';
+    UIkit.version = '3.5.9';
 
     globalAPI(UIkit);
     hooksAPI(UIkit);
@@ -3865,8 +3819,8 @@
                     changed = includes(this.cls, ' ') || toggled !== hasClass(el, this.cls);
                     changed && toggleClass(el, this.cls, includes(this.cls, ' ') ? undefined : toggled);
                 } else {
-                    changed = toggled === hasAttr(el, 'hidden');
-                    changed && attr(el, 'hidden', !toggled ? '' : null);
+                    changed = toggled === el.hidden;
+                    changed && (el.hidden = !toggled);
                 }
 
                 $$('[autofocus]', el).some(function (el) { return isVisible(el) ? el.focus() || true : el.blur(); });
@@ -4072,7 +4026,7 @@
     };
 
     function hide(el, hide) {
-        attr(el, 'hidden', hide ? '' : null);
+        el && (el.hidden = hide);
     }
 
     var alert = {
@@ -4153,10 +4107,8 @@
                 this.$el.preload = 'none';
             }
 
-            this.player = new Player(this.$el);
-
             if (this.automute) {
-                this.player.mute();
+                mute(this.$el);
             }
 
         },
@@ -4164,13 +4116,10 @@
         update: {
 
             read: function() {
-
-                return !this.player
-                    ? false
-                    : {
-                        visible: isVisible(this.$el) && css(this.$el, 'visibility') !== 'hidden',
-                        inView: this.inView && isInView(this.$el)
-                    };
+                return {
+                    visible: isVisible(this.$el) && css(this.$el, 'visibility') !== 'hidden',
+                    inView: this.inView && isInView(this.$el)
+                };
             },
 
             write: function(ref) {
@@ -4179,9 +4128,9 @@
 
 
                 if (!visible || this.inView && !inView) {
-                    this.player.pause();
+                    pause(this.$el);
                 } else if (this.autoplay === true || this.inView && inView) {
-                    this.player.play();
+                    play(this.$el);
                 }
 
             },
@@ -5559,7 +5508,7 @@
 
 
             if (isVoidElement(this.$el)) {
-                attr(this.$el, 'hidden', null);
+                this.$el.hidden = false;
             }
 
             if (this.svg) {
@@ -5727,7 +5676,7 @@
 
         if (isVoidElement(root) || root.tagName === 'CANVAS') {
 
-            attr(root, 'hidden', true);
+            root.hidden = true;
 
             var next = root.nextElementSibling;
             return equals(el, next)
@@ -6046,7 +5995,7 @@
         connected: function() {
 
             if (storage[this.cacheKey]) {
-                setSrcAttrs(this.$el, storage[this.cacheKey] || this.dataSrc, this.dataSrcset, this.sizes);
+                setSrcAttrs(this.$el, storage[this.cacheKey], this.dataSrcset, this.sizes);
             } else if (this.isImg && this.width && this.height) {
                 setSrcAttrs(this.$el, getPlaceholderImage(this.width, this.height, this.sizes));
             }
@@ -6469,7 +6418,9 @@
                         css(document.body, 'overflowY', 'scroll');
                     }
 
-                    this.stack && css(this.$el, 'zIndex', css(this.$el, 'zIndex') + active$1.length);
+                    if (this.stack) {
+                        css(this.$el, 'zIndex', toFloat(css(this.$el, 'zIndex')) + active$1.length);
+                    }
 
                     addClass(document.documentElement, this.clsPage);
 
@@ -6913,6 +6864,9 @@
                     var $el = ref.$el;
                     var dir = ref.dir;
 
+                    if (!hasClass($el, this.clsDrop)) {
+                        return;
+                    }
 
                     if (this.dropbarMode === 'slide') {
                         addClass(this.dropbar, 'uk-navbar-dropbar-slide');
@@ -6955,6 +6909,9 @@
                 handler: function(_, ref) {
                     var $el = ref.$el;
 
+                    if (!hasClass($el, this.clsDrop)) {
+                        return;
+                    }
 
                     var active = this.getActive();
 
@@ -7486,6 +7443,7 @@
 
     };
 
+    var stateKey$1 = '_ukScrollspy';
     var scrollspy = {
 
         args: 'cls',
@@ -7548,14 +7506,11 @@
 
                     this.elements.forEach(function (el) {
 
-                        var state = el._ukScrollspyState;
-
-                        if (!state) {
-                            state = {cls: data(el, 'uk-scrollspy-class') || this$1.cls};
+                        if (!el[stateKey$1]) {
+                            el[stateKey$1] = {cls: data(el, 'uk-scrollspy-class') || this$1.cls};
                         }
 
-                        state.show = isInView(el, this$1.offsetTop, this$1.offsetLeft);
-                        el._ukScrollspyState = state;
+                        el[stateKey$1].show = isInView(el, this$1.offsetTop, this$1.offsetLeft);
 
                     });
 
@@ -7573,7 +7528,7 @@
 
                     this.elements.forEach(function (el) {
 
-                        var state = el._ukScrollspyState;
+                        var state = el[stateKey$1];
                         var toggle = function (inview) {
 
                             css(el, 'visibility', !inview && this$1.hidden ? 'hidden' : '');
@@ -7912,7 +7867,7 @@
 
                     if (!within(placeholder, document)) {
                         after(this.$el, placeholder);
-                        attr(placeholder, 'hidden', '');
+                        placeholder.hidden = true;
                     }
 
                     this.isActive = !!this.isActive; // force self-assign
@@ -8018,7 +7973,7 @@
 
                 this.isFixed = true;
                 this.update();
-                attr(this.placeholder, 'hidden', null);
+                this.placeholder.hidden = false;
 
             },
 
@@ -8027,7 +7982,7 @@
                 this.isActive = false;
                 removeClass(this.$el, this.clsFixed, this.clsBelow);
                 css(this.$el, {position: '', top: '', width: ''});
-                attr(this.placeholder, 'hidden', '');
+                this.placeholder.hidden = true;
 
             },
 
@@ -9084,6 +9039,8 @@
         }]
 
     };
+
+
 
     var components = /*#__PURE__*/Object.freeze({
         __proto__: null,
@@ -11533,8 +11490,11 @@
                 triggerUpdate$1(this.getItemIn(), 'itemin', {percent: percent, duration: duration, timing: timing, dir: dir});
                 prev && triggerUpdate$1(this.getItemIn(true), 'itemout', {percent: 1 - percent, duration: duration, timing: timing, dir: dir});
 
+                // Workaround for a bug in iOS Safari 14.0 which does not let you transition to the same value twice
+                var randomOffset = index(next) / 10000;
+
                 Transition
-                    .start(list, {transform: translate(-to * (isRtl ? -1 : 1), 'px')}, duration, timing)
+                    .start(list, {transform: translate((-to + randomOffset) * (isRtl ? -1 : 1), 'px')}, duration, timing)
                     .then(deferred.resolve, noop);
 
                 return deferred.promise;
@@ -12351,17 +12311,11 @@
                 var ref$1 = this.origin;
                 var offsetTop = ref$1.offsetTop;
                 var offsetLeft = ref$1.offsetLeft;
-                var ref$2 = this.drag;
-                var offsetHeight = ref$2.offsetHeight;
-                var offsetWidth = ref$2.offsetWidth;
-                var ref$3 = offset(window);
-                var right = ref$3.right;
-                var bottom = ref$3.bottom;
                 var target = document.elementFromPoint(x, y);
 
                 css(this.drag, {
-                    top: clamp(y - offsetTop, 0, bottom - offsetHeight),
-                    left: clamp(x - offsetLeft, 0, right - offsetWidth)
+                    top: y - offsetTop,
+                    left: x - offsetLeft
                 });
 
                 var sortable = this.getSortable(target);
@@ -12464,10 +12418,6 @@
                 off(window, 'scroll', this.scroll);
 
                 if (!this.drag) {
-                    if (e.type === 'touchend') {
-                        e.target.click();
-                    }
-
                     return;
                 }
 
@@ -12575,9 +12525,9 @@
                 var bottom = ref.bottom;
                 var height = ref.height;
 
-                if (top < y && top + 30 > y) {
+                if (top < y && top + 35 > y) {
                     scroll -= dist;
-                } else if (bottom > y && bottom - 30 < y) {
+                } else if (bottom > y && bottom - 35 < y) {
                     scroll += dist;
                 } else {
                     return;
@@ -12601,7 +12551,7 @@
     function appendDrag(container, element) {
         var clone = append(container, element.outerHTML.replace(/(^<)(?:li|tr)|(?:li|tr)(\/>$)/g, '$1div$2'));
 
-        attr(clone, 'style', ((attr(clone, 'style')) + ";margin:0!important"));
+        clone.style.setProperty('margin', '0', 'important');
 
         css(clone, assign({
             boxSizing: 'border-box',
@@ -12967,6 +12917,8 @@
         }
 
     };
+
+
 
     var components$1 = /*#__PURE__*/Object.freeze({
         __proto__: null,
