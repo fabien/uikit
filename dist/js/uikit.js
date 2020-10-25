@@ -11633,7 +11633,8 @@
 
         props: {
             center: Boolean,
-            sets: Boolean
+            sets: Boolean,
+            clsVisible: String
         },
 
         data: {
@@ -11759,7 +11760,7 @@
                 }
 
                 var actives = this._getTransitioner(this.index).getActives();
-                this.slides.forEach(function (slide) { return toggleClass(slide, this$1.clsActive, includes(actives, slide)); });
+                this.slides.forEach(function (slide) { return toggleClass(slide, (this$1.clsVisible || this$1.clsActive), includes(actives, slide)); });
                 (!this.sets || includes(this.sets, toFloat(this.index))) && this.slides.forEach(function (slide) { return toggleClass(slide, this$1.clsActivated, includes(actives, slide)); });
 
             },
@@ -11804,7 +11805,7 @@
             },
 
             itemshow: function() {
-                ~this.prevIndex && addClass(this._getTransitioner().getItemIn(), this.clsActive);
+                ~this.prevIndex && addClass(this._getTransitioner().getItemIn(), (this.clsVisible || this.clsActive));
             }
 
         },

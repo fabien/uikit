@@ -10,7 +10,8 @@ export default {
 
     props: {
         center: Boolean,
-        sets: Boolean
+        sets: Boolean,
+        clsVisible: String
     },
 
     data: {
@@ -128,7 +129,7 @@ export default {
             }
 
             const actives = this._getTransitioner(this.index).getActives();
-            this.slides.forEach(slide => toggleClass(slide, this.clsActive, includes(actives, slide)));
+            this.slides.forEach(slide => toggleClass(slide, (this.clsVisible || this.clsActive), includes(actives, slide)));
             (!this.sets || includes(this.sets, toFloat(this.index))) && this.slides.forEach(slide => toggleClass(slide, this.clsActivated, includes(actives, slide)));
 
         },
@@ -173,7 +174,7 @@ export default {
         },
 
         itemshow() {
-            ~this.prevIndex && addClass(this._getTransitioner().getItemIn(), this.clsActive);
+            ~this.prevIndex && addClass(this._getTransitioner().getItemIn(), (this.clsVisible || this.clsActive));
         }
 
     },
