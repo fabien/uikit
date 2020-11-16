@@ -3651,6 +3651,7 @@
             var name = getComponentName(attributeName);
 
             if (!name || !(name in UIkit)) {
+                trigger(target, 'attributechanged', [attributeName]);
                 return;
             }
 

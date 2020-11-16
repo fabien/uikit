@@ -37,6 +37,10 @@
                     }
                 });
                 
+                UIkit.util.on('#panel', 'attributechanged', function(e) {
+                    console.log('Changed attributes:', e.detail);
+                });
+                
                 document.querySelectorAll('[uk-view]').forEach(function(elem) {
                     var view = UIkit.view(elem);
                     var on = UIkit.util.on;
@@ -119,7 +123,7 @@
     </head>
     <body>
         <div class="uk-container uk-margin-large-bottom">
-            <div class="uk-position-relative uk-overflow-hidden uk-margin" uk-height-content="target: .uk-panel; minHeight: 50; maxHeight: 800">
+            <div id="panel" class="uk-position-relative uk-overflow-hidden uk-margin" uk-observer="observeAttributes: true" uk-height-content="target: .uk-panel; minHeight: 50; maxHeight: 800">
                 <div class="uk-background-muted uk-position-cover">
                     <div class="uk-panel uk-padding-small">
                         <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Non quidem, eaque dolor esse, id deserunt neque, voluptate quisquam impedit nobis, laborum quaerat vero doloribus harum dignissimos iure repudiandae temporibus delectus.</p>
