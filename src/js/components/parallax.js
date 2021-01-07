@@ -1,5 +1,5 @@
 import Parallax from '../mixin/parallax';
-import {clamp, css, scrolledOver, query, addClass, removeClass} from 'uikit-util';
+import {clamp, css, parent, query, scrolledOver, addClass, removeClass} from 'uikit-util';
 
 export default {
 
@@ -79,6 +79,6 @@ function getOffsetElement(el) {
     return el
         ? 'offsetTop' in el
             ? el
-            : getOffsetElement(el.parentNode)
+            : getOffsetElement(parent(el))
         : document.body;
 }

@@ -4,7 +4,141 @@
 
 ### Fixed
 
+- Fix tooltip position
+
+## 3.6.8 (January 5, 2021)
+
+### Fixed
+
+- Fix regression in class util
+
+## 3.6.7 (January 4, 2021)
+
+### Fixed
+
+- Fix regression in class util
+
+## 3.6.6 (January 4, 2021)
+
+### Added
+
+- Add filter animation delayed-fade
+
+### Changed
+
+- Filter animation fade does not stagger
+
+### Fixed
+
+- Fix filter animations
+- Fix slider drag behavior on iOS
+- Fix Scroll component now supports hash starting with any character
+
+## 3.6.5 (December 21, 2020)
+
+### Fixed
+
+- Fix missing imports
+
+## 3.6.4 (December 21, 2020)
+
+### Changed
+
+- Improve context selectors to use a dom path selector
+
+### Fixed
+
+- Fix IE11 compatibility
+- Fix Accordion component toggles
+- Fix regression in Toggle component
+
+## 3.6.3 (December 18, 2020)
+
+### Fixed
+
+- Fix filter tests
+
+## 3.6.2 (December 18, 2020)
+
+### Changed
+
+- IMPORTANT: Change options 'animationMode' to 'animation', 'animation' to 'duration'
+- IMPORTANT: Rename 'shift' animation to 'slide'
+
+## 3.6.1 (December 17, 2020)
+
+### Fixed
+
+- Fix regression in Toggle component
+
+## 3.6.0 (December 17, 2020)
+
+### Added
+
+- Add fade animation to Filter component
+- Add 'priority' param to 'css' function
+
+### Fixed
+
+- Fix 'aria-expanded' value on toggles
+
+## 3.5.17 (December 16, 2020)
+
+### Added
+
+- Offcanvas component hides if invisible
+
+### Changed
+
+- Image component will load images eagerly in IE11
+- Improved Tooltip accessibility
+- Set 'aria-expanded' on toggles
+
+### Fixed
+
+- Fix regression in Slider component
+- Fix do not set 'aria-hidden' if element has already been removed from the accessibility tree
+- Fix Switcher component does not ignore disabled toggles
+- Fix Toggle component in queued mode
+
+## 3.5.16 (December 11, 2020)
+
+### Fixed
+
+- Fix Sortable lets sort items between lists if no 'group' is set
+- Fix 'scrollParents' checks for `position: fixed`
+
+## 3.5.15 (December 10, 2020)
+
+### Fixed
+
+- Fix regression in Scrollspy Nav
+
+## 3.5.14 (December 9, 2020)
+
+### Fixed
+
+- Fix Scrollspy Nav using wrong viewport as reference
+- Fix Slider component skipping animation if slide item wider than its list
+
+## 3.5.13 (December 8, 2020)
+
+### Changed
+
+- Sorting starts after traversing half the items height/width in Sortable component
+
+## 3.5.12 (December 7, 2020)
+
+### Fixed
+
+- Fix 'isInView' function
+
+## 3.5.11 (December 7, 2020)
+
+### Fixed
+
 - Fix 'positionAt' function did not flip within its targets scroll container
+- Fix drag gets 'overflow: hidden' in Sortable component
 
 ## 3.5.10 (November 27, 2020)
 

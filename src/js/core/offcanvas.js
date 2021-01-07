@@ -1,5 +1,5 @@
 import Modal from '../mixin/modal';
-import {$, addClass, append, css, endsWith, hasClass, width, height, removeClass, unwrap, wrapAll, trigger} from 'uikit-util';
+import {$, addClass, append, css, endsWith, hasClass, width, height, isVisible, parent, removeClass, unwrap, wrapAll, trigger} from 'uikit-util';
 
 export default {
 
@@ -71,7 +71,7 @@ export default {
         },
 
         transitionElement({mode}) {
-            return mode === 'reveal' ? this.panel.parentNode : this.panel;
+            return mode === 'reveal' ? parent(this.panel) : this.panel;
         }
 
     },
@@ -85,12 +85,17 @@ export default {
     update: {
 
         read() {
-            if (this.mode !== 'sidebar') return {};
-            return {
-                panel: this.panel.offsetWidth,
-                container: width(window),
-                toggled: this.isToggled()
-            };
+            if (this.mode !== 'sidebar') {
+                if (this.isToggled() && !isVisible(this.$el)) {
+                    this.hide();
+                }
+            } else {
+                return {
+                    panel: this.panel.offsetWidth,
+                    container: width(window),
+                    toggled: this.isToggled()
+                };
+            }
         },
 
         write({panel, container, toggled}) {
@@ -196,9 +201,9 @@ export default {
 
             handler() {
 
-                if (this.mode === 'reveal' && !hasClass(this.panel.parentNode, this.clsMode)) {
+                if (this.mode === 'reveal' && !hasClass(parent(this.panel), this.clsMode)) {
                     wrapAll(this.panel, '<div>');
-                    addClass(this.panel.parentNode, this.clsMode);
+                    addClass(parent(this.panel), this.clsMode);
                 }
                 
                 css(document.documentElement, 'overflowY', this.overlay ? 'hidden' : '');
