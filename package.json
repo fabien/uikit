@@ -61,8 +61,5 @@
       "patterns": "**/*.less",
       "extensions": "less"
     }
-  },
-  "dependencies": {
-    "camelcase": "^5.3.1"
   }
 }
