@@ -32,9 +32,18 @@ export default {
             },
 
             watch(connects) {
+
                 if (this.swiping) {
                     css(connects, 'touch-action', 'pan-y pinch-zoom');
                 }
+
+                const index = this.index();
+                this.connects.forEach(el =>
+                    children(el).forEach((child, i) =>
+                        toggleClass(child, this.cls, i === index)
+                    )
+                );
+
             },
 
             immediate: true
@@ -49,7 +58,7 @@ export default {
 
             watch(toggles) {
                 const active = this.index();
-                this.show(~active && active || toggles[this.active] || toggles[0]);
+                this.show(~active ? active : toggles[this.active] || toggles[0]);
             },
 
             immediate: true
@@ -138,8 +147,8 @@ export default {
             });
 
             this.connects.forEach(({children}) =>
-                this.toggleElement(toNodes(children).filter((child, i) =>
-                    i !== next && this.isToggled(child)
+                this.toggleElement(toNodes(children).filter(child =>
+                    hasClass(child, this.cls)
                 ), false, prev >= 0).then(() =>
                     this.toggleElement(children[next], true, prev >= 0)
                 )

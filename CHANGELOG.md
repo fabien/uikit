@@ -2,9 +2,109 @@
 
 ## WIP
 
+### Change
+
+- Update card badge style
+
 ### Fixed
 
-- Fix tooltip position
+- Fix animation set to `false` in Sortable component
+- Fix Tooltip on elements with class 'uk-active' applied
+- Fix Slider parallax states
+
+## 3.6.18 (March 12, 2021)
+
+### Added
+
+- Add Discord, Twitch and Tiktok icons
+
+### Removed
+
+- Remove Google Plus icon
+
+### Fixed
+
+- Fix filter inital state
+
+## 3.6.17 (February 25, 2021)
+
+### Added
+
+- Add background-size modifier for width and height to Background component 
+
+### Fixed
+
+- Fix dragging time control starts dragging slide in Safari
+
+## 3.6.16 (February 5, 2021)
+
+### Change
+
+- Make multiple select resizable
+
+### Fixed
+
+- Fix dragging slide correctly prevents click event
+
+## 3.6.15 (January 29, 2021)
+
+### Added
+
+- beforeSend in 'ajax' function may return Promise
+- Add 'container' option to Notification component
+
+### Fixed
+
+- Fix showing/hidding Modal/Offcanvas programmatically
+
+## 3.6.14 (January 26, 2021)
+
+### Fixed
+
+- Fix 'scrolledOver' function uses closest scrollable parent
+- Fix Lightbox closes on drag if slide background is dragged
+- Fix Drop component applies stack class wrongly
+
+## 3.6.13 (January 20, 2021)
+
+### Fixed
+
+- Fix slidenav icons
+
+## 3.6.12 (January 20, 2021)
+
+### Fixed
+
+- Fix IE11 compatibility
+- Fix changing ratio does not correctly apply width and height in SVG component
+- Fix issues from hiding an already hidden Modal 
+
+## 3.6.11 (January 14, 2021)
+
+### Fixed
+
+- Fix regression in SVG component
+
+## 3.6.10 (January 11, 2021)
+
+### Changed
+
+- Refactor Sortable behavior
+
+### Fixed
+
+- Fix regression in sticky component
+- Fix calculating max scroll height
+- Fix regression with calling watchers
+
+## 3.6.9 (January 7, 2021)
+
+### Fixed
+
+- Fix component update handling
+- Fix Tooltip position
+- Fix Tooltip component applied to button elements in iOS
+- Fix regression in Switcher component
 
 ## 3.6.8 (January 5, 2021)
 
@@ -81,6 +181,7 @@
 ### Fixed
 
 - Fix 'aria-expanded' value on toggles
+- Fix responsivness in Switcher component
 
 ## 3.5.17 (December 16, 2020)
 

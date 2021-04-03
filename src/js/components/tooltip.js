@@ -1,7 +1,7 @@
 import Container from '../mixin/container';
 import Togglable from '../mixin/togglable';
 import Position from '../mixin/position';
-import {append, attr, flipPosition, hasAttr, isInput, isTouch, matches, on, once, pointerEnter, pointerLeave, remove} from 'uikit-util';
+import {append, attr, flipPosition, hasAttr, isInput, isTouch, matches, on, once, pointerDown, pointerEnter, pointerLeave, remove, within} from 'uikit-util';
 
 export default {
 
@@ -40,12 +40,13 @@ export default {
 
         show() {
 
-            if (this.isToggled(this.tooltip) || !this.title) {
+            if (this.isToggled(this.tooltip || null) || !this.title) {
                 return;
             }
 
-            this._unbind = once(document, 'show keydown', this.hide, false, e =>
-                e.type === 'keydown' && e.keyCode === 27
+            this._unbind = once(document, `show keydown ${pointerDown}`, this.hide, false, e =>
+                e.type === pointerDown && !within(e.target, this.$el)
+                || e.type === 'keydown' && e.keyCode === 27
                 || e.type === 'show' && e.detail[0] !== this && e.detail[0].$name === this.$name
             );
 
@@ -61,7 +62,7 @@ export default {
 
             clearTimeout(this.showTimer);
 
-            if (!this.isToggled(this.tooltip)) {
+            if (!this.isToggled(this.tooltip || null)) {
                 return;
             }
 
@@ -110,12 +111,17 @@ export default {
         blur: 'hide',
 
         [`${pointerEnter} ${pointerLeave}`](e) {
-            if (isTouch(e)) {
-                return;
+            if (!isTouch(e)) {
+                this[e.type === pointerEnter ? 'show' : 'hide']();
             }
-            e.type === pointerEnter
-                ? this.show()
-                : this.hide();
+        },
+
+        // Clicking a button does not give it focus on all browsers and platforms
+        // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/button#clicking_and_focus
+        [pointerDown](e) {
+            if (isTouch(e)) {
+                this.show();
+            }
         }
 
     }

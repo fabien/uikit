@@ -25,7 +25,7 @@ export default {
         toggles: {
 
             get({attrItem}, $el) {
-                return $$(`[${this.attrItem}],[data-${this.attrItem}]`, $el);
+                return $$(`[${attrItem}],[data-${attrItem}]`, $el);
             },
 
             watch() {
@@ -50,10 +50,13 @@ export default {
             },
 
             watch(list, old) {
-                if (!isEqualList(list, old)) {
+                if (old && !isEqualList(list, old)) {
                     this.updateState();
                 }
-            }
+            },
+
+            immediate: true
+
         }
 
     },

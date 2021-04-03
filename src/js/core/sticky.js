@@ -1,6 +1,6 @@
 import Class from '../mixin/class';
 import Media from '../mixin/media';
-import {$, addClass, after, Animation, assign, css, dimensions, fastdom, hasClass, inBrowser, isNumeric, isString, isVisible, noop, offset, offsetPosition, parent, query, remove, removeClass, replaceClass, scrollTop, toFloat, toggleClass, toPx, trigger, within} from 'uikit-util';
+import {$, addClass, after, Animation, assign, css, dimensions, fastdom, hasClass, isNumeric, isString, isVisible, noop, offset, offsetPosition, parent, query, remove, removeClass, replaceClass, scrollTop, toFloat, toggleClass, toPx, trigger, within} from 'uikit-util';
 
 export default {
 
@@ -94,7 +94,9 @@ export default {
 
             name: 'load hashchange popstate',
 
-            el: inBrowser && window,
+            el() {
+                return window;
+            },
 
             handler() {
 
@@ -128,7 +130,7 @@ export default {
 
         {
 
-            read({height}, type) {
+            read({height}, types) {
 
                 this.inactive = !this.matchMedia || !isVisible(this.$el);
 
@@ -136,7 +138,7 @@ export default {
                     return false;
                 }
 
-                if (this.isActive && type !== 'update') {
+                if (this.isActive && types.has('resize')) {
                     this.hide();
                     height = this.$el.offsetHeight;
                     this.show();
@@ -191,14 +193,15 @@ export default {
                 };
             },
 
-            write(data, type) {
+            write(data, types) {
 
                 const now = Date.now();
+                const isScrollUpdate = types.has('scroll');
                 const {initTimestamp = 0, dir, lastDir, lastScroll, scroll, top} = data;
 
                 data.lastScroll = scroll;
 
-                if (scroll < 0 || scroll === lastScroll && type === 'scroll' || this.showOnUp && type !== 'scroll' && !this.isFixed) {
+                if (scroll < 0 || scroll === lastScroll && isScrollUpdate || this.showOnUp && !isScrollUpdate && !this.isFixed) {
                     return;
                 }
 
@@ -215,7 +218,7 @@ export default {
 
                 if (this.inactive
                     || scroll < this.top
-                    || this.showOnUp && (scroll <= this.top || dir === 'down' && type === 'scroll' || dir === 'up' && !this.isFixed && scroll <= this.bottomOffset)
+                    || this.showOnUp && (scroll <= this.top || dir === 'down' && isScrollUpdate || dir === 'up' && !this.isFixed && scroll <= this.bottomOffset)
                 ) {
 
                     if (!this.isFixed) {

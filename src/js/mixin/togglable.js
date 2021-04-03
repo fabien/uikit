@@ -71,30 +71,34 @@ export default {
                             : this.hasTransition
                                 ? toggleHeight(this)
                                 : toggleAnimation(this)
-                    )(el, show) || Promise.resolve();
+                    )(el, show);
 
-                    addClass(el, show ? this.clsEnter : this.clsLeave);
+                    const cls = show ? this.clsEnter : this.clsLeave;
+
+                    addClass(el, cls);
 
                     trigger(el, show ? 'show' : 'hide', [this]);
 
-                    promise
-                        .catch(noop)
-                        .then(() => removeClass(el, show ? this.clsEnter : this.clsLeave));
-
-                    return promise.then(() => {
-                        removeClass(el, show ? this.clsEnter : this.clsLeave);
+                    const done = () => {
+                        removeClass(el, cls);
                         trigger(el, show ? 'shown' : 'hidden', [this]);
                         trigger(el, show ? '_shown' : '_hidden', [this]);
                         this.$update(el);
-                    });
+                    };
+
+                    return promise ? promise.then(done, () => {
+                        removeClass(el, cls);
+                        return Promise.reject();
+                    }) : done();
+
                 })).then(resolve, noop)
             );
         },
 
         isToggled(el = this.$el) {
-            return hasClass(this.clsEnter)
+            return hasClass(el, this.clsEnter)
                 ? true
-                : hasClass(this.clsLeave)
+                : hasClass(el, this.clsLeave)
                     ? false
                     : this.cls
                         ? hasClass(el, this.cls.split(' ')[0])

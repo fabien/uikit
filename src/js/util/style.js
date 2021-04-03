@@ -1,7 +1,7 @@
 import {isIE} from './env';
 import {append, remove} from './dom';
 import {addClass} from './class';
-import {each, hyphenate, isArray, isNumber, isNumeric, isObject, isString, isUndefined, toNode, toNodes} from './lang';
+import {each, hyphenate, isArray, isNumber, isNumeric, isObject, isString, isUndefined, memoize, toNodes, toWindow} from './lang';
 
 const cssNumber = {
     'animation-iteration-count': true,
@@ -57,53 +57,36 @@ export function css(element, property, value, priority = '') {
 
 }
 
-export function getStyles(element, pseudoElt) {
-    element = toNode(element);
-    return element.ownerDocument.defaultView.getComputedStyle(element, pseudoElt);
+function getStyles(element, pseudoElt) {
+    return toWindow(element).getComputedStyle(element, pseudoElt);
 }
 
-export function getStyle(element, property, pseudoElt) {
+function getStyle(element, property, pseudoElt) {
     return getStyles(element, pseudoElt)[property];
 }
 
-const vars = {};
+const parseCssVar = memoize(name => {
+    /* usage in css: .uk-name:before { content:"xyz" } */
+
+    const element = append(document.documentElement, document.createElement('div'));
+
+    addClass(element, `uk-${name}`);
+
+    name = getStyle(element, 'content', ':before').replace(/^["'](.*)["']$/, '$1');
+
+    remove(element);
+
+    return name;
+});
 
 export function getCssVar(name) {
-
-    const docEl = document.documentElement;
-
-    if (!isIE) {
-        return getStyles(docEl).getPropertyValue(`--uk-${name}`);
-    }
-
-    if (!(name in vars)) {
-
-        /* usage in css: .uk-name:before { content:"xyz" } */
-
-        const element = append(docEl, document.createElement('div'));
-
-        addClass(element, `uk-${name}`);
-
-        vars[name] = getStyle(element, 'content', ':before').replace(/^["'](.*)["']$/, '$1');
-
-        remove(element);
-
-    }
-
-    return vars[name];
-
+    return !isIE
+        ? getStyles(document.documentElement).getPropertyValue(`--uk-${name}`)
+        : parseCssVar(name);
 }
-
-const cssProps = {};
 
 // https://drafts.csswg.org/cssom/#dom-cssstyledeclaration-setproperty
-export function propName(name) {
-
-    if (!cssProps[name]) {
-        cssProps[name] = vendorPropName(name);
-    }
-    return cssProps[name];
-}
+export const propName = memoize(name => vendorPropName(name));
 
 const cssPrefixes = ['webkit', 'moz', 'ms'];
 

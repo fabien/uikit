@@ -91,12 +91,10 @@ export default {
                 this.prevIndex = this.index;
             }
 
-            // Workaround for iOS's inert scrolling preventing pointerdown event
-            // https://developer.mozilla.org/en-US/docs/Web/CSS/touch-action
-            on(this.list, 'touchmove', this.move, {passive: false});
-
             on(document, pointerMove, this.move, {passive: false});
-            on(document, `${pointerUp} ${pointerCancel}`, this.end, true);
+
+            // 'input' event is triggered by video controls
+            on(document, `${pointerUp} ${pointerCancel} input`, this.end, true);
 
             css(this.list, 'userSelect', 'none');
 
@@ -109,6 +107,9 @@ export default {
             if (distance === 0 || this.prevPos === this.pos || !this.dragging && Math.abs(distance) < this.threshold) {
                 return;
             }
+
+            // prevent click event
+            css(this.list, 'pointerEvents', 'none');
 
             e.cancelable && e.preventDefault();
 
@@ -177,9 +178,8 @@ export default {
 
         end() {
 
-            off(this.list, 'touchmove', this.move, {passive: false});
             off(document, pointerMove, this.move, {passive: false});
-            off(document, `${pointerUp} ${pointerCancel}`, this.end, true);
+            off(document, `${pointerUp} ${pointerCancel} input`, this.end, true);
 
             if (this.dragging) {
 

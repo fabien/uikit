@@ -154,7 +154,7 @@ export default {
                             on(xhr, type.toLowerCase(), this[type])
                         );
 
-                        this.beforeSend(env);
+                        return this.beforeSend(env);
 
                     }
                 }).then(

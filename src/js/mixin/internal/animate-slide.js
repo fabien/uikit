@@ -1,60 +1,56 @@
-import {addClass, append, assign, children, css, fastdom, height, includes, index, isVisible, noop, offset, parent, position, Promise, removeClass, Transition} from 'uikit-util';
-
-const targetClass = 'uk-animation-target';
+import {assign, children, css, fastdom, includes, index, isVisible, noop, offset, parent, position, Promise, Transition} from 'uikit-util';
 
 export default function (action, target, duration) {
 
-    addStyle();
+    return new Promise(resolve =>
+        requestAnimationFrame(() => {
 
-    let nodes = children(target);
+            let nodes = children(target);
 
-    // Get current state
-    const currentProps = nodes.map(el => getProps(el, true));
-    const oldHeight = height(target);
+            // Get current state
+            const currentProps = nodes.map(el => getProps(el, true));
+            const targetProps = css(target, ['height', 'padding']);
 
-    // Cancel previous animations
-    Transition.cancel(target);
-    nodes.forEach(Transition.cancel);
-    removeClass(target, targetClass);
-    reset(target);
+            // Cancel previous animations
+            Transition.cancel(target);
+            nodes.forEach(Transition.cancel);
+            reset(target);
 
-    // Adding, sorting, removing nodes
-    action();
+            // Adding, sorting, removing nodes
+            action();
 
-    // Find new nodes
-    nodes = nodes.concat(children(target).filter(el => !includes(nodes, el)));
+            // Find new nodes
+            nodes = nodes.concat(children(target).filter(el => !includes(nodes, el)));
 
-    // Wait for update to propagate
-    return Promise.resolve().then(() => {
+            // Wait for update to propagate
+            Promise.resolve().then(() => {
 
-        // Force update
-        fastdom.flush();
+                // Force update
+                fastdom.flush();
 
-        // Get new state
-        const newHeight = height(target);
-        const [propsTo, propsFrom] = getTransitionProps(target, nodes, currentProps);
+                // Get new state
+                const targetPropsTo = css(target, ['height', 'padding']);
+                const [propsTo, propsFrom] = getTransitionProps(target, nodes, currentProps);
 
-        // Reset to previous state
-        addClass(target, targetClass);
-        nodes.forEach((el, i) => propsFrom[i] && css(el, propsFrom[i]));
-        css(target, {height: oldHeight, display: 'block'});
+                // Reset to previous state
+                nodes.forEach((el, i) => propsFrom[i] && css(el, propsFrom[i]));
+                css(target, assign({display: 'block'}, targetProps));
 
-        // Start transitions on next frame
-        return new Promise(resolve =>
-            requestAnimationFrame(() => {
+                // Start transitions on next frame
+                requestAnimationFrame(() => {
 
-                const transitions = nodes.map((el, i) =>
-                        Transition.start(el, propsTo[i], duration, 'ease')
-                    ).concat(Transition.start(target, {height: newHeight}, duration, 'ease'));
+                    const transitions = nodes.map((el, i) =>
+                            parent(el) === target && Transition.start(el, propsTo[i], duration, 'ease')
+                        ).concat(Transition.start(target, targetPropsTo, duration, 'ease'));
 
-                Promise.all(transitions).then(() => {
-                    nodes.forEach((el, i) => css(el, 'display', propsTo[i].opacity === 0 ? 'none' : ''));
-                    reset(target);
-                }, noop).then(resolve);
+                    Promise.all(transitions).then(() => {
+                        nodes.forEach((el, i) => parent(el) === target && css(el, 'display', propsTo[i].opacity === 0 ? 'none' : ''));
+                        reset(target);
+                    }, noop).then(resolve);
 
-            })
-        );
-    });
+                });
+            });
+        }));
 }
 
 function getProps(el, opacity) {
@@ -117,30 +113,19 @@ function reset(el) {
         pointerEvents: '',
         position: '',
         top: '',
+        marginTop: '',
+        marginLeft: '',
+        transform: '',
         width: '',
         zIndex: ''
     });
-    removeClass(el, targetClass);
-    css(el, {height: '', display: ''});
+    css(el, {height: '', display: '', padding: ''});
 }
 
 function getPositionWithMargin(el) {
     const {height, width} = offset(el);
     const {top, left} = position(el);
+    const {marginLeft, marginTop} = css(el, ['marginTop', 'marginLeft']);
 
-    return {top, left, height, width};
-}
-
-let style;
-
-function addStyle() {
-    if (style) {
-        return;
-    }
-    style = !!append(document.head, `<style>
-        .${targetClass} > * {
-            margin-top: 0 !important;
-            transform: none !important;
-        }
-    </style>`);
+    return {top, left, height, width, marginLeft, marginTop, transform: ''};
 }
