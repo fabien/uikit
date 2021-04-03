@@ -11006,7 +11006,8 @@
             pos: 'top-center',
             clsContainer: 'uk-notification',
             clsClose: 'uk-notification-close',
-            clsMsg: 'uk-notification-message'
+            clsMsg: 'uk-notification-message',
+            closeOnClick: true
         },
 
         install: install,
@@ -11028,6 +11029,7 @@
         },
 
         created: function() {
+            this.__onclose = [];
 
             var container = $(("." + (this.clsContainer) + "-" + (this.pos)), this.container)
                 || append(this.container, ("<div class=\"" + (this.clsContainer) + " " + (this.clsContainer) + "-" + (this.pos) + "\" style=\"display: block\"></div>"));
@@ -11060,8 +11062,10 @@
             click: function(e) {
                 if (closest(e.target, 'a[href="#"],a[href=""]')) {
                     e.preventDefault();
+                    this.close();
+                } else if (this.closeOnClick) {
+                    this.close();
                 }
-                this.close();
             }
 
         }, obj$1[pointerEnter] = function () {
@@ -11076,13 +11080,20 @@
 
         methods: {
 
+            then: function(fn) {
+                if (typeof fn === 'function') { this.__onclose.push(fn); }
+                return this;
+            },
+
             close: function(immediate) {
                 var this$1 = this;
 
 
                 var removeFn = function (el) {
-
                     var container = parent(el);
+
+                    this$1.__onclose.forEach(function (o) { return o(this$1); });
+                    this$1.__onclose = [];
 
                     trigger(el, 'close', [this$1]);
                     remove$1(el);
@@ -11090,7 +11101,6 @@
                     if (container && !container.hasChildNodes()) {
                         remove$1(container);
                     }
-
                 };
 
                 if (this.timer) {

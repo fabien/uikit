@@ -17,7 +17,8 @@ export default {
         pos: 'top-center',
         clsContainer: 'uk-notification',
         clsClose: 'uk-notification-close',
-        clsMsg: 'uk-notification-message'
+        clsMsg: 'uk-notification-message',
+        closeOnClick: true
     },
 
     install,
@@ -35,6 +36,7 @@ export default {
     },
 
     created() {
+        this.__onclose = [];
 
         const container = $(`.${this.clsContainer}-${this.pos}`, this.container)
             || append(this.container, `<div class="${this.clsContainer} ${this.clsContainer}-${this.pos}" style="display: block"></div>`);
@@ -67,8 +69,10 @@ export default {
         click(e) {
             if (closest(e.target, 'a[href="#"],a[href=""]')) {
                 e.preventDefault();
+                this.close();
+            } else if (this.closeOnClick) {
+                this.close();
             }
-            this.close();
         },
 
         [pointerEnter]() {
@@ -87,11 +91,18 @@ export default {
 
     methods: {
 
+        then(fn) {
+            if (typeof fn === 'function') this.__onclose.push(fn);
+            return this;
+        },
+
         close(immediate) {
 
             const removeFn = el => {
-
                 const container = parent(el);
+
+                this.__onclose.forEach((o) => o(this));
+                this.__onclose = [];
 
                 trigger(el, 'close', [this]);
                 remove(el);
@@ -99,7 +110,6 @@ export default {
                 if (container && !container.hasChildNodes()) {
                     remove(container);
                 }
-
             };
 
             if (this.timer) {
