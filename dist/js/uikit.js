@@ -1,4 +1,4 @@
-/*! UIkit 3.6.18 | https://www.getuikit.com | (c) 2014 - 2021 YOOtheme | MIT License */
+/*! UIkit 3.6.19 | https://www.getuikit.com | (c) 2014 - 2021 YOOtheme | MIT License */
 
 (function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -3446,7 +3446,7 @@
     UIkit.data = '__uikit__';
     UIkit.prefix = 'uk-';
     UIkit.options = {};
-    UIkit.version = '3.6.18';
+    UIkit.version = '3.6.19';
 
     globalAPI(UIkit);
     hooksAPI(UIkit);
@@ -7451,13 +7451,17 @@
 
             {
 
-                read: function(ref) {
+                read: function(data$1) {
                     var this$1 = this;
-                    var update = ref.update;
 
 
-                    if (!update) {
-                        return;
+                    // Let child components be applied at least once first
+                    if (!data$1.update) {
+                        Promise$1.resolve().then(function () {
+                            this$1.$emit();
+                            data$1.update = true;
+                        });
+                        return false;
                     }
 
                     this.elements.forEach(function (el) {
@@ -7475,12 +7479,6 @@
                 write: function(data) {
                     var this$1 = this;
 
-
-                    // Let child components be applied at least once first
-                    if (!data.update) {
-                        this.$emit();
-                        return data.update = true;
-                    }
 
                     this.elements.forEach(function (el) {
 
