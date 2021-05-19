@@ -1,5 +1,30 @@
 # Changelog
 
+## 3.6.22 (May 18, 2021)
+
+### Added
+
+- Add animation set to `false` in Filter component
+
+### Changed
+
+- Animation classes toggled by Scrollspy component are removed after animation finishes
+
+### Fixed
+
+- Fix box-shadow bottom being clipped in Safari if container is animated
+
+## 3.6.21 (May 4, 2021)
+
+### Added
+
+- Add divider modifier to Nav component
+
+### Fixed
+
+- Fix passing an array of classes to class utility functions
+- Fix boundary option in Drop component
+
 ## 3.6.20 (April 22, 2021)
 
 ### Change

@@ -1,4 +1,4 @@
-/*! UIkit 3.6.20 | https://www.getuikit.com | (c) 2014 - 2021 YOOtheme | MIT License */
+/*! UIkit 3.6.22 | https://www.getuikit.com | (c) 2014 - 2021 YOOtheme | MIT License */
 
 (function (global, factory) {
     typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
@@ -1326,8 +1326,7 @@
     }
 
     function getClasses(str) {
-        str = String(str);
-        return (~str.indexOf(' ') ? str.split(' ') : [str]).filter(Boolean);
+        return String(str).split(/\s|,/).filter(Boolean);
     }
 
     // IE 11
@@ -2400,7 +2399,7 @@
 
             var boundaries = scrollParents(element).map(getViewport$1);
 
-            if (boundary && includes(boundaries, boundary)) {
+            if (boundary && !includes(boundaries, boundary)) {
                 boundaries.unshift(boundary);
             }
 
@@ -3451,7 +3450,7 @@
     UIkit.data = '__uikit__';
     UIkit.prefix = 'uk-';
     UIkit.options = {};
-    UIkit.version = '3.6.20';
+    UIkit.version = '3.6.22';
 
     globalAPI(UIkit);
     hooksAPI(UIkit);
@@ -7488,20 +7487,6 @@
                     this.elements.forEach(function (el) {
 
                         var state = el[stateKey];
-                        var toggle = function (inview) {
-
-                            css(el, 'visibility', !inview && this$1.hidden ? 'hidden' : '');
-
-                            toggleClass(el, this$1.inViewClass, inview);
-                            toggleClass(el, state.cls);
-
-                            trigger(el, inview ? 'inview' : 'outview');
-
-                            state.inview = inview;
-
-                            this$1.$update(el);
-
-                        };
 
                         if (state.show && !state.inview && !state.queued) {
 
@@ -7510,7 +7495,7 @@
                             data.promise = (data.promise || Promise$1.resolve()).then(function () { return new Promise$1(function (resolve) { return setTimeout(resolve, this$1.delay); }
                                 ); }
                             ).then(function () {
-                                toggle(true);
+                                this$1.toggle(el, true);
                                 setTimeout(function () {
                                     state.queued = false;
                                     this$1.$emit();
@@ -7519,7 +7504,7 @@
 
                         } else if (!state.show && state.inview && !state.queued && this$1.repeat) {
 
-                            toggle(false);
+                            this$1.toggle(el, false);
 
                         }
 
@@ -7531,7 +7516,34 @@
 
             }
 
-        ]
+        ],
+
+        methods: {
+
+            toggle: function(el, inview) {
+
+                var state = el[stateKey];
+
+                state.off && state.off();
+
+                css(el, 'visibility', !inview && this.hidden ? 'hidden' : '');
+
+                toggleClass(el, this.inViewClass, inview);
+                toggleClass(el, state.cls);
+
+                if (/\buk-animation-/.test(state.cls)) {
+                    state.off = once(el, 'animationcancel animationend', function () { return removeClasses(el, 'uk-animation-\\w*'); }
+                    );
+                }
+
+                trigger(el, inview ? 'inview' : 'outview');
+
+                state.inview = inview;
+
+                this.$update(el);
+            }
+
+        }
 
     };
 
@@ -9518,7 +9530,12 @@
 
                             return fade.apply(void 0, args.concat( [40] ));
                 }
-                        : slide;
+                        : !name
+                            ? function () {
+                                action();
+                                return Promise$1.resolve();
+                            }
+                            : slide;
 
                 return animationFn(action, target, this.duration)
                     .then(function () { return this$1.$update(target, 'resize'); }, noop);
@@ -12622,11 +12639,7 @@
                     ? before(target, element)
                     : append(this$1.target, element); };
 
-                if (this.animation) {
-                    this.animate(insert);
-                } else {
-                    insert();
-                }
+                this.animate(insert);
 
             },
 
@@ -12636,11 +12649,7 @@
                     return;
                 }
 
-                if (this.animation) {
-                    this.animate(function () { return remove$1(element); });
-                } else {
-                    remove$1(element);
-                }
+                this.animate(function () { return remove$1(element); });
 
             },
 
