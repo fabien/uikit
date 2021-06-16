@@ -8994,8 +8994,8 @@
 
     var ratio = {
 
-        mixins: [mixin.class],
-        
+        mixins: [Media, mixin.class],
+
         args: 'ratio',
 
         props: {
@@ -9006,8 +9006,9 @@
         },
 
         data: {
-            ratio: '1/1',
+            ratio: '1:1',
             adjust: 0,
+            media: 640,
             minHeight: false,
             maxHeight: false
         },
@@ -9015,32 +9016,44 @@
         update: [{
 
             read: function() {
-                if (this.ratio === 'auto' || !this.ratio.indexOf('/')) {
+                if (this.ratio === 'auto' ||
+                    !(this.ratio.indexOf(':') > 0 || this.ratio.indexOf('/') > 0)) {
                     return {height: false};
                 }
 
-                var ref = this.ratio.split('/').map(Number);
+                var ref = this.ratio.split(/[/:]/).map(Number);
                 var w = ref[0];
                 var h = ref[1];
+
+                if (typeof w !== 'number' || typeof h !== 'number') {
+                    return {height: false};
+                }
+
                 var _width = width(this.$el) + this.adjust;
-                
+
                 h = h * _width / w;
 
-                if (this.minHeight) {
+                if (this.minHeight === 'screen') {
+                    if (this.media > 0 && !this.matchMedia) {
+                        return {height: '100vh'};
+                    }
+                } else if (typeof this.minHeight === 'number') {
                     h = Math.max(this.minHeight, h);
                 }
 
-                if (this.maxHeight) {
+                if (typeof this.maxHeight === 'number') {
                     h = Math.min(this.maxHeight, h);
                 }
 
-                return {height:h};
+                return {height: h};
             },
 
             write: function(ref) {
                 var hgt = ref.height;
 
-                if (hgt === false) {
+                if (typeof hgt === 'string') {
+                    css(this.$el, 'height', hgt);
+                } else if (hgt === false) {
                     css(this.$el, 'height', '100%');
                 } else {
                     height(this.$el, Math.floor(hgt));
@@ -12300,16 +12313,17 @@
 
     var slideshow = {
 
-        mixins: [Class, Slideshow, SliderReactive],
+        mixins: [Class, Slideshow, SliderReactive, Media],
 
         props: {
             ratio: String,
-            minHeight: Number,
-            maxHeight: Number
+            minHeight: Boolean,
+            maxHeight: Boolean
         },
 
         data: {
             ratio: '16:9',
+            media: 640,
             minHeight: false,
             maxHeight: false,
             selList: '.uk-slideshow-items',
@@ -12321,7 +12335,8 @@
         update: {
 
             read: function() {
-                if (this.ratio === 'auto' || !this.ratio.indexOf(':')) {
+                if (this.ratio === 'auto' ||
+                    !(this.ratio.indexOf(':') > 0 || this.ratio.indexOf('/') > 0)) {
                     return {height: false};
                 }
 
@@ -12331,11 +12346,15 @@
 
                 height = height * this.list.offsetWidth / width || 0;
 
-                if (this.minHeight) {
+                if (this.minHeight === 'screen') {
+                    if (this.media > 0 && !this.matchMedia) {
+                        return {height: '100vh'};
+                    }
+                } else if (typeof this.minHeight === 'number') {
                     height = Math.max(this.minHeight, height);
                 }
 
-                if (this.maxHeight) {
+                if (typeof this.maxHeight === 'number') {
                     height = Math.min(this.maxHeight, height);
                 }
 
@@ -12345,7 +12364,9 @@
             write: function(ref) {
                 var height = ref.height;
 
-                if (height === false) {
+                if (typeof height === 'string') {
+                    css(this.list, 'height', height);
+                } else if (height === false) {
                     css(this.list, 'minHeight', '100%');
                 } else if (height > 0) {
                     css(this.list, 'minHeight', height);
