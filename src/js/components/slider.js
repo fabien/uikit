@@ -179,7 +179,9 @@ export default {
         },
 
         itemshow() {
-            ~this.prevIndex && addClass(this._getTransitioner().getItemIn(), (this.clsVisible || this.clsActive));
+            if (~this.prevIndex) {
+                addClass(this._getTransitioner().getItemIn(), (this.clsVisible || this.clsActive));
+            }
         }
 
     },

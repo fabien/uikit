@@ -180,7 +180,7 @@ export default {
                     return;
                 }
 
-                const clientY = event.targetTouches[0].clientY - this.clientY;
+                const clientY = e.targetTouches[0].clientY - this.clientY;
                 const {scrollTop, scrollHeight, clientHeight} = this.panel;
 
                 if (clientHeight >= scrollHeight
